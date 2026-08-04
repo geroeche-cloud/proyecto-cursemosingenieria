@@ -1,6 +1,7 @@
 import { getSessionUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-import { createUniversity, createAmbassador } from "./actions";
+import { UniversityForm } from "./UniversityForm";
+import { AmbassadorForm } from "./AmbassadorForm";
 
 type University = {
   id: string;
@@ -16,9 +17,6 @@ type Ambassador = {
   full_name: string | null;
   university_id: string | null;
 };
-
-const field =
-  "rounded-lg border border-hair-strong bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:border-blue-500";
 
 export default async function AdminPage() {
   const user = await getSessionUser();
@@ -79,23 +77,7 @@ export default async function AdminPage() {
           )}
         </div>
 
-        <form action={createUniversity} className="mt-4 flex flex-wrap items-end gap-3">
-          <label className="flex flex-1 flex-col gap-1">
-            <span className="text-xs text-ink-soft">Nombre</span>
-            <input name="name" required placeholder="Universidad Nacional del Comahue" className={field} />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-ink-soft">Sigla</span>
-            <input name="short_name" placeholder="UNCo" className={`${field} w-28`} />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-ink-soft">Ciudad</span>
-            <input name="city" placeholder="Neuquén" className={`${field} w-36`} />
-          </label>
-          <button type="submit" className="btn btn-blue text-sm">
-            Crear universidad
-          </button>
-        </form>
+        <UniversityForm />
       </section>
 
       {/* ---------- Embajadores ---------- */}
@@ -109,11 +91,11 @@ export default async function AdminPage() {
             <ul className="divide-y divide-hair">
               {ambs.map((a) => (
                 <li key={a.id} className="flex items-center justify-between gap-4 px-5 py-3">
-                  <span className="text-sm text-ink">
-                    {a.full_name || a.email}
-                    {a.full_name ? <span className="text-ink-mute"> · {a.email}</span> : null}
-                  </span>
-                  <span className="font-mono text-xs text-blue-300">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-ink">{a.full_name || "Sin nombre"}</p>
+                    <p className="truncate font-mono text-xs text-ink-mute">{a.email}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full border border-blue-500/40 bg-blue-500/10 px-3 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-blue-300">
                     {a.university_id ? uniName.get(a.university_id) ?? "—" : "sin asignar"}
                   </span>
                 </li>
@@ -127,38 +109,7 @@ export default async function AdminPage() {
             Creá primero una universidad para poder asignar un embajador.
           </p>
         ) : (
-          <form action={createAmbassador} className="mt-4 grid gap-3 sm:grid-cols-2">
-            <label className="flex flex-col gap-1">
-              <span className="text-xs text-ink-soft">Nombre completo</span>
-              <input name="full_name" placeholder="Gerónimo Echevarría" className={field} />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs text-ink-soft">Universidad</span>
-              <select name="university_id" required className={field} defaultValue="">
-                <option value="" disabled>
-                  Elegí una universidad
-                </option>
-                {unis.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    {u.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs text-ink-soft">Email</span>
-              <input name="email" type="email" required placeholder="embajador@email.com" className={field} />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs text-ink-soft">Contraseña temporal</span>
-              <input name="password" type="text" required minLength={8} placeholder="mínimo 8 caracteres" className={field} />
-            </label>
-            <div className="sm:col-span-2">
-              <button type="submit" className="btn btn-blue text-sm">
-                Crear embajador
-              </button>
-            </div>
-          </form>
+          <AmbassadorForm universities={unis.map((u) => ({ id: u.id, name: u.name }))} />
         )}
       </section>
     </div>
