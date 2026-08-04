@@ -1,0 +1,358 @@
+# Guía Visual y Dirección Creativa — Gerónimo Echevarría
+
+# 1. Concepto general de marca
+
+La identidad visual debe representar la construcción de un profesional moderno que combina:
+
+* Ingeniería.
+* Tecnología.
+* Innovación.
+* Educación.
+* Liderazgo.
+* Mentalidad emprendedora.
+
+La página debe transmitir la sensación de estar frente a una persona joven con una visión clara de futuro, disciplina y capacidad de construir proyectos reales.
+
+La estética debe ubicarse entre:
+
+* Una empresa tecnológica moderna.
+* Una startup de alto crecimiento.
+* Una marca personal profesional.
+* Un portfolio de un futuro líder de industria.
+
+---
+
+# 2. Sensación que debe generar
+
+Cuando una persona ingrese al sitio debería percibir:
+
+"Esta persona tiene una dirección clara, está construyendo algo importante y vale la pena conocer su trayectoria."
+
+La sensación buscada:
+
+* Profesional.
+* Premium.
+* Minimalista.
+* Inteligente.
+* Moderna.
+* Ambiciosa.
+* Tecnológica.
+* Elegante.
+
+Debe transmitir confianza sin parecer corporativa tradicional.
+
+---
+
+# 3. Referencias visuales
+
+La dirección estética toma inspiración de:
+
+## Apple
+
+Por:
+
+* Simplicidad.
+* Uso del espacio vacío.
+* Elegancia.
+* Atención extrema al detalle.
+* Sensación premium.
+
+## Notion
+
+Por:
+
+* Organización.
+* Claridad.
+* Sistema visual limpio.
+* Enfoque en productividad.
+
+## Linear
+
+Por:
+
+* Estética tecnológica.
+* Interfaces modernas.
+* Animaciones suaves.
+* Diseño oscuro sofisticado.
+
+## Vercel
+
+Por:
+
+* Minimalismo.
+* Sensación de innovación.
+* Enfoque en tecnología.
+
+## Startups modernas
+
+Inspiración en páginas de empresas tecnológicas que priorizan:
+
+* Mensajes claros.
+* Diseño limpio.
+* Experiencia visual memorable.
+
+---
+
+# 4. Paleta visual
+
+## Fondo principal
+
+Preferencia:
+
+* blanco profundo.
+* Gris oscuro.
+* Tonos azules.
+
+Debe evitarse un fondo completamente plano; se pueden utilizar:
+
+* Gradientes sutiles.
+* Luces ambientales.
+* Efectos de profundidad dinamicos.
+
+---
+
+## Colores secundarios
+
+Utilizar una paleta elegante:
+
+* Blanco para textos principales.
+* Gris para textos secundarios.
+* Azul tecnológico o tonos metálicos como acento. el metal me gusta en cuanto a texturas.
+
+Evitar:
+
+* Colores demasiado saturados.
+* Diseños juveniles.
+* Estéticas tipo influencer.
+
+---
+
+# 5. Tipografía
+
+La tipografía debe comunicar:
+
+* Inteligencia.
+* Modernidad.
+* Profesionalismo.
+
+Características:
+
+* Sans serif moderna.
+* Títulos grandes.
+* Mucho espacio.
+* Jerarquía clara.
+
+Inspiración:
+
+* Inter.
+* SF Pro.
+* Helvetica moderna.
+
+---
+
+# 6. Diseño general
+
+La web debe ser:
+
+* Responsive.
+* Fluida.
+* Minimalista.
+* Rápida.
+* Visualmente impactante.
+
+Debe evitar:
+
+* Exceso de texto visible.
+* Bloques largos.
+* Diseño tipo currículum.
+* Secciones repetitivas.
+
+La información debe aparecer mediante:
+
+* Tarjetas.
+* Animaciones.
+* Elementos interactivos.
+* Transiciones suaves.
+
+---
+
+# 7. Hero Section
+
+La primera pantalla debe generar impacto inmediato.
+
+Debe incluir:
+
+Nombre:
+
+Gerónimo Echevarría
+
+Descripción:
+
+Creador de contenido, estudiante de Ingeniería en Petróleo y fundador de proyectos.
+
+Mensaje conceptual:
+
+Construyendo el futuro desde la ingeniería, la innovación y el conocimiento.
+
+Elementos posibles:
+
+* Foto profesional.
+* Fondo animado sutil.
+* Efectos de luz.
+* Elementos tecnológicos.
+
+La primera impresión debe sentirse como la página personal de un profesional en crecimiento.
+
+---
+
+# 8. Fotografía personal
+
+La fotografía debe representar:
+
+* Confianza.
+* Profesionalismo.
+* Naturalidad.
+
+Tipos de imágenes recomendadas:
+
+## Profesional
+
+* Retrato con buena iluminación.
+* Vestimenta elegante o relacionada con ingeniería.
+* Fondo limpio.
+
+## Construcción
+
+Imágenes mostrando:
+
+* Estudiando.
+* Trabajando en proyectos.
+* Eventos profesionales.
+* Universidad.
+
+## Lifestyle
+
+Mostrar aspectos humanos:
+
+* Disciplina.
+* Entrenamiento.
+* Aprendizaje.
+* Creación.
+
+La imagen debe contar una historia, no solamente decorar.
+
+---
+
+# 9. Arquitectura visual de la página
+
+La web debe funcionar como un hub personal.
+
+Estructura recomendada:
+
+## Inicio
+
+Presentación personal.
+
+## Sobre mí
+
+Historia, filosofía y visión.
+
+## Proyectos
+
+Mostrar:
+
+* Cursemos Ingeniería.
+* Proyectos académicos.
+* Iniciativas personales.
+
+## Experiencias
+
+Mostrar:
+
+* Programa Roberto Rocca.
+* Tecpetrol Inspiring Program.
+* Embajador.
+* SPE.
+
+## Contenido
+
+Integración con:
+
+* Instagram.
+* TikTok.
+* YouTube.
+* LinkedIn.
+
+## Contacto
+
+Espacio para conexiones profesionales.
+
+---
+
+# 10. Identidad de Cursamos Ingeniería
+
+Debe sentirse como una extensión profesional, no como un proyecto separado.
+
+Concepto:
+
+Educación + comunidad + ingeniería.
+
+Estética:
+
+* Moderna.
+* Académica.
+* Tecnológica.
+
+Debe transmitir:
+
+"Una iniciativa creada por un estudiante de ingeniería con visión de resolver problemas reales."
+
+---
+
+# 11. Animaciones y experiencia
+
+Las animaciones deben ser:
+
+* Elegantes.
+* Rápidas.
+* Naturales.
+
+Ejemplos:
+
+* Aparición progresiva de elementos.
+* Movimiento suave al hacer scroll.
+* Efectos glassmorphism.
+* Hover sobre tarjetas.
+* Fondos dinámicos discretos.
+
+Evitar:
+
+* Animaciones exageradas.
+* Efectos llamativos sin propósito.
+* Sensación de videojuego.
+
+---
+
+# 12. Elementos que deben evitarse
+
+No utilizar:
+
+* Plantillas genéricas de portfolio.
+* Diseño demasiado universitario.
+* Exceso de colores.
+* Iconos infantiles.
+* Frases motivacionales vacías.
+* Fotos sin contexto.
+* Aspecto de influencer.
+
+La marca debe representar construcción profesional, no solamente presencia digital.
+
+---
+
+# 13. Mensaje final de marca
+
+La web debe comunicar:
+
+Gerónimo Echevarría es un joven profesional en construcción, formado en ingeniería, conectado con la industria energética y orientado a crear proyectos que combinan conocimiento, tecnología e impacto.
+
+Una identidad basada en aprender, construir y generar valor.

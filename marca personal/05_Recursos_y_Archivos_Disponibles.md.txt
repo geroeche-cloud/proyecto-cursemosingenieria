@@ -1,0 +1,410 @@
+# Recursos y Archivos Disponibles — Gerónimo Echevarría
+
+# 1. Objetivo del documento
+
+Este documento contiene todos los recursos oficiales disponibles para la construcción de la página web personal de Gerónimo Echevarría.
+
+Los archivos incluidos representan la identidad visual, profesional y comunicacional de la marca.
+
+Todos los elementos deben utilizarse manteniendo coherencia con la dirección creativa definida:
+
+* Profesional.
+* Premium.
+* Tecnológica.
+* Minimalista.
+* Elegante.
+
+---
+
+# 2. Información personal oficial
+
+## Nombre completo
+
+Gerónimo Echevarría
+
+## Identidad profesional
+
+* Estudiante de Ingeniería en Petróleo.
+* Creador de contenido.
+* Fundador de proyectos educativos.
+* Participante de iniciativas vinculadas a la industria energética.
+
+## Ubicación
+
+Argentina, neuquen.
+
+## Universidad
+
+Universidad Nacional del Comahue.
+
+## Carrera
+
+Ingeniería en Petróleo.
+
+---
+
+# 3. Datos de contacto
+
+## Contacto profesional
+
+Email:
+
+[geroeche@iCloud.com](mailto:geroeche@iCloud.com)
+
+Uso:
+
+Este correo debe utilizarse exclusivamente para:
+
+* Propuestas profesionales.
+* Colaboraciones.
+* Contactos empresariales.
+* Networking.
+* Oportunidades laborales.
+
+---
+
+# 4. Redes sociales oficiales
+
+## LinkedIn
+
+Archivo / enlace:
+
+https://www.linkedin.com/in/echevarriageronimo/?skipRedirect=true
+
+Objetivo:
+
+Mostrar trayectoria profesional, experiencias, logros y conexiones dentro del ámbito laboral.
+
+---
+
+## Instagram
+
+Archivo / enlace:
+
+https://www.instagram.com/cursemosingenieria
+
+Objetivo:
+
+Mostrar identidad personal, proyectos, experiencias y contenido visual.
+
+---
+
+## TikTok
+
+Archivo / enlace:
+
+https://www.tiktok.com/@cursemos.ingenieria?_r=1&_t=ZM-92WdHTRGEEW
+
+Objetivo:
+
+Contenido educativo, divulgación y construcción de comunidad.
+
+---
+
+## YouTube
+
+Archivo / enlace:
+
+https://www.youtube.com/@CursemosIngenier%C3%ADa
+
+Objetivo:
+
+Contenido profundo, experiencias, proyectos y desarrollo de ideas.
+
+---
+
+
+drive para que accedas a mis drives de contenido academico que tienen modelos de examen teorias y apuntes 
+https://drive.google.com/drive/folders/1qXC6Ohex0L4Til6DgYxo2Y9oXghLFnwk?usp=sharing
+
+discord de la comunidad de la universidad nacional del comahue colaborativo
+https://discord.gg/KUTG4Zbnc
+# 5. Fotografías personales
+
+Ubicación recomendada:
+
+`/Fotos_Personales/`
+
+Las fotografías deben clasificarse según función.
+
+---
+
+## Foto principal de identidad
+
+Carpeta:
+
+`/Fotos_Personales/Perfil/`
+
+Uso:
+
+* Hero principal.
+* Presentación inicial.
+* Imagen destacada.
+
+Características ideales:
+
+* Buena iluminación.
+* Alta resolución.
+* Imagen profesional.
+* Expresión natural.
+* Transmitir confianza.
+
+---
+
+## Fotografías profesionales
+
+Carpeta:
+
+`/Fotos_Personales/Profesional/`
+
+Uso:
+
+* Experiencias.
+* Eventos.
+* Secciones profesionales.
+
+Ejemplos:
+
+* Eventos académicos.
+* Actividades relacionadas con industria.
+* Presentaciones.
+* Reuniones.
+* Certificaciones.
+
+---
+
+## Fotografías personales y de proceso
+
+Carpeta:
+
+`/Fotos_Personales/Proceso/`
+
+Uso:
+
+Mostrar la construcción detrás de la marca.
+
+Ejemplos:
+
+* Estudiando.
+* Trabajando en proyectos.
+* Creando contenido.
+* Organización personal.
+* Desarrollo de iniciativas.
+
+---
+
+# 6. Logos y elementos de marca
+
+Ubicación:
+
+`/Marca/Logos/`
+
+---
+
+## Logo personal
+
+Archivos posibles:
+
+* Logo principal.
+* Versiones alternativas.
+* Icono.
+* Imagen para favicon.
+
+Uso:
+
+* Header.
+* Presentaciones.
+* Elementos visuales.
+
+---
+
+## Logo Cursamos Ingeniería
+
+Ubicación:
+
+`/Marca/Cursamos_Ingenieria/`
+
+Archivos:
+
+* Logo principal.
+* Variaciones.
+* Iconos.
+
+Uso:
+
+* Sección del proyecto.
+* Tarjetas.
+* Enlaces externos.
+
+---
+
+# 7. Recursos del proyecto Cursamos Ingeniería
+
+Ubicación:
+
+`/Cursamos_Ingenieria/`
+
+Debe incluir:
+
+* Logos.
+* Capturas de pantalla.
+* Diseños.
+* Publicaciones.
+* Material visual.
+
+Objetivo:
+
+Mostrar el proyecto como una iniciativa educativa profesional.
+
+---
+
+# 8. Experiencias y certificaciones
+
+Ubicación:
+
+`/Experiencias/`
+
+Incluir:
+
+* Certificados.
+* Diplomas.
+* Reconocimientos.
+* Fotografías relacionadas.
+
+Ejemplos:
+
+## Programa Roberto Rocca
+
+Recursos:
+
+* Certificación.
+* Fotografías.
+* Material relacionado.
+
+Uso:
+
+Representar excelencia académica y desarrollo profesional.
+
+---
+
+## Tecpetrol Inspiring Program
+
+Recursos:
+
+* Certificados.
+* Fotografías.
+* Experiencias.
+
+Uso:
+
+Mostrar acercamiento a la industria energética y aprendizaje profesional.
+
+---
+
+## Programa de Embajadores
+
+Recursos:
+
+* Material oficial.
+* Fotografías.
+* Participaciones.
+
+Uso:
+
+Mostrar liderazgo, comunicación y representación.
+
+---
+
+## Society of Petroleum Engineers
+
+Recursos:
+
+* Membresía.
+* Certificaciones.
+* Material relacionado.
+
+Uso:
+
+Mostrar conexión con la comunidad profesional internacional.
+
+---
+
+# 9. Recursos académicos
+
+Ubicación:
+
+`/Recursos_Educativos/`
+
+Puede incluir:
+
+* Apuntes.
+* Planificaciones.
+* Guías.
+* Material compartido.
+* Organización académica.
+
+Uso:
+
+Conectar la marca personal con la comunidad estudiantil.
+
+---
+
+# 10. Referencias externas
+
+Ubicación:
+
+`/Inspiracion/`
+
+Debe contener:
+
+* Capturas de páginas web inspiradoras.
+* Diseños favoritos.
+* Referencias visuales.
+
+Ejemplos:
+
+* Apple.
+* Notion.
+* Linear.
+* Vercel.
+* Startups tecnológicas.
+
+---
+
+# 11. Reglas de utilización de recursos
+
+Los recursos deben utilizarse respetando:
+
+## Calidad
+
+No utilizar imágenes borrosas o de baja resolución.
+
+## Coherencia
+
+Toda imagen debe reforzar la narrativa profesional.
+
+## Elegancia
+
+Evitar saturación visual.
+
+## Autenticidad
+
+La web debe mostrar una identidad real, no una imagen artificial.
+
+---
+
+# 12. Objetivo final
+
+Todos los recursos deben integrarse para construir una experiencia digital donde una persona pueda comprender:
+
+Quién es Gerónimo Echevarría.
+
+Qué está construyendo.
+
+Qué experiencias lo formaron.
+
+Qué proyectos desarrolla.
+
+Cómo contactarlo.
+
+Y por qué su trayectoria representa una combinación de ingeniería, innovación, educación y visión de futuro.
