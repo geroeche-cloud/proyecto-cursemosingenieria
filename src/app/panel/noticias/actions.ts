@@ -32,13 +32,12 @@ export async function createNews(formData: FormData) {
   const supabase = await createClient();
   const slug = `${slugify(title)}-${Math.random().toString(36).slice(2, 7)}`;
 
-  // university_id y author_id los completa SOLO la base (trigger). Nunca el cliente.
   const { error } = await supabase
     .from("news")
     .insert({ title, slug, summary, body, status: "draft" });
   if (error) throw new Error(error.message);
 
-  revalidatePath("/panel");
+  revalidatePath("/panel/noticias");
 }
 
 export async function setNewsStatus(formData: FormData) {
@@ -49,7 +48,6 @@ export async function setNewsStatus(formData: FormData) {
   if (!id || !["draft", "published", "archived"].includes(status)) return;
 
   const supabase = await createClient();
-  // RLS garantiza que solo puede tocar noticias de SU universidad.
   const { error } = await supabase
     .from("news")
     .update({
@@ -59,7 +57,7 @@ export async function setNewsStatus(formData: FormData) {
     .eq("id", id);
   if (error) throw new Error(error.message);
 
-  revalidatePath("/panel");
+  revalidatePath("/panel/noticias");
   revalidatePath("/novedades");
 }
 
@@ -73,6 +71,6 @@ export async function deleteNews(formData: FormData) {
   const { error } = await supabase.from("news").delete().eq("id", id);
   if (error) throw new Error(error.message);
 
-  revalidatePath("/panel");
+  revalidatePath("/panel/noticias");
   revalidatePath("/novedades");
 }
