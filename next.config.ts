@@ -5,18 +5,29 @@ import type { NextConfig } from "next";
 // Tailwind + Motion, and one inline JSON-LD script.
 const isDev = process.env.NODE_ENV !== "production";
 
+// Origen de Supabase — habilita auth, datos, realtime y storage desde el navegador.
+let supabaseOrigin = "";
+try {
+  supabaseOrigin = process.env.NEXT_PUBLIC_SUPABASE_URL
+    ? new URL(process.env.NEXT_PUBLIC_SUPABASE_URL).origin
+    : "";
+} catch {
+  supabaseOrigin = "";
+}
+const supabaseWs = supabaseOrigin.replace(/^https/, "wss");
+
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self'",
-  "img-src 'self' data: blob:",
+  `img-src 'self' data: blob:${supabaseOrigin ? " " + supabaseOrigin : ""}`,
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
   // 'unsafe-eval' only in dev (React dev tooling); strict in production.
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
-  "connect-src 'self'" + (isDev ? " ws:" : ""),
+  `connect-src 'self'${supabaseOrigin ? " " + supabaseOrigin + " " + supabaseWs : ""}${isDev ? " ws:" : ""}`,
   "upgrade-insecure-requests",
 ].join("; ");
 
