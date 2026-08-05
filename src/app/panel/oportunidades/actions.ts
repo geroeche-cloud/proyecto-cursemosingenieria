@@ -37,6 +37,8 @@ export async function createOpportunity(
     if (!title) return { ok: false, error: "El título es obligatorio." };
     if (!KINDS.includes(kind)) return { ok: false, error: "Tipo inválido." };
 
+    const publish = String(formData.get("intent") ?? "") === "publish";
+
     const supabase = await createClient();
     const { error } = await supabase.from("opportunities").insert({
       kind,
@@ -46,12 +48,19 @@ export async function createOpportunity(
       deadline,
       href,
       requirements,
-      status: "draft",
+      status: publish ? "published" : "draft",
+      published_at: publish ? new Date().toISOString() : null,
     });
     if (error) return { ok: false, error: error.message };
 
     revalidatePath("/panel/oportunidades");
-    return { ok: true, message: "Oportunidad creada como borrador." };
+    if (publish) revalidatePath("/campus/[university]", "page");
+    return {
+      ok: true,
+      message: publish
+        ? "Oportunidad publicada. Ya aparece en tu campus."
+        : "Oportunidad creada como borrador.",
+    };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
   }
@@ -74,6 +83,7 @@ export async function setOpportunityStatus(formData: FormData) {
       .eq("id", id);
 
     revalidatePath("/panel/oportunidades");
+    revalidatePath("/campus/[university]", "page");
   } catch {
     // no-op: la UI se mantiene; se puede reintentar.
   }
@@ -89,6 +99,7 @@ export async function deleteOpportunity(formData: FormData) {
     await supabase.from("opportunities").delete().eq("id", id);
 
     revalidatePath("/panel/oportunidades");
+    revalidatePath("/campus/[university]", "page");
   } catch {
     // no-op
   }

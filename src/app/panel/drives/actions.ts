@@ -27,17 +27,25 @@ export async function createDrive(
 
     if (!owner) return { ok: false, error: "El nombre de quien comparte es obligatorio." };
 
+    const publish = String(formData.get("intent") ?? "") === "publish";
+
     const supabase = await createClient();
     const { error } = await supabase.from("drives").insert({
       owner,
       career,
       href,
-      status: "draft",
+      status: publish ? "published" : "draft",
     });
     if (error) return { ok: false, error: error.message };
 
     revalidatePath("/panel/drives");
-    return { ok: true, message: "Drive cargado como borrador." };
+    if (publish) revalidatePath("/campus/[university]", "page");
+    return {
+      ok: true,
+      message: publish
+        ? "Drive publicado. Ya aparece en tu campus."
+        : "Drive cargado como borrador.",
+    };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
   }
@@ -53,6 +61,7 @@ export async function setDriveStatus(formData: FormData) {
     const supabase = await createClient();
     await supabase.from("drives").update({ status }).eq("id", id);
     revalidatePath("/panel/drives");
+    revalidatePath("/campus/[university]", "page");
   } catch {
     // no-op
   }
@@ -67,6 +76,7 @@ export async function deleteDrive(formData: FormData) {
     const supabase = await createClient();
     await supabase.from("drives").delete().eq("id", id);
     revalidatePath("/panel/drives");
+    revalidatePath("/campus/[university]", "page");
   } catch {
     // no-op
   }

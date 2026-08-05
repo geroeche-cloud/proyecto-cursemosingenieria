@@ -27,17 +27,27 @@ export async function createNews(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const summary = String(formData.get("summary") ?? "").trim() || null;
   const body = String(formData.get("body") ?? "").trim() || null;
+  const publish = String(formData.get("intent") ?? "") === "publish";
   if (!title) return;
 
   const supabase = await createClient();
   const slug = `${slugify(title)}-${Math.random().toString(36).slice(2, 7)}`;
 
-  const { error } = await supabase
-    .from("news")
-    .insert({ title, slug, summary, body, status: "draft" });
+  const { error } = await supabase.from("news").insert({
+    title,
+    slug,
+    summary,
+    body,
+    status: publish ? "published" : "draft",
+    published_at: publish ? new Date().toISOString() : null,
+  });
   if (error) throw new Error(error.message);
 
   revalidatePath("/panel/noticias");
+  if (publish) {
+    revalidatePath("/novedades");
+    revalidatePath("/campus/[university]", "page");
+  }
 }
 
 export async function setNewsStatus(formData: FormData) {
@@ -59,6 +69,7 @@ export async function setNewsStatus(formData: FormData) {
 
   revalidatePath("/panel/noticias");
   revalidatePath("/novedades");
+  revalidatePath("/campus/[university]", "page");
 }
 
 export async function deleteNews(formData: FormData) {
@@ -73,4 +84,5 @@ export async function deleteNews(formData: FormData) {
 
   revalidatePath("/panel/noticias");
   revalidatePath("/novedades");
+  revalidatePath("/campus/[university]", "page");
 }

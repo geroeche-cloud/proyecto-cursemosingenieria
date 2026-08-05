@@ -43,9 +43,22 @@ export default async function NoticiasPanelPage() {
             <span className="text-xs text-ink-soft">Contenido</span>
             <textarea name="body" rows={4} className={field} />
           </label>
-          <div>
-            <button type="submit" className="btn btn-blue text-sm">
-              Crear como borrador
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="submit"
+              name="intent"
+              value="publish"
+              className="btn btn-blue text-sm"
+            >
+              Crear y publicar
+            </button>
+            <button
+              type="submit"
+              name="intent"
+              value="draft"
+              className="btn btn-ghost text-sm"
+            >
+              Guardar como borrador
             </button>
           </div>
         </form>

@@ -50,9 +50,26 @@ export function ProfessorForm() {
         />
       </label>
       <div className="flex flex-col gap-2 sm:col-span-2">
-        <button type="submit" disabled={pending} className="btn btn-blue text-sm disabled:opacity-60">
-          {pending ? "Cargando…" : "Cargar como borrador"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="submit"
+            name="intent"
+            value="publish"
+            disabled={pending}
+            className="btn btn-blue text-sm disabled:opacity-60"
+          >
+            {pending ? "Guardando…" : "Cargar y publicar"}
+          </button>
+          <button
+            type="submit"
+            name="intent"
+            value="draft"
+            disabled={pending}
+            className="btn btn-ghost text-sm disabled:opacity-60"
+          >
+            Guardar como borrador
+          </button>
+        </div>
         {state.error && <p className="text-sm text-red-400">{state.error}</p>}
         {state.ok && state.message && <p className="text-sm text-emerald-400">{state.message}</p>}
       </div>

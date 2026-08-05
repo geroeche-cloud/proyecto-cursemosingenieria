@@ -35,6 +35,8 @@ export async function createProfessor(
     if (!name) return { ok: false, error: "El nombre es obligatorio." };
     if (!MODALITIES.includes(modality)) return { ok: false, error: "Modalidad inválida." };
 
+    const publish = String(formData.get("intent") ?? "") === "publish";
+
     const supabase = await createClient();
     const { error } = await supabase.from("professors").insert({
       name,
@@ -42,12 +44,18 @@ export async function createProfessor(
       modality,
       whatsapp,
       subjects,
-      status: "draft",
+      status: publish ? "published" : "draft",
     });
     if (error) return { ok: false, error: error.message };
 
     revalidatePath("/panel/profesores");
-    return { ok: true, message: "Profesor cargado como borrador." };
+    if (publish) revalidatePath("/campus/[university]", "page");
+    return {
+      ok: true,
+      message: publish
+        ? "Profesor publicado. Ya aparece en tu campus."
+        : "Profesor cargado como borrador.",
+    };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
   }
@@ -63,6 +71,7 @@ export async function setProfessorStatus(formData: FormData) {
     const supabase = await createClient();
     await supabase.from("professors").update({ status }).eq("id", id);
     revalidatePath("/panel/profesores");
+    revalidatePath("/campus/[university]", "page");
   } catch {
     // no-op
   }
@@ -77,6 +86,7 @@ export async function deleteProfessor(formData: FormData) {
     const supabase = await createClient();
     await supabase.from("professors").delete().eq("id", id);
     revalidatePath("/panel/profesores");
+    revalidatePath("/campus/[university]", "page");
   } catch {
     // no-op
   }

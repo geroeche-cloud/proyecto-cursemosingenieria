@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const tabs = [
+  { href: "/panel", label: "Inicio", exact: true },
   { href: "/panel/noticias", label: "Noticias" },
   { href: "/panel/oportunidades", label: "Oportunidades" },
   { href: "/panel/profesores", label: "Profesores" },
@@ -15,7 +16,9 @@ export function PanelNav() {
   return (
     <nav className="flex gap-1 overflow-x-auto">
       {tabs.map((t) => {
-        const active = path === t.href || path.startsWith(`${t.href}/`);
+        const active = t.exact
+          ? path === t.href
+          : path === t.href || path.startsWith(`${t.href}/`);
         return (
           <Link
             key={t.href}
