@@ -32,6 +32,33 @@ function waLink(num: string | null): string | null {
   return digits ? `https://wa.me/${digits}` : null;
 }
 
+function initials(name: string | null): string {
+  if (!name) return "★";
+  return (
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((w) => w[0]?.toUpperCase() ?? "")
+      .join("") || "★"
+  );
+}
+
+/** Agrupa la trayectoria por año, respetando el orden de aparición. */
+function groupTrajectory(items: { year: string; text: string }[]) {
+  const groups: { year: string; items: string[] }[] = [];
+  for (const t of items) {
+    const year = t.year || "—";
+    let g = groups.find((x) => x.year === year);
+    if (!g) {
+      g = { year, items: [] };
+      groups.push(g);
+    }
+    g.items.push(t.text);
+  }
+  return groups;
+}
+
 export async function generateStaticParams() {
   try {
     const supabase = createPublicClient();
@@ -104,17 +131,41 @@ export default async function UniversityPage({
   if (!uni) notFound();
 
   const uid = uni.id;
-  const [newsRes, oppRes, profRes, driveRes] = await Promise.all([
+  const [newsRes, oppRes, profRes, driveRes, ambProfileRes] = await Promise.all([
     supabase.from("news").select("id, title, summary, published_at").eq("university_id", uid).eq("status", "published").order("published_at", { ascending: false }).limit(30),
     supabase.from("opportunities").select("id, kind, title, org, description, deadline, requirements, href").eq("university_id", uid).eq("status", "published").order("created_at", { ascending: false }),
     supabase.from("professors").select("id, name, title, modality, subjects, whatsapp").eq("university_id", uid).eq("status", "published"),
     supabase.from("drives").select("id, owner, career, href").eq("university_id", uid).eq("status", "published"),
+    supabase.from("ambassador_profiles").select("display_name, presentation, bio, photo_url, trajectory").eq("university_id", uid).maybeSingle(),
   ]);
 
   const news = (newsRes.data ?? []) as News[];
   const opportunities = (oppRes.data ?? []) as Opp[];
   const professors = (profRes.data ?? []) as Prof[];
   const drives = (driveRes.data ?? []) as Drive[];
+
+  const ambRaw = ambProfileRes.data as {
+    display_name: string | null;
+    presentation: string | null;
+    bio: string | null;
+    photo_url: string | null;
+    trajectory: unknown;
+  } | null;
+  const ambassador =
+    ambRaw && (ambRaw.display_name || ambRaw.bio || ambRaw.photo_url)
+      ? {
+          name: ambRaw.display_name,
+          presentation: ambRaw.presentation,
+          bio: ambRaw.bio,
+          photo: ambRaw.photo_url,
+          trajectory: Array.isArray(ambRaw.trajectory)
+            ? (ambRaw.trajectory as { year?: unknown; text?: unknown }[])
+                .map((t) => ({ year: String(t.year ?? ""), text: String(t.text ?? "") }))
+                .filter((t) => t.text)
+            : [],
+        }
+      : null;
+  const trajGroups = ambassador ? groupTrajectory(ambassador.trajectory) : [];
 
   return (
     <>
@@ -139,6 +190,88 @@ export default async function UniversityPage({
               </p>
             </Reveal>
           </div>
+
+          {/* Embajador */}
+          {ambassador && (
+            <section className="mt-16 sm:mt-20">
+              <Reveal>
+                <div
+                  className="chrome-edge overflow-hidden rounded-3xl border border-hair-strong p-6 sm:p-8"
+                  style={{ background: CARD }}
+                >
+                  <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
+                    <div className="shrink-0">
+                      {ambassador.photo ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={ambassador.photo}
+                          alt={ambassador.name ?? "Embajador"}
+                          className="h-24 w-24 rounded-2xl object-cover sm:h-28 sm:w-28"
+                          style={{ border: "1px solid rgba(255,255,255,0.14)" }}
+                        />
+                      ) : (
+                        <div
+                          className="flex h-24 w-24 items-center justify-center rounded-2xl font-display text-2xl font-bold text-blue-100 sm:h-28 sm:w-28"
+                          style={{
+                            background:
+                              "linear-gradient(158deg, rgba(59,107,255,0.4), rgba(26,58,168,0.16))",
+                            border: "1px solid rgba(120,150,255,0.42)",
+                          }}
+                        >
+                          {initials(ambassador.name)}
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <span className="eyebrow flex items-center gap-3">
+                        <span className="metal-tick" />
+                        Embajador
+                      </span>
+                      <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+                        {ambassador.name ?? "Embajador"}
+                      </h2>
+                      {ambassador.presentation && (
+                        <p className="mt-1 font-medium text-ti-500">{ambassador.presentation}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {ambassador.bio && (
+                    <p className="mt-6 max-w-2xl leading-relaxed text-ink-soft">{ambassador.bio}</p>
+                  )}
+
+                  {trajGroups.length > 0 && (
+                    <div className="mt-8 border-t border-hair pt-6">
+                      <p className="eyebrow mb-4 flex items-center gap-3">
+                        <span className="metal-tick" />
+                        Trayectoria
+                      </p>
+                      <div className="flex flex-col gap-5">
+                        {trajGroups.map((g) => (
+                          <div key={g.year} className="flex flex-col gap-2 sm:flex-row sm:gap-6">
+                            <span className="font-display text-2xl font-bold leading-none text-ti-500 sm:w-24 sm:shrink-0">
+                              {g.year}
+                            </span>
+                            <ul className="flex flex-col gap-1.5">
+                              {g.items.map((it, i) => (
+                                <li
+                                  key={i}
+                                  className="flex items-start gap-2 leading-snug text-ink-soft"
+                                >
+                                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-blue-400" />
+                                  {it}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </Reveal>
+            </section>
+          )}
 
           {/* Novedades */}
           <Section>

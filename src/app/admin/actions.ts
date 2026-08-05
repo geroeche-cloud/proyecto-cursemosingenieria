@@ -162,6 +162,57 @@ export async function setAmbassadorStatus(formData: FormData) {
   }
 }
 
+/** Perfil público del embajador de una universidad (lo cura el admin). */
+export async function saveAmbassadorProfile(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    await assertAdmin();
+
+    const university_id = String(formData.get("university_id") ?? "");
+    if (!university_id) return { ok: false, error: "Elegí una universidad." };
+
+    const display_name = String(formData.get("display_name") ?? "").trim() || null;
+    const presentation = String(formData.get("presentation") ?? "").trim() || null;
+    const bio = String(formData.get("bio") ?? "").trim() || null;
+    const photo_url = String(formData.get("photo_url") ?? "").trim() || null;
+
+    // Trayectoria: una línea por hito, formato "AÑO | texto".
+    const trajectory = String(formData.get("trajectory") ?? "")
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .map((line) => {
+        const sep = line.indexOf("|");
+        if (sep === -1) return { year: "", text: line };
+        return { year: line.slice(0, sep).trim(), text: line.slice(sep + 1).trim() };
+      })
+      .filter((h) => h.text);
+
+    const supabase = await createClient();
+    const { error } = await supabase.from("ambassador_profiles").upsert(
+      {
+        university_id,
+        display_name,
+        presentation,
+        bio,
+        photo_url,
+        trajectory,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "university_id" },
+    );
+    if (error) return { ok: false, error: friendly(error.message) };
+
+    revalidatePath("/admin");
+    revalidatePath("/campus/[university]", "page");
+    return { ok: true, message: "Perfil del embajador actualizado." };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+  }
+}
+
 /** Moderación: bajar de público una publicación de cualquier universidad. */
 export async function unpublishContent(formData: FormData) {
   try {

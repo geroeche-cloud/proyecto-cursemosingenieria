@@ -2,6 +2,7 @@ import { getSessionUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { UniversityForm } from "./UniversityForm";
 import { AmbassadorForm } from "./AmbassadorForm";
+import { AmbassadorProfileEditor, type ProfileRow } from "./AmbassadorProfileEditor";
 import {
   setUniversityStatus,
   setAmbassadorStatus,
@@ -66,6 +67,7 @@ export default async function AdminPage() {
     oRecent,
     pRecent,
     dRecent,
+    profRowsRes,
   ] = await Promise.all([
     supabase
       .from("universities")
@@ -104,11 +106,49 @@ export default async function AdminPage() {
       .eq("status", "published")
       .order("created_at", { ascending: false })
       .limit(8),
+    supabase
+      .from("ambassador_profiles")
+      .select("university_id, display_name, presentation, bio, photo_url, trajectory"),
   ]);
 
   const unis = (uniRes.data ?? []) as University[];
   const ambs = (ambRes.data ?? []) as Ambassador[];
   const uniName = new Map(unis.map((u) => [u.id, u.short_name || u.name]));
+  const uniFullName = new Map(unis.map((u) => [u.id, u.name]));
+
+  // Perfiles públicos de embajadores (uno por universidad con embajador).
+  const profByUni = new Map(
+    (profRowsRes.data ?? []).map((r) => [r.university_id as string, r]),
+  );
+  const editorProfiles: ProfileRow[] = ambs
+    .filter((a) => a.university_id)
+    .map((a) => {
+      const row = profByUni.get(a.university_id as string) as
+        | {
+            display_name: string | null;
+            presentation: string | null;
+            bio: string | null;
+            photo_url: string | null;
+            trajectory: unknown;
+          }
+        | undefined;
+      const traj = Array.isArray(row?.trajectory)
+        ? (row!.trajectory as { year?: unknown; text?: unknown }[]).map((t) => ({
+            year: String(t.year ?? ""),
+            text: String(t.text ?? ""),
+          }))
+        : [];
+      return {
+        university_id: a.university_id as string,
+        university_name: uniFullName.get(a.university_id as string) ?? "—",
+        ambassador_name: a.full_name,
+        display_name: row?.display_name ?? null,
+        presentation: row?.presentation ?? null,
+        bio: row?.bio ?? null,
+        photo_url: row?.photo_url ?? null,
+        trajectory: traj,
+      };
+    });
 
   const activeUnis = unis.filter((u) => u.status === "active").length;
   const activeAmbs = ambs.filter((a) => a.status === "active").length;
@@ -294,6 +334,16 @@ export default async function AdminPage() {
         ) : (
           <AmbassadorForm universities={unis.map((u) => ({ id: u.id, name: u.name }))} />
         )}
+      </section>
+
+      {/* ---------- Perfil público del embajador ---------- */}
+      <section className="mt-14">
+        <h2 className="font-display text-xl font-semibold">Perfil público del embajador</h2>
+        <p className="mt-1 text-sm text-ink-soft">
+          Foto, presentación, bio y trayectoria que se muestran en la página pública
+          de cada universidad.
+        </p>
+        <AmbassadorProfileEditor profiles={editorProfiles} />
       </section>
 
       {/* ---------- Moderación ---------- */}
