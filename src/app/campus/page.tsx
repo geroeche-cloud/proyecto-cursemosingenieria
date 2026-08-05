@@ -4,7 +4,8 @@ import { Nav } from "@/components/layout/Nav";
 import { Footer } from "@/components/layout/Footer";
 import { Reveal } from "@/components/ui/Reveal";
 import { GlobalNet } from "@/components/campus/GlobalNet";
-import { CAMPUS, listCampusUniversities } from "@/lib/campus";
+import { CAMPUS } from "@/lib/campus";
+import { createPublicClient } from "@/lib/supabase/public";
 
 export const metadata: Metadata = {
   title: "Campus",
@@ -44,8 +45,24 @@ function PinIcon() {
   );
 }
 
-export default function CampusPage() {
-  const universities = listCampusUniversities();
+export const revalidate = 60;
+
+type University = {
+  id: string;
+  name: string;
+  short_name: string | null;
+  city: string | null;
+  slug: string;
+};
+
+export default async function CampusPage() {
+  const supabase = createPublicClient();
+  const { data } = await supabase
+    .from("universities")
+    .select("id, name, short_name, city, slug")
+    .eq("status", "active")
+    .order("name");
+  const universities = (data ?? []) as University[];
 
   return (
     <>
@@ -93,7 +110,7 @@ export default function CampusPage() {
               {universities.map((u, i) => (
                 <Reveal key={u.id} delay={0.05 * i}>
                   <Link
-                    href={`/campus/${u.id}`}
+                    href={`/campus/${u.slug}`}
                     className="group relative flex min-h-[17rem] flex-col justify-between overflow-hidden rounded-[1.75rem] p-7 transition-all duration-500 hover:-translate-y-1 sm:min-h-[18rem] sm:p-9"
                     style={{
                       background:
@@ -109,7 +126,7 @@ export default function CampusPage() {
                       className="pointer-events-none absolute -bottom-10 -right-3 select-none whitespace-nowrap font-display text-[9rem] font-bold leading-none text-white/[0.045] transition-colors duration-500 group-hover:text-blue-300/[0.1]"
                       aria-hidden
                     >
-                      {u.short}
+                      {u.short_name}
                     </span>
 
                     {/* Línea superior luminosa */}
@@ -175,7 +192,7 @@ export default function CampusPage() {
                             boxShadow: "0 0 9px 1px rgba(110,147,255,0.95)",
                           }}
                         />
-                        {u.short}
+                        {u.short_name}
                       </span>
                     </div>
 
