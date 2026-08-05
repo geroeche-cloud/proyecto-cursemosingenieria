@@ -111,8 +111,72 @@ export async function createAmbassador(
       .upsert({ university_id, profile_id: userId }, { onConflict: "university_id" });
 
     revalidatePath("/admin");
+    revalidatePath("/campus");
     return { ok: true, message: `Embajador ${email} creado.` };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Gestión: activar/desactivar universidades, suspender embajadores, moderar.
+// Todas pasan por RLS (solo admin) usando el cliente de servidor.
+// ---------------------------------------------------------------------------
+
+const CONTENT_TABLES = ["news", "opportunities", "professors", "drives"] as const;
+type ContentTable = (typeof CONTENT_TABLES)[number];
+
+/** Activar / desactivar una universidad (afecta su visibilidad pública). */
+export async function setUniversityStatus(formData: FormData) {
+  try {
+    await assertAdmin();
+    const id = String(formData.get("id") ?? "");
+    const status = String(formData.get("status") ?? "");
+    if (!id || !["active", "inactive"].includes(status)) return;
+
+    const supabase = await createClient();
+    await supabase.from("universities").update({ status }).eq("id", id);
+
+    revalidatePath("/admin");
+    revalidatePath("/campus");
+    revalidatePath("/campus/[university]", "page");
+  } catch {
+    // no-op
+  }
+}
+
+/** Suspender / reactivar un embajador (un suspendido no puede entrar al panel). */
+export async function setAmbassadorStatus(formData: FormData) {
+  try {
+    await assertAdmin();
+    const id = String(formData.get("id") ?? "");
+    const status = String(formData.get("status") ?? "");
+    if (!id || !["active", "suspended"].includes(status)) return;
+
+    const supabase = await createClient();
+    await supabase.from("profiles").update({ status }).eq("id", id).eq("role", "ambassador");
+
+    revalidatePath("/admin");
+  } catch {
+    // no-op
+  }
+}
+
+/** Moderación: bajar de público una publicación de cualquier universidad. */
+export async function unpublishContent(formData: FormData) {
+  try {
+    await assertAdmin();
+    const table = String(formData.get("table") ?? "") as ContentTable;
+    const id = String(formData.get("id") ?? "");
+    if (!id || !CONTENT_TABLES.includes(table)) return;
+
+    const supabase = await createClient();
+    await supabase.from(table).update({ status: "archived" }).eq("id", id);
+
+    revalidatePath("/admin");
+    revalidatePath("/campus/[university]", "page");
+    if (table === "news") revalidatePath("/novedades");
+  } catch {
+    // no-op
   }
 }
