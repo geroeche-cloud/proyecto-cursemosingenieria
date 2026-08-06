@@ -6,7 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Reveal } from "@/components/ui/Reveal";
 import { GlobalNet } from "@/components/campus/GlobalNet";
 import { CampusCrumb } from "@/components/campus/CampusCrumb";
-import { AmbassadorMore } from "@/components/campus/AmbassadorMore";
+import { AmbassadorCard, type AmbassadorCardData } from "@/components/campus/AmbassadorCard";
 import { createPublicClient } from "@/lib/supabase/public";
 
 export const revalidate = 60;
@@ -31,40 +31,6 @@ function waLink(num: string | null): string | null {
   if (!num) return null;
   const digits = num.replace(/\D/g, "");
   return digits ? `https://wa.me/${digits}` : null;
-}
-
-/** Antepone https:// si el admin pegó una URL sin esquema. */
-function normalizeUrl(url: string): string {
-  const u = url.trim();
-  if (/^https?:\/\//i.test(u) || u.startsWith("mailto:")) return u;
-  return `https://${u}`;
-}
-
-function initials(name: string | null): string {
-  if (!name) return "★";
-  return (
-    name
-      .split(/\s+/)
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((w) => w[0]?.toUpperCase() ?? "")
-      .join("") || "★"
-  );
-}
-
-/** Agrupa la trayectoria por año, respetando el orden de aparición. */
-function groupTrajectory(items: { year: string; title: string; detail: string }[]) {
-  const groups: { year: string; items: { title: string; detail: string }[] }[] = [];
-  for (const t of items) {
-    const year = t.year || "—";
-    let g = groups.find((x) => x.year === year);
-    if (!g) {
-      g = { year, items: [] };
-      groups.push(g);
-    }
-    g.items.push({ title: t.title, detail: t.detail });
-  }
-  return groups;
 }
 
 export async function generateStaticParams() {
@@ -165,21 +131,20 @@ export default async function UniversityPage({
     linkedin: string | null;
     trajectory: unknown;
   } | null;
-  const ambassador =
+  const ambassador: AmbassadorCardData | null =
     ambRaw && (ambRaw.display_name || ambRaw.bio || ambRaw.photo_url)
       ? {
+          universityName: uni.name,
           name: ambRaw.display_name,
           presentation: ambRaw.presentation,
           bio: ambRaw.bio,
           bioFull: ambRaw.bio_full,
           photo: ambRaw.photo_url,
-          socials: [
-            ambRaw.email ? { label: "Mail", href: `mailto:${ambRaw.email}` } : null,
-            ambRaw.instagram ? { label: "Instagram", href: normalizeUrl(ambRaw.instagram) } : null,
-            ambRaw.tiktok ? { label: "TikTok", href: normalizeUrl(ambRaw.tiktok) } : null,
-            ambRaw.youtube ? { label: "YouTube", href: normalizeUrl(ambRaw.youtube) } : null,
-            ambRaw.linkedin ? { label: "LinkedIn", href: normalizeUrl(ambRaw.linkedin) } : null,
-          ].filter((s): s is { label: string; href: string } => s !== null),
+          email: ambRaw.email,
+          instagram: ambRaw.instagram,
+          tiktok: ambRaw.tiktok,
+          youtube: ambRaw.youtube,
+          linkedin: ambRaw.linkedin,
           trajectory: Array.isArray(ambRaw.trajectory)
             ? (ambRaw.trajectory as { year?: unknown; title?: unknown; text?: unknown; detail?: unknown }[])
                 .map((t) => ({
@@ -191,7 +156,6 @@ export default async function UniversityPage({
             : [],
         }
       : null;
-  const trajGroups = ambassador ? groupTrajectory(ambassador.trajectory) : [];
 
   return (
     <>
@@ -221,76 +185,7 @@ export default async function UniversityPage({
           {ambassador && (
             <section className="mt-16 sm:mt-20">
               <Reveal>
-                <div
-                  className="chrome-edge overflow-hidden rounded-3xl border border-hair-strong p-6 sm:p-8"
-                  style={{ background: CARD }}
-                >
-                  <div className="flex flex-col gap-6 sm:flex-row sm:items-center">
-                    <div className="shrink-0">
-                      {ambassador.photo ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={ambassador.photo}
-                          alt={ambassador.name ?? "Embajador"}
-                          className="h-24 w-24 rounded-2xl object-cover sm:h-28 sm:w-28"
-                          style={{ border: "1px solid rgba(255,255,255,0.14)" }}
-                        />
-                      ) : (
-                        <div
-                          className="flex h-24 w-24 items-center justify-center rounded-2xl font-display text-2xl font-bold text-blue-100 sm:h-28 sm:w-28"
-                          style={{
-                            background:
-                              "linear-gradient(158deg, rgba(59,107,255,0.4), rgba(26,58,168,0.16))",
-                            border: "1px solid rgba(120,150,255,0.42)",
-                          }}
-                        >
-                          {initials(ambassador.name)}
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0">
-                      <span className="eyebrow flex items-center gap-3">
-                        <span className="metal-tick" />
-                        Embajador
-                      </span>
-                      <h2 className="mt-2 font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-                        {ambassador.name ?? "Embajador"}
-                      </h2>
-                      {ambassador.presentation && (
-                        <p className="mt-1 font-medium text-ti-500">{ambassador.presentation}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  {ambassador.bio && (
-                    <p className="mt-6 max-w-2xl leading-relaxed text-ink-soft">{ambassador.bio}</p>
-                  )}
-
-                  {ambassador.socials.length > 0 && (
-                    <div className="mt-5 flex flex-wrap gap-2">
-                      {ambassador.socials.map((s) => {
-                        const external = !s.href.startsWith("mailto:");
-                        return (
-                          <a
-                            key={s.label}
-                            href={s.href}
-                            target={external ? "_blank" : undefined}
-                            rel={external ? "noopener noreferrer" : undefined}
-                            className="chip rounded-full px-3.5 py-1.5 text-sm font-medium text-ti-100 transition-colors hover:text-white"
-                          >
-                            {s.label}
-                          </a>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  <AmbassadorMore
-                    name={ambassador.name ?? "el embajador"}
-                    bioFull={ambassador.bioFull}
-                    groups={trajGroups}
-                  />
-                </div>
+                <AmbassadorCard data={ambassador} />
               </Reveal>
             </section>
           )}

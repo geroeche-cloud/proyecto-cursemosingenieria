@@ -7,6 +7,8 @@ import { Collaborate } from "@/components/sections/Collaborate";
 import { MetalDivider } from "@/components/ui/MetalDivider";
 import { ORG } from "@/lib/org";
 
+export const revalidate = 60;
+
 const jsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",

@@ -1,17 +1,76 @@
-import Image from "next/image";
-import Link from "next/link";
 import { Reveal } from "@/components/ui/Reveal";
 import { AmbientLights } from "@/components/ui/AmbientLights";
-import { AMBASSADORS } from "@/lib/campus";
-import { getUniversity } from "@/lib/academy";
+import { AmbassadorCard, type AmbassadorCardData } from "@/components/campus/AmbassadorCard";
+import { createPublicClient } from "@/lib/supabase/public";
+
+type ProfileRow = {
+  university_id: string;
+  display_name: string | null;
+  presentation: string | null;
+  bio: string | null;
+  bio_full: string | null;
+  photo_url: string | null;
+  email: string | null;
+  instagram: string | null;
+  tiktok: string | null;
+  youtube: string | null;
+  linkedin: string | null;
+  trajectory: unknown;
+};
+
+function toTrajectory(raw: unknown) {
+  return Array.isArray(raw)
+    ? (raw as { year?: unknown; title?: unknown; text?: unknown; detail?: unknown }[])
+        .map((t) => ({
+          year: String(t.year ?? ""),
+          title: String(t.title ?? t.text ?? ""),
+          detail: String(t.detail ?? ""),
+        }))
+        .filter((t) => t.title)
+    : [];
+}
+
+async function loadAmbassadors(): Promise<AmbassadorCardData[]> {
+  try {
+    const supabase = createPublicClient();
+    const [profRes, uniRes] = await Promise.all([
+      supabase
+        .from("ambassador_profiles")
+        .select(
+          "university_id, display_name, presentation, bio, bio_full, photo_url, email, instagram, tiktok, youtube, linkedin, trajectory",
+        ),
+      supabase.from("universities").select("id, name").eq("status", "active"),
+    ]);
+
+    const uniName = new Map((uniRes.data ?? []).map((u) => [u.id as string, u.name as string]));
+    return ((profRes.data ?? []) as ProfileRow[])
+      .filter((p) => uniName.has(p.university_id) && (p.display_name || p.bio || p.photo_url))
+      .map((p) => ({
+        universityName: uniName.get(p.university_id) ?? "",
+        name: p.display_name,
+        presentation: p.presentation,
+        bio: p.bio,
+        bioFull: p.bio_full,
+        photo: p.photo_url,
+        email: p.email,
+        instagram: p.instagram,
+        tiktok: p.tiktok,
+        youtube: p.youtube,
+        linkedin: p.linkedin,
+        trajectory: toTrajectory(p.trajectory),
+      }));
+  } catch {
+    return [];
+  }
+}
 
 /**
- * "Conocé a los embajadores" — presentaciones de quienes construyen la red en
- * cada universidad. Preview en la home; el perfil completo vive en /embajadores.
- * Estructura lista para escalar a más universidades.
+ * "Conocé a los embajadores" — se alimenta de la base: cada embajador con perfil
+ * cargado aparece con la misma tarjeta que en la página de su universidad.
  */
-export function Embajadores() {
-  const ambassadors = Object.values(AMBASSADORS);
+export async function Embajadores() {
+  const ambassadors = await loadAmbassadors();
+  const placeholders = Math.max(0, 3 - ambassadors.length);
 
   return (
     <section id="embajadores" className="relative overflow-hidden py-24 sm:py-32">
@@ -24,102 +83,42 @@ export function Embajadores() {
           </h2>
         </Reveal>
 
-        <div className="mt-12 flex flex-col gap-16">
-          {ambassadors.map((a) => {
-            const uni = getUniversity(a.universityId);
-            return (
-              <Reveal key={a.universityId}>
-                <article className="grid items-center gap-8 lg:grid-cols-[minmax(0,20rem)_1fr] lg:gap-12">
-                  {/* Fotografía */}
-                  <div className="relative mx-auto aspect-[4/5] w-full max-w-[20rem] overflow-hidden rounded-3xl border border-hair-strong chrome-edge lg:mx-0">
-                    <Image
-                      src={a.photo}
-                      alt={a.name}
-                      fill
-                      sizes="(max-width: 1024px) 320px, 320px"
-                      className="object-cover object-[50%_18%]"
-                    />
-                    <div className="absolute inset-x-0 bottom-0 h-1/4 bg-gradient-to-t from-bg/60 to-transparent" />
-                  </div>
-
-                  {/* Información */}
-                  <div className="flex flex-col gap-5">
-                    <div>
-                      <span className="eyebrow flex items-center gap-3">
-                        <span className="metal-tick" />
-                        {uni?.name}
-                      </span>
-                      <h3 className="mt-4 font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">
-                        {a.name}
-                      </h3>
-                      <p className="mt-2 font-mono text-xs uppercase tracking-[0.16em] text-ink-mute">
-                        {a.role} · {a.career}
-                      </p>
-                    </div>
-
-                    <p className="max-w-2xl leading-relaxed text-ink-soft">{a.bio}</p>
-
-                    {/* Etiquetas visuales */}
-                    <div className="flex flex-wrap gap-2">
-                      {a.tags.map((t) => (
-                        <span
-                          key={t}
-                          className="chip rounded-full px-3 py-1.5 text-xs font-medium text-ti-100"
-                        >
-                          {t}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Redes — plata */}
-                    <div className="flex flex-wrap gap-2.5">
-                      {a.socials.map((s) => {
-                        const external = !s.href.startsWith("mailto");
-                        return (
-                          <a
-                            key={s.label}
-                            href={s.href}
-                            target={external ? "_blank" : undefined}
-                            rel={external ? "noopener noreferrer" : undefined}
-                            className="chip rounded-full px-3.5 py-1.5 text-sm font-medium text-ti-100 transition-colors hover:text-white"
-                          >
-                            {s.label}
-                          </a>
-                        );
-                      })}
-                    </div>
-
-                    <div>
-                      <Link href="/embajadores" className="btn btn-blue">
-                        Conocer trayectoria completa
-                      </Link>
-                    </div>
-                  </div>
-                </article>
+        {ambassadors.length > 0 ? (
+          <div className="mt-12 flex flex-col gap-16">
+            {ambassadors.map((a, i) => (
+              <Reveal key={`${a.universityName}-${i}`}>
+                <AmbassadorCard data={a} />
               </Reveal>
-            );
-          })}
-        </div>
-
-        {/* Expansión a otras universidades */}
-        <Reveal delay={0.1}>
-          <div className="mt-16 grid gap-4 sm:grid-cols-3">
-            {[0, 1, 2].map((i) => (
-              <div
-                key={i}
-                className="flex flex-col items-center gap-2 rounded-2xl border border-hair-strong p-7 text-center"
-                style={{ borderStyle: "dashed" }}
-              >
-                <span className="font-mono text-[0.6rem] uppercase tracking-[0.2em] text-ink-mute">
-                  Universidad
-                </span>
-                <p className="font-display text-sm font-medium text-ink-faint">
-                  Próximo embajador
-                </p>
-              </div>
             ))}
           </div>
-        </Reveal>
+        ) : (
+          <p className="mt-10 max-w-2xl leading-relaxed text-ink-soft">
+            Pronto vas a conocer a los estudiantes que representan a Cursemos Ingeniería
+            en cada universidad.
+          </p>
+        )}
+
+        {/* Expansión a otras universidades */}
+        {placeholders > 0 && (
+          <Reveal delay={0.1}>
+            <div className="mt-16 grid gap-4 sm:grid-cols-3">
+              {Array.from({ length: placeholders }).map((_, i) => (
+                <div
+                  key={i}
+                  className="flex flex-col items-center gap-2 rounded-2xl border border-hair-strong p-7 text-center"
+                  style={{ borderStyle: "dashed" }}
+                >
+                  <span className="font-mono text-[0.6rem] uppercase tracking-[0.2em] text-ink-mute">
+                    Universidad
+                  </span>
+                  <p className="font-display text-sm font-medium text-ink-faint">
+                    Próximo embajador
+                  </p>
+                </div>
+              ))}
+            </div>
+          </Reveal>
+        )}
       </div>
     </section>
   );
