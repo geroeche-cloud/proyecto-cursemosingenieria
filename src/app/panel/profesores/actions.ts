@@ -27,9 +27,9 @@ export async function createProfessor(
     const title = String(formData.get("title") ?? "").trim() || null;
     const modality = String(formData.get("modality") ?? "ambas");
     const whatsapp = String(formData.get("whatsapp") ?? "").trim() || null;
-    const subjects = String(formData.get("subjects") ?? "")
-      .split("\n")
-      .map((s) => s.trim())
+    const subjects = formData
+      .getAll("subjects")
+      .map((s) => String(s).trim())
       .filter(Boolean);
 
     if (!name) return { ok: false, error: "El nombre es obligatorio." };
