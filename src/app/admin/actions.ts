@@ -140,6 +140,7 @@ export async function setUniversityStatus(formData: FormData) {
     revalidatePath("/admin");
     revalidatePath("/campus");
     revalidatePath("/campus/[university]", "page");
+    revalidatePath("/");
   } catch {
     // no-op
   }
@@ -248,6 +249,7 @@ export async function saveAmbassadorProfile(
 
     revalidatePath("/admin");
     revalidatePath("/campus/[university]", "page");
+    revalidatePath("/");
     return { ok: true, message: "Perfil del embajador actualizado." };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
@@ -272,6 +274,7 @@ export async function deleteUniversity(
     revalidatePath("/admin");
     revalidatePath("/campus");
     revalidatePath("/campus/[university]", "page");
+    revalidatePath("/");
     return { ok: true, message: "Universidad borrada." };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
@@ -302,6 +305,7 @@ export async function deleteAmbassador(
     await admin.auth.admin.deleteUser(id);
 
     revalidatePath("/admin");
+    revalidatePath("/");
     return { ok: true, message: "Embajador borrado." };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
