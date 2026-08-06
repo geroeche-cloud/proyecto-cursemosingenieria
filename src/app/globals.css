@@ -560,3 +560,21 @@ input[type="file"] {
     transform: none;
   }
 }
+
+/* ---------- Tarjeta de universidad: placa reactiva al cursor ----------
+   La inclinación 3D solo tiene sentido con mouse: en táctil la tarjeta queda
+   quieta (igual de sólida) y con "reducir movimiento" se desactiva del todo. */
+@media (hover: hover) and (pointer: fine) {
+  .uni-card {
+    transform: perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))
+      translateY(calc(var(--lit, 0) * -6px));
+  }
+  .uni-card:hover {
+    box-shadow: 0 48px 90px -30px rgba(0, 0, 0, 0.98);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .uni-card {
+    transform: none !important;
+  }
+}
