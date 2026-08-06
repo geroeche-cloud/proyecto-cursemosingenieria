@@ -51,10 +51,15 @@ export type CampusProf = {
 };
 export type CampusDrive = { id: string; owner: string; career: string | null; href: string | null; status?: string };
 
-function waLink(num: string | null): string | null {
+function waLink(num: string | null, name?: string | null): string | null {
   if (!num) return null;
   const digits = num.replace(/\D/g, "");
-  return digits ? `https://wa.me/${digits}` : null;
+  if (!digits) return null;
+  const saludo = name ? `Hola ${name}` : "Hola";
+  const msg =
+    `${saludo}, te escribo desde Cursemos Ingeniería. ` +
+    "Me gustaría pedirte información sobre tus clases particulares. ¡Gracias!";
+  return `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
 }
 
 /** Badge de estado para la vista previa (no se muestra en la página pública real). */
@@ -230,7 +235,7 @@ export function CampusView({
                 <p className="text-sm text-ink-mute">Todavía no hay profesores publicados.</p>
               ) : (
                 professors.map((p) => {
-                  const wa = waLink(p.whatsapp);
+                  const wa = waLink(p.whatsapp, p.name);
                   return (
                     <Reveal key={p.id}>
                       <article className="chrome-edge flex flex-col gap-4 rounded-3xl border border-hair-strong p-6 sm:flex-row sm:items-center sm:justify-between" style={{ background: CARD }}>
