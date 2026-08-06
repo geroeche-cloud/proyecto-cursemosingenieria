@@ -28,15 +28,34 @@ export default async function PanelHome() {
 
   const supabase = await createClient();
 
-  const [uniRes, newsRes, oppRes, profRes, driveRes] = await Promise.all([
+  const [uniRes, newsRes, oppRes, profRes, driveRes, topRes] = await Promise.all([
     supabase.from("universities").select("name, slug").eq("id", user.university_id).single(),
     supabase.from("news").select("status"),
     supabase.from("opportunities").select("status"),
     supabase.from("professors").select("status"),
     supabase.from("drives").select("status"),
+    Promise.all([
+      supabase.from("news").select("id, title, clicks").order("clicks", { ascending: false }).limit(5),
+      supabase.from("opportunities").select("id, title, clicks").order("clicks", { ascending: false }).limit(5),
+      supabase.from("professors").select("id, name, clicks").order("clicks", { ascending: false }).limit(5),
+      supabase.from("drives").select("id, owner, clicks").order("clicks", { ascending: false }).limit(5),
+    ]),
   ]);
 
   const slug = uniRes.data?.slug ?? null;
+
+  // Ranking "lo más visto" (clics acumulados) entre todos los módulos.
+  type Clicked = { clicks?: number | null };
+  const [nTop, oTop, pTop, dTop] = topRes;
+  const ranking = [
+    ...((nTop.data ?? []) as (Clicked & { title: string })[]).map((r) => ({ label: r.title, kind: "Noticia", clicks: r.clicks ?? 0 })),
+    ...((oTop.data ?? []) as (Clicked & { title: string })[]).map((r) => ({ label: r.title, kind: "Oportunidad", clicks: r.clicks ?? 0 })),
+    ...((pTop.data ?? []) as (Clicked & { name: string })[]).map((r) => ({ label: r.name, kind: "Profesor", clicks: r.clicks ?? 0 })),
+    ...((dTop.data ?? []) as (Clicked & { owner: string })[]).map((r) => ({ label: `Drive de ${r.owner}`, kind: "Drive", clicks: r.clicks ?? 0 })),
+  ]
+    .filter((x) => x.clicks > 0)
+    .sort((a, b) => b.clicks - a.clicks)
+    .slice(0, 6);
 
   const modules: ModuleStat[] = [
     {
@@ -161,6 +180,44 @@ export default async function PanelHome() {
             </Link>
           ))}
         </div>
+      </section>
+
+      {/* Lo más visto */}
+      <section>
+        <div className="mb-4 flex items-center gap-3">
+          <span className="metal-tick" />
+          <h2 className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-ink-mute">
+            Lo más visto
+          </h2>
+        </div>
+
+        {ranking.length === 0 ? (
+          <p className="text-sm text-ink-mute">
+            Todavía no hay clics registrados. Cuando publiques y la gente interactúe,
+            acá vas a ver qué es lo más visto de tu campus.
+          </p>
+        ) : (
+          <div className="overflow-hidden rounded-2xl border border-hair">
+            <ul className="divide-y divide-hair">
+              {ranking.map((r, i) => (
+                <li key={i} className="flex items-center justify-between gap-4 px-5 py-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    <span className="font-mono text-xs text-ink-mute">{i + 1}</span>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm text-ink">{r.label}</p>
+                      <p className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ink-mute">
+                        {r.kind}
+                      </p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 rounded-full border border-blue-500/40 bg-blue-500/10 px-3 py-1 font-mono text-xs text-blue-300">
+                    {r.clicks} clic{r.clicks === 1 ? "" : "s"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </section>
     </div>
   );

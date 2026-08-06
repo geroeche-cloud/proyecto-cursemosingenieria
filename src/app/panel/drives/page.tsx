@@ -8,6 +8,7 @@ type Drive = {
   career: string | null;
   href: string | null;
   status: "draft" | "published" | "archived";
+  clicks: number;
 };
 
 export default async function DrivesPanelPage() {
@@ -15,7 +16,7 @@ export default async function DrivesPanelPage() {
 
   const { data } = await supabase
     .from("drives")
-    .select("id, owner, career, href, status")
+    .select("id, owner, career, href, status, clicks")
     .order("created_at", { ascending: false });
   const items = (data ?? []) as Drive[];
 
@@ -62,6 +63,9 @@ export default async function DrivesPanelPage() {
                   <a href={`/panel/drives/${d.id}`} className="btn btn-ghost text-xs">
                     Editar
                   </a>
+                  <span className="order-last ml-auto font-mono text-xs text-ink-mute">
+                    {d.clicks} clic{d.clicks === 1 ? "" : "s"}
+                  </span>
                   {d.status !== "published" ? (
                     <form action={setDriveStatus}>
                       <input type="hidden" name="id" value={d.id} />

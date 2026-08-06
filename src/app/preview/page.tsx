@@ -46,7 +46,7 @@ export default async function PreviewPage() {
 
   const uid = uni.id;
   const [newsRes, oppRes, profRes, driveRes, ambProfileRes] = await Promise.all([
-    supabase.from("news").select("id, title, summary, status, starts_at, ends_at").eq("university_id", uid).in("status", VISIBLE).order("created_at", { ascending: false }).limit(50),
+    supabase.from("news").select("id, title, summary, body, status, starts_at, ends_at").eq("university_id", uid).in("status", VISIBLE).order("created_at", { ascending: false }).limit(50),
     supabase.from("opportunities").select("id, kind, title, org, description, deadline, requirements, href, status, starts_at, ends_at").eq("university_id", uid).in("status", VISIBLE).order("created_at", { ascending: false }),
     supabase.from("professors").select("id, name, title, modality, subjects, whatsapp, status").eq("university_id", uid).in("status", VISIBLE).order("created_at", { ascending: false }),
     supabase.from("drives").select("id, owner, career, href, status").eq("university_id", uid).in("status", VISIBLE).order("created_at", { ascending: false }),

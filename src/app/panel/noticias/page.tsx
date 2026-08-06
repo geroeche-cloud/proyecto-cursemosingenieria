@@ -10,6 +10,7 @@ type News = {
   status: "draft" | "published" | "archived";
   starts_at: string | null;
   ends_at: string | null;
+  clicks: number;
 };
 
 const TONE: Record<ScheduleTone, string> = {
@@ -27,7 +28,7 @@ export default async function NoticiasPanelPage() {
 
   const { data } = await supabase
     .from("news")
-    .select("id, title, summary, status, starts_at, ends_at")
+    .select("id, title, summary, status, starts_at, ends_at, clicks")
     .order("created_at", { ascending: false });
   const news = (data ?? []) as News[];
 
@@ -56,6 +57,9 @@ export default async function NoticiasPanelPage() {
                   <a href={`/panel/noticias/${n.id}`} className="btn btn-ghost text-xs">
                     Editar
                   </a>
+                  <span className="order-last ml-auto font-mono text-xs text-ink-mute">
+                    {n.clicks} clic{n.clicks === 1 ? "" : "s"}
+                  </span>
                   {n.status !== "published" ? (
                     <form action={setNewsStatus}>
                       <input type="hidden" name="id" value={n.id} />

@@ -10,6 +10,7 @@ type Professor = {
   subjects: string[] | null;
   whatsapp: string | null;
   status: "draft" | "published" | "archived";
+  clicks: number;
 };
 
 const MODALITY_LABEL: Record<Professor["modality"], string> = {
@@ -23,7 +24,7 @@ export default async function ProfesoresPanelPage() {
 
   const { data } = await supabase
     .from("professors")
-    .select("id, name, title, modality, subjects, whatsapp, status")
+    .select("id, name, title, modality, subjects, whatsapp, status, clicks")
     .order("created_at", { ascending: false });
   const items = (data ?? []) as Professor[];
 
@@ -73,6 +74,9 @@ export default async function ProfesoresPanelPage() {
                   <a href={`/panel/profesores/${p.id}`} className="btn btn-ghost text-xs">
                     Editar
                   </a>
+                  <span className="order-last ml-auto font-mono text-xs text-ink-mute">
+                    {p.clicks} clic{p.clicks === 1 ? "" : "s"}
+                  </span>
                   {p.status !== "published" ? (
                     <form action={setProfessorStatus}>
                       <input type="hidden" name="id" value={p.id} />

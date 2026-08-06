@@ -5,6 +5,8 @@ import { Reveal } from "@/components/ui/Reveal";
 import { GlobalNet } from "@/components/campus/GlobalNet";
 import { CampusCrumb } from "@/components/campus/CampusCrumb";
 import { AmbassadorCard, type AmbassadorCardData } from "@/components/campus/AmbassadorCard";
+import { TrackedLink } from "@/components/campus/TrackedLink";
+import { TrackedNews } from "@/components/campus/TrackedNews";
 import { scheduleState, type ScheduleTone } from "@/lib/schedule";
 
 const CARD = "linear-gradient(158deg, #121a2c 0%, #0b1020 100%)";
@@ -35,7 +37,7 @@ const TONE: Record<ScheduleTone, string> = {
 
 export type CampusUni = { name: string; short_name: string | null; city: string | null; slug: string };
 export type CampusNews = {
-  id: string; title: string; summary: string | null;
+  id: string; title: string; summary: string | null; body?: string | null;
   status?: string; starts_at?: string | null; ends_at?: string | null;
 };
 export type CampusOpp = {
@@ -157,16 +159,16 @@ export function CampusView({
               )}
               {news.map((n) => (
                 <Reveal key={n.id}>
-                  <article className="chrome-edge rounded-2xl border border-hair-strong p-6" style={{ background: CARD }}>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full border border-hair px-2.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-ink-mute">
-                        Noticia
-                      </span>
+                  <TrackedNews
+                    id={n.id}
+                    title={n.title}
+                    summary={n.summary}
+                    body={n.body ?? null}
+                    track={!preview}
+                    badge={
                       <StateBadge preview={preview} status={n.status} starts_at={n.starts_at} ends_at={n.ends_at} />
-                    </div>
-                    <h3 className="mt-2 font-display text-xl font-semibold text-ink">{n.title}</h3>
-                    {n.summary && <p className="mt-1 leading-relaxed text-ink-soft">{n.summary}</p>}
-                  </article>
+                    }
+                  />
                 </Reveal>
               ))}
               {opportunities.length > 0 && (
@@ -206,9 +208,9 @@ export function CampusView({
                           </div>
                         )}
                         {o.href && (
-                          <a href={o.href} target="_blank" rel="noopener noreferrer" className="btn btn-blue mt-auto w-full text-sm">
+                          <TrackedLink kind="opportunities" id={o.id} href={o.href} track={!preview} className="btn btn-blue mt-auto w-full text-sm">
                             Ver convocatoria
-                          </a>
+                          </TrackedLink>
                         )}
                       </article>
                     </Reveal>
@@ -252,9 +254,9 @@ export function CampusView({
                           )}
                         </div>
                         {wa && (
-                          <a href={wa} target="_blank" rel="noopener noreferrer" className="btn btn-blue shrink-0 self-start text-sm sm:self-auto">
+                          <TrackedLink kind="professors" id={p.id} href={wa} track={!preview} className="btn btn-blue shrink-0 self-start text-sm sm:self-auto">
                             Escribime
-                          </a>
+                          </TrackedLink>
                         )}
                       </article>
                     </Reveal>
@@ -288,9 +290,9 @@ export function CampusView({
                         )}
                       </div>
                       {d.href && (
-                        <a href={d.href} target="_blank" rel="noopener noreferrer" className="btn btn-blue shrink-0 self-start text-sm sm:self-auto">
+                        <TrackedLink kind="drives" id={d.id} href={d.href} track={!preview} className="btn btn-blue shrink-0 self-start text-sm sm:self-auto">
                           Acceder
-                        </a>
+                        </TrackedLink>
                       )}
                     </div>
                   </Reveal>

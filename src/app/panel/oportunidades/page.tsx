@@ -13,6 +13,7 @@ type Opportunity = {
   status: "draft" | "published" | "archived";
   starts_at: string | null;
   ends_at: string | null;
+  clicks: number;
 };
 
 const KIND_LABEL: Record<string, string> = {
@@ -39,7 +40,7 @@ export default async function OportunidadesPanelPage() {
 
   const { data } = await supabase
     .from("opportunities")
-    .select("id, kind, title, org, deadline, requirements, status, starts_at, ends_at")
+    .select("id, kind, title, org, deadline, requirements, status, starts_at, ends_at, clicks")
     .order("created_at", { ascending: false });
   const items = (data ?? []) as Opportunity[];
 
@@ -85,6 +86,9 @@ export default async function OportunidadesPanelPage() {
                   <a href={`/panel/oportunidades/${o.id}`} className="btn btn-ghost text-xs">
                     Editar
                   </a>
+                  <span className="order-last ml-auto font-mono text-xs text-ink-mute">
+                    {o.clicks} clic{o.clicks === 1 ? "" : "s"}
+                  </span>
                   {o.status !== "published" ? (
                     <form action={setOpportunityStatus}>
                       <input type="hidden" name="id" value={o.id} />
