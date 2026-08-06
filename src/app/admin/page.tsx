@@ -112,7 +112,9 @@ export default async function AdminPage() {
       .limit(8),
     supabase
       .from("ambassador_profiles")
-      .select("university_id, display_name, presentation, bio, photo_url, trajectory"),
+      .select(
+        "university_id, display_name, presentation, bio, bio_full, photo_url, email, instagram, tiktok, youtube, linkedin, trajectory",
+      ),
   ]);
 
   const unis = (uniRes.data ?? []) as University[];
@@ -132,15 +134,24 @@ export default async function AdminPage() {
             display_name: string | null;
             presentation: string | null;
             bio: string | null;
+            bio_full: string | null;
             photo_url: string | null;
+            email: string | null;
+            instagram: string | null;
+            tiktok: string | null;
+            youtube: string | null;
+            linkedin: string | null;
             trajectory: unknown;
           }
         | undefined;
       const traj = Array.isArray(row?.trajectory)
-        ? (row!.trajectory as { year?: unknown; text?: unknown }[]).map((t) => ({
-            year: String(t.year ?? ""),
-            text: String(t.text ?? ""),
-          }))
+        ? (row!.trajectory as { year?: unknown; title?: unknown; text?: unknown; detail?: unknown }[]).map(
+            (t) => ({
+              year: String(t.year ?? ""),
+              title: String(t.title ?? t.text ?? ""),
+              detail: String(t.detail ?? ""),
+            }),
+          )
         : [];
       return {
         university_id: a.university_id as string,
@@ -149,7 +160,13 @@ export default async function AdminPage() {
         display_name: row?.display_name ?? null,
         presentation: row?.presentation ?? null,
         bio: row?.bio ?? null,
+        bio_full: row?.bio_full ?? null,
         photo_url: row?.photo_url ?? null,
+        email: row?.email ?? null,
+        instagram: row?.instagram ?? null,
+        tiktok: row?.tiktok ?? null,
+        youtube: row?.youtube ?? null,
+        linkedin: row?.linkedin ?? null,
         trajectory: traj,
       };
     });

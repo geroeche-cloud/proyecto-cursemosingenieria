@@ -6,6 +6,7 @@ import { Footer } from "@/components/layout/Footer";
 import { Reveal } from "@/components/ui/Reveal";
 import { GlobalNet } from "@/components/campus/GlobalNet";
 import { CampusCrumb } from "@/components/campus/CampusCrumb";
+import { AmbassadorMore } from "@/components/campus/AmbassadorMore";
 import { createPublicClient } from "@/lib/supabase/public";
 
 export const revalidate = 60;
@@ -32,6 +33,13 @@ function waLink(num: string | null): string | null {
   return digits ? `https://wa.me/${digits}` : null;
 }
 
+/** Antepone https:// si el admin pegó una URL sin esquema. */
+function normalizeUrl(url: string): string {
+  const u = url.trim();
+  if (/^https?:\/\//i.test(u) || u.startsWith("mailto:")) return u;
+  return `https://${u}`;
+}
+
 function initials(name: string | null): string {
   if (!name) return "★";
   return (
@@ -45,8 +53,8 @@ function initials(name: string | null): string {
 }
 
 /** Agrupa la trayectoria por año, respetando el orden de aparición. */
-function groupTrajectory(items: { year: string; text: string }[]) {
-  const groups: { year: string; items: string[] }[] = [];
+function groupTrajectory(items: { year: string; title: string; detail: string }[]) {
+  const groups: { year: string; items: { title: string; detail: string }[] }[] = [];
   for (const t of items) {
     const year = t.year || "—";
     let g = groups.find((x) => x.year === year);
@@ -54,7 +62,7 @@ function groupTrajectory(items: { year: string; text: string }[]) {
       g = { year, items: [] };
       groups.push(g);
     }
-    g.items.push(t.text);
+    g.items.push({ title: t.title, detail: t.detail });
   }
   return groups;
 }
@@ -136,7 +144,7 @@ export default async function UniversityPage({
     supabase.from("opportunities").select("id, kind, title, org, description, deadline, requirements, href").eq("university_id", uid).eq("status", "published").order("created_at", { ascending: false }),
     supabase.from("professors").select("id, name, title, modality, subjects, whatsapp").eq("university_id", uid).eq("status", "published"),
     supabase.from("drives").select("id, owner, career, href").eq("university_id", uid).eq("status", "published"),
-    supabase.from("ambassador_profiles").select("display_name, presentation, bio, photo_url, trajectory").eq("university_id", uid).maybeSingle(),
+    supabase.from("ambassador_profiles").select("display_name, presentation, bio, bio_full, photo_url, email, instagram, tiktok, youtube, linkedin, trajectory").eq("university_id", uid).maybeSingle(),
   ]);
 
   const news = (newsRes.data ?? []) as News[];
@@ -148,7 +156,13 @@ export default async function UniversityPage({
     display_name: string | null;
     presentation: string | null;
     bio: string | null;
+    bio_full: string | null;
     photo_url: string | null;
+    email: string | null;
+    instagram: string | null;
+    tiktok: string | null;
+    youtube: string | null;
+    linkedin: string | null;
     trajectory: unknown;
   } | null;
   const ambassador =
@@ -157,11 +171,23 @@ export default async function UniversityPage({
           name: ambRaw.display_name,
           presentation: ambRaw.presentation,
           bio: ambRaw.bio,
+          bioFull: ambRaw.bio_full,
           photo: ambRaw.photo_url,
+          socials: [
+            ambRaw.email ? { label: "Mail", href: `mailto:${ambRaw.email}` } : null,
+            ambRaw.instagram ? { label: "Instagram", href: normalizeUrl(ambRaw.instagram) } : null,
+            ambRaw.tiktok ? { label: "TikTok", href: normalizeUrl(ambRaw.tiktok) } : null,
+            ambRaw.youtube ? { label: "YouTube", href: normalizeUrl(ambRaw.youtube) } : null,
+            ambRaw.linkedin ? { label: "LinkedIn", href: normalizeUrl(ambRaw.linkedin) } : null,
+          ].filter((s): s is { label: string; href: string } => s !== null),
           trajectory: Array.isArray(ambRaw.trajectory)
-            ? (ambRaw.trajectory as { year?: unknown; text?: unknown }[])
-                .map((t) => ({ year: String(t.year ?? ""), text: String(t.text ?? "") }))
-                .filter((t) => t.text)
+            ? (ambRaw.trajectory as { year?: unknown; title?: unknown; text?: unknown; detail?: unknown }[])
+                .map((t) => ({
+                  year: String(t.year ?? ""),
+                  title: String(t.title ?? t.text ?? ""),
+                  detail: String(t.detail ?? ""),
+                }))
+                .filter((t) => t.title)
             : [],
         }
       : null;
@@ -240,34 +266,30 @@ export default async function UniversityPage({
                     <p className="mt-6 max-w-2xl leading-relaxed text-ink-soft">{ambassador.bio}</p>
                   )}
 
-                  {trajGroups.length > 0 && (
-                    <div className="mt-8 border-t border-hair pt-6">
-                      <p className="eyebrow mb-4 flex items-center gap-3">
-                        <span className="metal-tick" />
-                        Trayectoria
-                      </p>
-                      <div className="flex flex-col gap-5">
-                        {trajGroups.map((g) => (
-                          <div key={g.year} className="flex flex-col gap-2 sm:flex-row sm:gap-6">
-                            <span className="font-display text-2xl font-bold leading-none text-ti-500 sm:w-24 sm:shrink-0">
-                              {g.year}
-                            </span>
-                            <ul className="flex flex-col gap-1.5">
-                              {g.items.map((it, i) => (
-                                <li
-                                  key={i}
-                                  className="flex items-start gap-2 leading-snug text-ink-soft"
-                                >
-                                  <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-blue-400" />
-                                  {it}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        ))}
-                      </div>
+                  {ambassador.socials.length > 0 && (
+                    <div className="mt-5 flex flex-wrap gap-2">
+                      {ambassador.socials.map((s) => {
+                        const external = !s.href.startsWith("mailto:");
+                        return (
+                          <a
+                            key={s.label}
+                            href={s.href}
+                            target={external ? "_blank" : undefined}
+                            rel={external ? "noopener noreferrer" : undefined}
+                            className="chip rounded-full px-3.5 py-1.5 text-sm font-medium text-ti-100 transition-colors hover:text-white"
+                          >
+                            {s.label}
+                          </a>
+                        );
+                      })}
                     </div>
                   )}
+
+                  <AmbassadorMore
+                    name={ambassador.name ?? "el embajador"}
+                    bioFull={ambassador.bioFull}
+                    groups={trajGroups}
+                  />
                 </div>
               </Reveal>
             </section>

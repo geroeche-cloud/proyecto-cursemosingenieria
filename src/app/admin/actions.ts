@@ -175,7 +175,19 @@ export async function saveAmbassadorProfile(
 
     const display_name = String(formData.get("display_name") ?? "").trim() || null;
     const presentation = String(formData.get("presentation") ?? "").trim() || null;
+
     const bio = String(formData.get("bio") ?? "").trim() || null;
+    if (bio && bio.length > 240) {
+      return { ok: false, error: "La bio corta no puede superar los 240 caracteres." };
+    }
+    const bio_full = String(formData.get("bio_full") ?? "").trim() || null;
+
+    // Redes: se guardan tal cual (URL o mail). Vacío => null.
+    const email = String(formData.get("email") ?? "").trim() || null;
+    const instagram = String(formData.get("instagram") ?? "").trim() || null;
+    const tiktok = String(formData.get("tiktok") ?? "").trim() || null;
+    const youtube = String(formData.get("youtube") ?? "").trim() || null;
+    const linkedin = String(formData.get("linkedin") ?? "").trim() || null;
 
     // Foto: si suben un archivo nuevo, lo guardamos en Storage; si no, se
     // conserva la foto actual (o se limpia si tildaron "quitar foto").
@@ -200,17 +212,18 @@ export async function saveAmbassadorProfile(
       photo_url = admin.storage.from("ambassadors").getPublicUrl(path).data.publicUrl;
     }
 
-    // Trayectoria: una línea por hito, formato "AÑO | texto".
+    // Trayectoria: una línea por hito, formato "AÑO | título | detalle".
     const trajectory = String(formData.get("trajectory") ?? "")
       .split("\n")
       .map((line) => line.trim())
       .filter(Boolean)
       .map((line) => {
-        const sep = line.indexOf("|");
-        if (sep === -1) return { year: "", text: line };
-        return { year: line.slice(0, sep).trim(), text: line.slice(sep + 1).trim() };
+        const parts = line.split("|").map((p) => p.trim());
+        if (parts.length === 1) return { year: "", title: parts[0], detail: "" };
+        if (parts.length === 2) return { year: parts[0], title: parts[1], detail: "" };
+        return { year: parts[0], title: parts[1], detail: parts.slice(2).join(" · ") };
       })
-      .filter((h) => h.text);
+      .filter((h) => h.title);
 
     const supabase = await createClient();
     const { error } = await supabase.from("ambassador_profiles").upsert(
@@ -219,8 +232,14 @@ export async function saveAmbassadorProfile(
         display_name,
         presentation,
         bio,
+        bio_full,
         photo_url,
         trajectory,
+        email,
+        instagram,
+        tiktok,
+        youtube,
+        linkedin,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "university_id" },

@@ -1,7 +1,9 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { saveAmbassadorProfile, type ActionState } from "./actions";
+
+export type TrajItem = { year: string; title: string; detail: string };
 
 export type ProfileRow = {
   university_id: string;
@@ -10,27 +12,31 @@ export type ProfileRow = {
   display_name: string | null;
   presentation: string | null;
   bio: string | null;
+  bio_full: string | null;
   photo_url: string | null;
-  trajectory: { year: string; text: string }[];
+  email: string | null;
+  instagram: string | null;
+  tiktok: string | null;
+  youtube: string | null;
+  linkedin: string | null;
+  trajectory: TrajItem[];
 };
 
 const field =
   "rounded-lg border border-hair-strong bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:border-blue-500";
 
 const initial: ActionState = { ok: false };
+const BIO_MAX = 240;
 
-function trajectoryToText(items: { year: string; text: string }[]): string {
-  return items.map((i) => (i.year ? `${i.year} | ${i.text}` : i.text)).join("\n");
+function trajectoryToText(items: TrajItem[]): string {
+  return items
+    .map((i) => [i.year, i.title, i.detail].filter(Boolean).join(" | "))
+    .join("\n");
 }
 
 export function AmbassadorProfileEditor({ profiles }: { profiles: ProfileRow[] }) {
   const [state, action, pending] = useActionState(saveAmbassadorProfile, initial);
   const [selectedId, setSelectedId] = useState(profiles[0]?.university_id ?? "");
-
-  // Al guardar bien, limpiamos el mensaje si el admin cambia de universidad.
-  useEffect(() => {
-    // no-op: el mensaje se muestra hasta el próximo submit.
-  }, [state]);
 
   if (profiles.length === 0) {
     return (
@@ -78,11 +84,12 @@ export function AmbassadorProfileEditor({ profiles }: { profiles: ProfileRow[] }
           <input
             name="presentation"
             defaultValue={selected.presentation ?? ""}
-            placeholder="Embajador · Ingeniería en Petróleo"
+            placeholder="Fundador de Cursemos Ingeniería · Embajador UNCo"
             className={field}
           />
         </label>
 
+        {/* Foto */}
         <div className="flex flex-col gap-2 sm:col-span-2">
           <span className="text-xs text-ink-soft">Foto del embajador</span>
           <input type="hidden" name="current_photo_url" value={selected.photo_url ?? ""} />
@@ -115,26 +122,68 @@ export function AmbassadorProfileEditor({ profiles }: { profiles: ProfileRow[] }
           <p className="text-[0.68rem] text-ink-mute">JPG o PNG, hasta 5 MB. Se guarda en Supabase Storage.</p>
         </div>
 
+        {/* Bio corta + completa */}
         <label className="flex flex-col gap-1 sm:col-span-2">
-          <span className="text-xs text-ink-soft">Bio / visión</span>
+          <span className="text-xs text-ink-soft">
+            Bio corta <span className="text-ink-mute">(máx. {BIO_MAX} caracteres · se ve siempre)</span>
+          </span>
           <textarea
             name="bio"
-            rows={4}
+            rows={3}
+            maxLength={BIO_MAX}
             defaultValue={selected.bio ?? ""}
-            placeholder="Su historia, su rol y hacia dónde va la comunidad en esta universidad."
+            placeholder="Una línea o dos que lo presenten."
+            className={field}
+          />
+        </label>
+        <label className="flex flex-col gap-1 sm:col-span-2">
+          <span className="text-xs text-ink-soft">
+            Bio completa <span className="text-ink-mute">(se ve al “conocer la trayectoria completa”; separá párrafos con un renglón en blanco)</span>
+          </span>
+          <textarea
+            name="bio_full"
+            rows={6}
+            defaultValue={selected.bio_full ?? ""}
+            placeholder={"Su historia y su propósito.\n\nSu visión hacia adelante."}
             className={field}
           />
         </label>
 
+        {/* Redes */}
+        <label className="flex flex-col gap-1">
+          <span className="text-xs text-ink-soft">Mail</span>
+          <input name="email" defaultValue={selected.email ?? ""} placeholder="nombre@mail.com" className={field} />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-xs text-ink-soft">Instagram (URL)</span>
+          <input name="instagram" defaultValue={selected.instagram ?? ""} placeholder="https://instagram.com/…" className={field} />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-xs text-ink-soft">TikTok (URL)</span>
+          <input name="tiktok" defaultValue={selected.tiktok ?? ""} placeholder="https://tiktok.com/@…" className={field} />
+        </label>
+        <label className="flex flex-col gap-1">
+          <span className="text-xs text-ink-soft">YouTube (URL)</span>
+          <input name="youtube" defaultValue={selected.youtube ?? ""} placeholder="https://youtube.com/@…" className={field} />
+        </label>
+        <label className="flex flex-col gap-1 sm:col-span-2">
+          <span className="text-xs text-ink-soft">LinkedIn (URL)</span>
+          <input name="linkedin" defaultValue={selected.linkedin ?? ""} placeholder="https://linkedin.com/in/…" className={field} />
+        </label>
+
+        {/* Trayectoria */}
         <label className="flex flex-col gap-1 sm:col-span-2">
           <span className="text-xs text-ink-soft">
-            Trayectoria <span className="text-ink-mute">(una por línea, formato: AÑO | hito)</span>
+            Trayectoria{" "}
+            <span className="text-ink-mute">(una por línea, formato: AÑO | título | detalle)</span>
           </span>
           <textarea
             name="trajectory"
-            rows={5}
+            rows={6}
             defaultValue={trajectoryToText(selected.trajectory)}
-            placeholder={"2024 | Fundé la comunidad en la facultad\n2023 | Beca Roberto Rocca"}
+            placeholder={
+              "2026 | Fundación de Cursemos Ingeniería | Una red que conecta estudiantes y oportunidades\n2025 | Programa de Becarios Roberto Rocca | Desarrollo académico y profesional"
+            }
             className={field}
           />
         </label>
