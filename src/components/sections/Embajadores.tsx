@@ -2,6 +2,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { AmbientLights } from "@/components/ui/AmbientLights";
 import { AmbassadorCard, type AmbassadorCardData } from "@/components/campus/AmbassadorCard";
 import { createPublicClient } from "@/lib/supabase/public";
+import { logIfError } from "@/lib/log";
 
 type ProfileRow = {
   university_id: string;
@@ -41,6 +42,9 @@ async function loadAmbassadors(): Promise<AmbassadorCardData[]> {
         ),
       supabase.from("universities").select("id, name").eq("status", "active"),
     ]);
+
+    logIfError("home ambassador_profiles", profRes.error);
+    logIfError("home universities", uniRes.error);
 
     const uniName = new Map((uniRes.data ?? []).map((u) => [u.id as string, u.name as string]));
     return ((profRes.data ?? []) as ProfileRow[])

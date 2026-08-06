@@ -23,27 +23,27 @@ export default async function PanelLayout({ children }: { children: ReactNode })
   return (
     <div className="min-h-screen bg-bg text-ink">
       <header className="border-b border-hair">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-6 pt-6 pb-4">
-          <div>
+        <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-5 pt-5 pb-4 sm:px-6 sm:pt-6">
+          <div className="min-w-0">
             <p className="font-mono text-[0.62rem] uppercase tracking-[0.2em] text-blue-300">
               Panel del embajador
             </p>
-            <p className="mt-0.5 font-display text-lg font-bold tracking-tight">
+            <p className="mt-0.5 truncate font-display text-base font-bold tracking-tight sm:text-lg">
               {uni?.name ?? "Tu universidad"}
             </p>
           </div>
-          <form action="/auth/signout" method="post">
+          <form action="/auth/signout" method="post" className="shrink-0">
             <button type="submit" className="btn btn-ghost text-xs">
-              Cerrar sesión
+              Salir
             </button>
           </form>
         </div>
-        <div className="mx-auto max-w-4xl px-6">
+        <div className="mx-auto max-w-4xl px-5 sm:px-6">
           <PanelNav />
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl px-6 py-10">{children}</main>
+      <main className="mx-auto max-w-4xl px-5 py-8 sm:px-6 sm:py-10">{children}</main>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { GlobalNet } from "@/components/campus/GlobalNet";
 import { CAMPUS } from "@/lib/campus";
 import { createPublicClient } from "@/lib/supabase/public";
+import { logIfError } from "@/lib/log";
 
 export const metadata: Metadata = {
   title: "Campus",
@@ -57,11 +58,12 @@ type University = {
 
 export default async function CampusPage() {
   const supabase = createPublicClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("universities")
     .select("id, name, short_name, city, slug")
     .eq("status", "active")
     .order("name");
+  logIfError("campus universities", error);
   const universities = (data ?? []) as University[];
 
   return (

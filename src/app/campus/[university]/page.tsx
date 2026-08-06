@@ -10,6 +10,7 @@ import {
 import { createPublicClient } from "@/lib/supabase/public";
 import { isActiveNow } from "@/lib/schedule";
 import { AMB_COLS, buildAmbassador, type AmbassadorRaw } from "@/lib/ambassador";
+import { logIfError } from "@/lib/log";
 
 export const revalidate = 60;
 
@@ -62,6 +63,13 @@ export default async function UniversityPage({
     supabase.from("drives").select("id, owner, career, href").eq("university_id", uid).eq("status", "published").order("created_at", { ascending: false }).limit(100),
     supabase.from("ambassador_profiles").select(AMB_COLS).eq("university_id", uid).maybeSingle(),
   ]);
+
+  // Si alguna consulta falla, queda registrada (no más "vacío en silencio").
+  logIfError(`campus/${university} news`, newsRes.error);
+  logIfError(`campus/${university} opportunities`, oppRes.error);
+  logIfError(`campus/${university} professors`, profRes.error);
+  logIfError(`campus/${university} drives`, driveRes.error);
+  logIfError(`campus/${university} ambassador_profile`, ambProfileRes.error);
 
   const news = ((newsRes.data ?? []) as CampusNews[]).filter((n) =>
     isActiveNow(n.starts_at ?? null, n.ends_at ?? null),

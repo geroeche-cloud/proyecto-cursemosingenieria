@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { AmbassadorMore } from "./AmbassadorMore";
 
 export type AmbassadorCardData = {
@@ -70,11 +71,12 @@ export function AmbassadorCard({ data }: { data: AmbassadorCardData }) {
       {/* Fotografía */}
       <div className="relative mx-auto aspect-[4/5] w-full max-w-[20rem] overflow-hidden rounded-3xl border border-hair-strong chrome-edge lg:mx-0">
         {data.photo ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={data.photo}
             alt={name}
-            className="absolute inset-0 h-full w-full object-cover object-[50%_18%]"
+            fill
+            sizes="(max-width: 1024px) 90vw, 320px"
+            className="object-cover object-[50%_18%]"
           />
         ) : (
           <div

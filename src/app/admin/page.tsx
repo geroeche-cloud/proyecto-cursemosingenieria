@@ -221,18 +221,18 @@ export default async function AdminPage() {
   ];
 
   return (
-    <div className="mx-auto max-w-4xl px-6 py-14">
-      <header className="flex items-start justify-between gap-4">
-        <div>
+    <div className="mx-auto max-w-4xl px-5 py-10 sm:px-6 sm:py-14">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
           <p className="font-mono text-xs uppercase tracking-[0.2em] text-blue-300">
             Administración
           </p>
-          <h1 className="mt-1 font-display text-3xl font-bold tracking-tight">
+          <h1 className="mt-1 font-display text-2xl font-bold tracking-tight sm:text-3xl">
             Panel de Cursemos Ingeniería
           </h1>
-          <p className="mt-1 text-sm text-ink-soft">{user?.email}</p>
+          <p className="mt-1 text-sm text-ink-soft break-anywhere">{user?.email}</p>
         </div>
-        <form action="/auth/signout" method="post">
+        <form action="/auth/signout" method="post" className="sm:shrink-0">
           <button type="submit" className="btn btn-ghost text-sm">
             Cerrar sesión
           </button>
@@ -268,15 +268,18 @@ export default async function AdminPage() {
               {unis.map((u) => {
                 const active = u.status === "active";
                 return (
-                  <li key={u.id} className="flex items-center justify-between gap-4 px-5 py-3">
+                  <li
+                    key={u.id}
+                    className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-3"
+                  >
                     <div className="min-w-0">
-                      <p className="truncate text-sm text-ink">
+                      <p className="text-sm text-ink break-anywhere">
                         {u.name}
                         {u.short_name ? <span className="text-ink-mute"> · {u.short_name}</span> : null}
                       </p>
                       <p className="font-mono text-xs text-ink-mute">{u.city}</p>
                     </div>
-                    <div className="flex shrink-0 items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:gap-3">
                       <span
                         className={
                           active
@@ -323,12 +326,15 @@ export default async function AdminPage() {
               {ambs.map((a) => {
                 const active = a.status === "active";
                 return (
-                  <li key={a.id} className="flex items-center justify-between gap-4 px-5 py-3">
+                  <li
+                    key={a.id}
+                    className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-3"
+                  >
                     <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-ink">{a.full_name || "Sin nombre"}</p>
-                      <p className="truncate font-mono text-xs text-ink-mute">{a.email}</p>
+                      <p className="text-sm font-medium text-ink break-anywhere">{a.full_name || "Sin nombre"}</p>
+                      <p className="font-mono text-xs text-ink-mute break-anywhere">{a.email}</p>
                     </div>
-                    <div className="flex shrink-0 items-center gap-3">
+                    <div className="flex flex-wrap items-center gap-2 sm:shrink-0 sm:gap-3">
                       <span className="rounded-full border border-blue-500/40 bg-blue-500/10 px-3 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-blue-300">
                         {a.university_id ? uniName.get(a.university_id) ?? "—" : "sin asignar"}
                       </span>
@@ -394,14 +400,17 @@ export default async function AdminPage() {
           ) : (
             <ul className="divide-y divide-hair">
               {moderation.map((m) => (
-                <li key={`${m.table}-${m.id}`} className="flex items-center justify-between gap-4 px-5 py-3">
+                <li
+                  key={`${m.table}-${m.id}`}
+                  className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:py-3"
+                >
                   <div className="min-w-0">
-                    <p className="truncate text-sm text-ink">{m.label}</p>
+                    <p className="text-sm text-ink break-anywhere">{m.label}</p>
                     <p className="font-mono text-[0.62rem] uppercase tracking-[0.1em] text-ink-mute">
                       {m.typeLabel} · {uniName.get(m.university_id) ?? "—"}
                     </p>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
                     <form action={unpublishContent}>
                       <input type="hidden" name="table" value={m.table} />
                       <input type="hidden" name="id" value={m.id} />

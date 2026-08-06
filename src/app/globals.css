@@ -455,166 +455,6 @@ body {
 }
 
 /* ============================================================
-   ACADEMIA — módulo en prueba · diferenciación visual
-   Estética ingeniería: titanio / acero cepillado + blueprint,
-   reflejos suaves y luces discretas (sin sobrecargar).
-   Clases namespaced `academy-*`: no afectan otras secciones.
-   ============================================================ */
-.academy-metal-base {
-  background:
-    radial-gradient(130% 92% at 50% -14%, rgba(196, 210, 232, 0.1), transparent 58%),
-    radial-gradient(120% 80% at 50% 116%, rgba(59, 107, 255, 0.06), transparent 60%),
-    linear-gradient(168deg, #0e111a 0%, #0a0d14 46%, #06080e 100%);
-}
-.academy-blueprint {
-  background-image:
-    linear-gradient(rgba(156, 182, 255, 0.06) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(156, 182, 255, 0.06) 1px, transparent 1px),
-    linear-gradient(rgba(156, 182, 255, 0.13) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(156, 182, 255, 0.13) 1px, transparent 1px);
-  background-size: 34px 34px, 34px 34px, 170px 170px, 170px 170px;
-  opacity: 0.75;
-  -webkit-mask-image: radial-gradient(ellipse 82% 72% at 50% 24%, #000 30%, transparent 82%);
-  mask-image: radial-gradient(ellipse 82% 72% at 50% 24%, #000 30%, transparent 82%);
-}
-.academy-brushed {
-  background-image: repeating-linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.015) 0 1px,
-    transparent 1px 3px
-  );
-  opacity: 0.5;
-  -webkit-mask-image: linear-gradient(180deg, #000, transparent 72%);
-  mask-image: linear-gradient(180deg, #000, transparent 72%);
-}
-.academy-sheen {
-  background: linear-gradient(122deg, transparent 32%, rgba(216, 226, 240, 0.05) 49%, transparent 60%);
-  mix-blend-mode: screen;
-}
-.academy-glow {
-  position: absolute;
-  border-radius: 50%;
-  filter: blur(90px);
-  will-change: transform;
-}
-.academy-glow--steel {
-  width: 46vw;
-  height: 46vw;
-  top: -14%;
-  left: -10%;
-  opacity: 0.2;
-  background: radial-gradient(circle, rgba(196, 210, 232, 0.5), transparent 66%);
-}
-.academy-glow--blue {
-  width: 42vw;
-  height: 42vw;
-  bottom: -16%;
-  right: -12%;
-  opacity: 0.22;
-  background: radial-gradient(circle, rgba(59, 107, 255, 0.42), transparent 68%);
-}
-/* Placas metálicas (aluminio / titanio) — profundidad ambiental */
-.academy-plate {
-  position: absolute;
-  background:
-    repeating-linear-gradient(122deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 3px),
-    linear-gradient(135deg, rgba(200, 212, 230, 0.11), rgba(120, 134, 160, 0.03) 55%, rgba(200, 212, 230, 0.08));
-  border-radius: 2rem;
-  -webkit-mask-image: radial-gradient(circle at 50% 40%, #000 24%, transparent 72%);
-  mask-image: radial-gradient(circle at 50% 40%, #000 24%, transparent 72%);
-  opacity: 0.55;
-}
-.academy-plate--tr {
-  width: 44vw;
-  height: 32vw;
-  top: -9vw;
-  right: -11vw;
-  transform: rotate(8deg);
-}
-.academy-plate--bl {
-  width: 48vw;
-  height: 28vw;
-  bottom: -9vw;
-  left: -13vw;
-  transform: rotate(-7deg);
-}
-
-/* Líneas diagonales técnicas (mecanizado sutil) */
-.academy-diagonals {
-  background-image: repeating-linear-gradient(135deg, rgba(230, 236, 245, 0.05) 0 1px, transparent 1px 28px);
-  -webkit-mask-image: linear-gradient(158deg, #000, transparent 62%);
-  mask-image: linear-gradient(158deg, #000, transparent 62%);
-  opacity: 0.6;
-}
-
-/* Destello especular (reflejo metálico) */
-.academy-glint {
-  background: linear-gradient(122deg, transparent 45%, rgba(255, 255, 255, 0.09) 50%, transparent 55%);
-  mix-blend-mode: screen;
-}
-
-/* Navegación por etapas — badge metálico + estado activo */
-.academy-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 2.5rem;
-  width: 2.5rem;
-  border-radius: 0.85rem;
-  font-family: var(--font-mono), monospace;
-  font-weight: 600;
-  font-size: 1rem;
-  color: var(--color-ti-100);
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.03));
-  border: 1px solid rgba(230, 236, 245, 0.2);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
-  transition: all 0.4s var(--ease-out-expo);
-}
-.academy-badge--active {
-  color: #06070c;
-  background: linear-gradient(180deg, #ffffff, #cdd6e2);
-  border-color: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 8px 20px -8px rgba(220, 228, 240, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
-.academy-stage-active {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 0 42px rgba(59, 107, 255, 0.12),
-    0 22px 52px -22px rgba(0, 0, 0, 0.92),
-    0 0 36px -6px rgba(59, 107, 255, 0.45);
-}
-/* Tile inactivo — superficie de titanio siempre nítida (borde metálico definido)
-   para que ningún tile se pierda sobre las zonas oscuras del fondo. */
-.academy-tile {
-  background: linear-gradient(160deg, rgba(224, 232, 244, 0.07), rgba(255, 255, 255, 0.015));
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.1),
-    0 20px 44px -30px rgba(0, 0, 0, 0.9);
-  backdrop-filter: blur(12px) saturate(140%);
-  -webkit-backdrop-filter: blur(12px) saturate(140%);
-}
-.academy-tile:hover {
-  border-color: rgba(150, 172, 220, 0.4);
-}
-
-@media (max-width: 640px) {
-  .academy-glow {
-    filter: blur(60px);
-    opacity: 0.16;
-  }
-  .academy-blueprint {
-    opacity: 0.6;
-  }
-  .academy-plate {
-    opacity: 0.42;
-  }
-  .academy-diagonals {
-    opacity: 0.45;
-  }
-}
-
-/* ============================================================
    LIENZO GLOBAL — fondo luminoso y continuo del sitio.
    Base grafito (menos negra) + grilla blueprint + campo de luces.
    Fijo: el contenido pasa por las luces al scrollear (sin cortes).
@@ -651,5 +491,72 @@ body {
   }
   .site-grid {
     opacity: 0.55;
+  }
+}
+
+/* ============================================================
+   FORMULARIOS Y TÁCTIL — fluidez en celular y tablet
+   El panel del embajador y el del admin se usan mucho desde el
+   teléfono: acá se resuelven los problemas propios de esos entornos.
+   ============================================================ */
+
+/* iOS Safari hace ZOOM automático al enfocar un campo con menos de 16px.
+   Eso descoloca el layout y corta la escritura. Forzamos 16px en móvil
+   (el tamaño visual del panel se mantiene desde 641px en adelante). */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Superficie táctil cómoda y sin "flash" azul al tocar en Android/iOS. */
+input,
+select,
+textarea,
+button,
+a,
+[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Los controles chicos (Editar / Publicar / Borrar) mantienen un área
+   táctil mínima de ~44px, la recomendada para el dedo. */
+@media (pointer: coarse) {
+  .btn {
+    min-height: 44px;
+  }
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: 20px;
+    min-width: 20px;
+  }
+}
+
+/* Los campos de fecha y archivo se ven consistentes en todos los navegadores. */
+input[type="date"] {
+  min-height: 2.6rem;
+}
+input[type="file"] {
+  max-width: 100%;
+}
+
+/* Nada de scroll horizontal: cualquier texto largo (mails, URLs de drives)
+   corta la línea en vez de ensanchar la página. */
+.break-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* En pantallas táctiles, los efectos :hover de las tarjetas no se aplican
+   (evita que queden "trabadas" en estado hover tras tocarlas). */
+@media (hover: none) {
+  .lift:hover {
+    transform: none;
+    box-shadow: none;
+  }
+  .btn:hover {
+    transform: none;
   }
 }

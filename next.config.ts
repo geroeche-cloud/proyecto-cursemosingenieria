@@ -48,6 +48,14 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  images: {
+    // Las fotos de embajadores viven en Supabase Storage: se optimizan y se
+    // sirven en el tamaño que pide cada dispositivo (clave en celular).
+    remotePatterns: supabaseOrigin
+      ? [{ protocol: "https", hostname: new URL(supabaseOrigin).hostname, pathname: "/storage/**" }]
+      : [],
+    formats: ["image/avif", "image/webp"],
+  },
   // Las Server Actions aceptan 1MB por defecto; subimos el límite para permitir
   // la carga de fotos de embajadores (hasta 5MB) vía Supabase Storage.
   experimental: {
