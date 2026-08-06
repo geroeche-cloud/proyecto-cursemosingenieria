@@ -29,9 +29,56 @@ export function AmbassadorMore({
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="btn btn-ghost text-sm"
+        className="group chrome-edge sheen relative inline-flex w-full items-center justify-between gap-4 overflow-hidden rounded-full py-3.5 pl-5 pr-4 text-left transition-all duration-500 hover:-translate-y-0.5 sm:w-auto sm:gap-6"
+        style={{
+          background:
+            "linear-gradient(150deg, rgba(59,107,255,0.22) 0%, rgba(20,27,45,0.9) 45%, rgba(10,14,26,0.95) 100%)",
+          boxShadow:
+            "0 18px 40px -22px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.12)",
+        }}
       >
-        {open ? "Ver menos" : `Conocé la trayectoria completa de ${firstName}`}
+        {/* Resplandor azul que se enciende al pasar por encima */}
+        <span
+          className="pointer-events-none absolute -left-8 top-1/2 h-24 w-24 -translate-y-1/2 rounded-full opacity-50 blur-2xl transition-opacity duration-500 group-hover:opacity-100"
+          style={{ background: "radial-gradient(circle, rgba(59,107,255,0.8), transparent 70%)" }}
+          aria-hidden
+        />
+
+        <span className="relative flex items-center gap-3">
+          {/* Punto vivo: señala que hay más para ver */}
+          <span
+            className={`h-2 w-2 shrink-0 rounded-full ${open ? "" : "pulse-dot"}`}
+            style={{ background: "#9cb6ff", boxShadow: "0 0 10px 1px rgba(110,147,255,0.9)" }}
+            aria-hidden
+          />
+          <span className="font-medium text-ink transition-colors duration-300 group-hover:text-white">
+            {open ? "Ver menos" : `Conocé la trayectoria completa de ${firstName}`}
+          </span>
+        </span>
+
+        {/* Flecha que gira al abrir */}
+        <span
+          className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all duration-500 group-hover:scale-105"
+          style={{
+            background: "linear-gradient(158deg, rgba(59,107,255,0.45), rgba(26,58,168,0.2))",
+            border: "1px solid rgba(120,150,255,0.45)",
+          }}
+          aria-hidden
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={`h-4 w-4 text-blue-200 transition-transform duration-500 ${
+              open ? "rotate-180" : ""
+            }`}
+          >
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </span>
       </button>
 
       {open && (
