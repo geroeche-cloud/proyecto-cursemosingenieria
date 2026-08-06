@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { IntroLoader } from "@/components/ui/IntroLoader";
 import { SiteBackdrop } from "@/components/ui/SiteBackdrop";
+import { SITE_URL } from "@/lib/site";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -23,8 +24,6 @@ const jetbrains = JetBrains_Mono({
   weight: ["400", "500"],
   display: "swap",
 });
-
-const SITE_URL = "https://geronimoechevarria.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

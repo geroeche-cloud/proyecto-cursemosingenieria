@@ -1,10 +1,14 @@
 import type { MetadataRoute } from "next";
-
-const SITE_URL = "https://geronimoechevarria.com";
+import { SITE_URL } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
   return {
-    rules: { userAgent: "*", allow: "/" },
+    rules: {
+      userAgent: "*",
+      allow: "/",
+      // Zonas privadas: back-office y flujos de cuenta. No deben indexarse.
+      disallow: ["/admin", "/panel", "/preview", "/login", "/recuperar", "/auth"],
+    },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };
 }

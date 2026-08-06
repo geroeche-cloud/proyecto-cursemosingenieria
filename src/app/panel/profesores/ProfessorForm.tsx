@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createProfessor, updateProfessor, type ActionState } from "./actions";
 
@@ -21,23 +21,28 @@ export type ProfessorInitial = {
 export function ProfessorForm({ initial }: { initial?: ProfessorInitial }) {
   const isEdit = !!initial;
   const router = useRouter();
-  const [state, action, pending] = useActionState(
-    isEdit ? updateProfessor : createProfessor,
-    initialState,
-  );
   const formRef = useRef<HTMLFormElement>(null);
   const [subjects, setSubjects] = useState<string[]>(
     initial?.subjects && initial.subjects.length > 0 ? initial.subjects : [""],
   );
 
-  useEffect(() => {
-    if (!state.ok) return;
-    if (isEdit) router.push("/panel/profesores");
-    else {
-      formRef.current?.reset();
-      setSubjects([""]);
-    }
-  }, [state, isEdit, router]);
+  // El post-guardado se resuelve dentro de la acción (como un event handler),
+  // no en un efecto: evita renders en cascada (regla de React 19).
+  const [state, action, pending] = useActionState(
+    async (prev: ActionState, formData: FormData) => {
+      const result = await (isEdit ? updateProfessor : createProfessor)(prev, formData);
+      if (result.ok) {
+        if (isEdit) {
+          router.push("/panel/profesores");
+        } else {
+          formRef.current?.reset();
+          setSubjects([""]);
+        }
+      }
+      return result;
+    },
+    initialState,
+  );
 
   const updateSubject = (i: number, v: string) =>
     setSubjects((prev) => prev.map((s, idx) => (idx === i ? v : s)));

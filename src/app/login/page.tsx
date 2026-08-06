@@ -1,12 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export default function LoginPage() {
+/** Solo permitimos volver a rutas internas (evita redirecciones a sitios externos). */
+function safeNext(value: string | null): string | null {
+  if (!value) return null;
+  return /^\/(?!\/)/.test(value) ? value : null;
+}
+
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -26,7 +33,7 @@ export default function LoginPage() {
       return;
     }
 
-    // Redirigir según el rol.
+    // Redirigir según el rol (o a la página que se pedía antes de loguearse).
     let dest = "/panel";
     const {
       data: { user },
@@ -40,7 +47,7 @@ export default function LoginPage() {
       if (profile?.role === "admin") dest = "/admin";
     }
 
-    router.push(dest);
+    router.push(safeNext(searchParams.get("next")) ?? dest);
     router.refresh();
   }
 
@@ -93,5 +100,20 @@ export default function LoginPage() {
         </form>
       </div>
     </main>
+  );
+}
+
+/** useSearchParams necesita un límite de Suspense en el App Router. */
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-bg px-6 text-ink">
+          <p className="text-sm text-ink-mute">Cargando…</p>
+        </main>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

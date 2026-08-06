@@ -139,17 +139,18 @@ export function IntroLoader() {
   const [show, setShow] = useState(true);
 
   useEffect(() => {
+    // Ya vista en esta sesión → se cierra de inmediato; si no, corre la intro.
+    // El setState va dentro del timer (no síncrono en el efecto) para no
+    // disparar renders en cascada.
+    let seen = false;
     try {
-      if (sessionStorage.getItem("ei-intro")) {
-        setShow(false);
-        return;
-      }
-      sessionStorage.setItem("ei-intro", "1");
+      seen = Boolean(sessionStorage.getItem("ei-intro"));
+      if (!seen) sessionStorage.setItem("ei-intro", "1");
     } catch {
       /* sin sessionStorage: se muestra igual */
     }
-    armCue();
-    const t = setTimeout(() => setShow(false), 2000);
+    if (!seen) armCue();
+    const t = setTimeout(() => setShow(false), seen ? 0 : 2000);
     return () => clearTimeout(t);
   }, []);
 

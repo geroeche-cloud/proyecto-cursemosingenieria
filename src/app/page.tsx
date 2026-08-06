@@ -6,6 +6,7 @@ import { Embajadores } from "@/components/sections/Embajadores";
 import { Collaborate } from "@/components/sections/Collaborate";
 import { MetalDivider } from "@/components/ui/MetalDivider";
 import { ORG } from "@/lib/org";
+import { SITE_URL } from "@/lib/site";
 
 export const revalidate = 60;
 
@@ -16,7 +17,7 @@ const jsonLd = {
   description: ORG.statement,
   foundingDate: ORG.established,
   email: ORG.email,
-  url: "https://geronimoechevarria.com",
+  url: SITE_URL,
   founder: {
     "@type": "Person",
     name: ORG.founder,

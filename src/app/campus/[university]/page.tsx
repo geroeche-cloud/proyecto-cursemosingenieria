@@ -57,9 +57,9 @@ export default async function UniversityPage({
   const uid = uni.id;
   const [newsRes, oppRes, profRes, driveRes, ambProfileRes] = await Promise.all([
     supabase.from("news").select("id, title, summary, body, starts_at, ends_at").eq("university_id", uid).eq("status", "published").order("published_at", { ascending: false }).limit(30),
-    supabase.from("opportunities").select("id, kind, title, org, description, deadline, requirements, href, starts_at, ends_at").eq("university_id", uid).eq("status", "published").order("created_at", { ascending: false }),
-    supabase.from("professors").select("id, name, title, modality, subjects, whatsapp").eq("university_id", uid).eq("status", "published"),
-    supabase.from("drives").select("id, owner, career, href").eq("university_id", uid).eq("status", "published"),
+    supabase.from("opportunities").select("id, kind, title, org, description, deadline, requirements, href, starts_at, ends_at").eq("university_id", uid).eq("status", "published").order("created_at", { ascending: false }).limit(60),
+    supabase.from("professors").select("id, name, title, modality, subjects, whatsapp").eq("university_id", uid).eq("status", "published").order("created_at", { ascending: false }).limit(100),
+    supabase.from("drives").select("id, owner, career, href").eq("university_id", uid).eq("status", "published").order("created_at", { ascending: false }).limit(100),
     supabase.from("ambassador_profiles").select(AMB_COLS).eq("university_id", uid).maybeSingle(),
   ]);
 
