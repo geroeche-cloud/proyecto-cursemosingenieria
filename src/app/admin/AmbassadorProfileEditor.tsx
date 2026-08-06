@@ -83,16 +83,37 @@ export function AmbassadorProfileEditor({ profiles }: { profiles: ProfileRow[] }
           />
         </label>
 
-        <label className="flex flex-col gap-1 sm:col-span-2">
-          <span className="text-xs text-ink-soft">Foto (URL)</span>
-          <input
-            name="photo_url"
-            type="url"
-            defaultValue={selected.photo_url ?? ""}
-            placeholder="https://…/foto.jpg"
-            className={field}
-          />
-        </label>
+        <div className="flex flex-col gap-2 sm:col-span-2">
+          <span className="text-xs text-ink-soft">Foto del embajador</span>
+          <input type="hidden" name="current_photo_url" value={selected.photo_url ?? ""} />
+          <div className="flex items-center gap-4">
+            {selected.photo_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={selected.photo_url}
+                alt="Foto actual"
+                className="h-16 w-16 rounded-xl object-cover"
+                style={{ border: "1px solid rgba(255,255,255,0.14)" }}
+              />
+            ) : (
+              <div className="flex h-16 w-16 items-center justify-center rounded-xl border border-hair text-xs text-ink-mute">
+                Sin foto
+              </div>
+            )}
+            <input
+              name="photo_file"
+              type="file"
+              accept="image/*"
+              className="text-xs text-ink-soft file:mr-3 file:rounded-lg file:border file:border-hair-strong file:bg-surface file:px-3 file:py-1.5 file:text-xs file:text-ink"
+            />
+          </div>
+          {selected.photo_url && (
+            <label className="flex items-center gap-2 text-xs text-ink-mute">
+              <input type="checkbox" name="remove_photo" /> Quitar la foto actual
+            </label>
+          )}
+          <p className="text-[0.68rem] text-ink-mute">JPG o PNG, hasta 5 MB. Se guarda en Supabase Storage.</p>
+        </div>
 
         <label className="flex flex-col gap-1 sm:col-span-2">
           <span className="text-xs text-ink-soft">Bio / visión</span>

@@ -13,9 +13,18 @@ alter table public.ambassador_profiles
 
 -- (photo_url, bio, presentation y trajectory ya existen desde 0001.)
 
--- RLS y grants ya definidos en 0001:
+-- RLS y grants de la tabla ya definidos en 0001:
 --   lectura pública (using true) + escritura solo admin.
---   No hace falta tocar nada más.
+
+-- ---------------------------------------------------------------------------
+-- Storage: bucket PÚBLICO para las fotos de los embajadores.
+-- La subida la hace el admin desde el backend con la service_role key
+-- (bypassa RLS de storage), así que no hacen falta políticas de escritura.
+-- Al ser público, las fotos se leen por URL sin autenticación.
+-- ---------------------------------------------------------------------------
+insert into storage.buckets (id, name, public)
+values ('ambassadors', 'ambassadors', true)
+on conflict (id) do nothing;
 
 -- ============================================================================
 -- Fin de la migración 0003.

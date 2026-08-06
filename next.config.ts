@@ -48,6 +48,13 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Las Server Actions aceptan 1MB por defecto; subimos el límite para permitir
+  // la carga de fotos de embajadores (hasta 5MB) vía Supabase Storage.
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "6mb",
+    },
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

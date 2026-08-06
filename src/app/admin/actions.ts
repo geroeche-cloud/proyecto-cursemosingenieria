@@ -176,7 +176,29 @@ export async function saveAmbassadorProfile(
     const display_name = String(formData.get("display_name") ?? "").trim() || null;
     const presentation = String(formData.get("presentation") ?? "").trim() || null;
     const bio = String(formData.get("bio") ?? "").trim() || null;
-    const photo_url = String(formData.get("photo_url") ?? "").trim() || null;
+
+    // Foto: si suben un archivo nuevo, lo guardamos en Storage; si no, se
+    // conserva la foto actual (o se limpia si tildaron "quitar foto").
+    let photo_url = String(formData.get("current_photo_url") ?? "").trim() || null;
+    if (String(formData.get("remove_photo") ?? "") === "on") photo_url = null;
+
+    const photo = formData.get("photo_file");
+    if (photo instanceof File && photo.size > 0) {
+      if (!photo.type.startsWith("image/")) {
+        return { ok: false, error: "El archivo debe ser una imagen." };
+      }
+      if (photo.size > 5 * 1024 * 1024) {
+        return { ok: false, error: "La imagen no puede superar los 5 MB." };
+      }
+      const admin = createAdminClient();
+      const ext = (photo.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const path = `${university_id}/${Date.now()}.${ext || "jpg"}`;
+      const { error: upErr } = await admin.storage
+        .from("ambassadors")
+        .upload(path, photo, { contentType: photo.type, upsert: true });
+      if (upErr) return { ok: false, error: friendly(upErr.message) };
+      photo_url = admin.storage.from("ambassadors").getPublicUrl(path).data.publicUrl;
+    }
 
     // Trayectoria: una línea por hito, formato "AÑO | texto".
     const trajectory = String(formData.get("trajectory") ?? "")
