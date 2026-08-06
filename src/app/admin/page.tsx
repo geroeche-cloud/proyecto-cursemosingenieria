@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { UniversityForm } from "./UniversityForm";
 import { AmbassadorForm } from "./AmbassadorForm";
 import { AmbassadorProfileEditor, type ProfileRow } from "./AmbassadorProfileEditor";
-import { ConfirmButton } from "./ConfirmButton";
+import { DangerForm } from "./DangerForm";
 import {
   setUniversityStatus,
   setAmbassadorStatus,
@@ -293,15 +293,13 @@ export default async function AdminPage() {
                           {active ? "Desactivar" : "Activar"}
                         </button>
                       </form>
-                      <form action={deleteUniversity}>
-                        <input type="hidden" name="id" value={u.id} />
-                        <ConfirmButton
-                          message={`¿Borrar "${u.name}"? Se eliminan también todas sus publicaciones y el perfil de su embajador. Esta acción no se puede deshacer.`}
-                          className="btn btn-ghost text-xs text-red-300"
-                        >
-                          Borrar
-                        </ConfirmButton>
-                      </form>
+                      <DangerForm
+                        action={deleteUniversity}
+                        hidden={{ id: u.id }}
+                        confirm={`¿Borrar "${u.name}"? Se eliminan también todas sus publicaciones y el perfil de su embajador. Esta acción no se puede deshacer.`}
+                        label="Borrar"
+                        className="btn btn-ghost text-xs text-red-300"
+                      />
                     </div>
                   </li>
                 );
@@ -349,15 +347,13 @@ export default async function AdminPage() {
                           {active ? "Suspender" : "Reactivar"}
                         </button>
                       </form>
-                      <form action={deleteAmbassador}>
-                        <input type="hidden" name="id" value={a.id} />
-                        <ConfirmButton
-                          message={`¿Borrar la cuenta de ${a.full_name || a.email || "este embajador"}? No podrá volver a ingresar. Esta acción no se puede deshacer.`}
-                          className="btn btn-ghost text-xs text-red-300"
-                        >
-                          Borrar
-                        </ConfirmButton>
-                      </form>
+                      <DangerForm
+                        action={deleteAmbassador}
+                        hidden={{ id: a.id }}
+                        confirm={`¿Borrar la cuenta de ${a.full_name || a.email || "este embajador"}? No podrá volver a ingresar. Esta acción no se puede deshacer.`}
+                        label="Borrar"
+                        className="btn btn-ghost text-xs text-red-300"
+                      />
                     </div>
                   </li>
                 );
@@ -413,16 +409,13 @@ export default async function AdminPage() {
                         Despublicar
                       </button>
                     </form>
-                    <form action={deleteContent}>
-                      <input type="hidden" name="table" value={m.table} />
-                      <input type="hidden" name="id" value={m.id} />
-                      <ConfirmButton
-                        message="¿Borrar esta publicación definitivamente? Esta acción no se puede deshacer."
-                        className="btn btn-ghost text-xs text-red-300"
-                      >
-                        Borrar
-                      </ConfirmButton>
-                    </form>
+                    <DangerForm
+                      action={deleteContent}
+                      hidden={{ table: m.table, id: m.id }}
+                      confirm="¿Borrar esta publicación definitivamente? Esta acción no se puede deshacer."
+                      label="Borrar"
+                      className="btn btn-ghost text-xs text-red-300"
+                    />
                   </div>
                 </li>
               ))}

@@ -255,59 +255,80 @@ export async function saveAmbassadorProfile(
 }
 
 /** Borrar una universidad y, en cascada, todo su contenido. Irreversible. */
-export async function deleteUniversity(formData: FormData) {
+export async function deleteUniversity(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   try {
     await assertAdmin();
     const id = String(formData.get("id") ?? "");
-    if (!id) return;
+    if (!id) return { ok: false, error: "Falta el identificador." };
 
-    const supabase = await createClient();
-    await supabase.from("universities").delete().eq("id", id);
+    // Cliente service_role: saltea RLS, garantiza el borrado.
+    const admin = createAdminClient();
+    const { error } = await admin.from("universities").delete().eq("id", id);
+    if (error) return { ok: false, error: friendly(error.message) };
 
     revalidatePath("/admin");
     revalidatePath("/campus");
     revalidatePath("/campus/[university]", "page");
-  } catch {
-    // no-op
+    return { ok: true, message: "Universidad borrada." };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
   }
 }
 
-/** Borrar la cuenta de un embajador (auth + perfil). Su contenido queda sin autor. */
-export async function deleteAmbassador(formData: FormData) {
+/** Borrar un embajador: su perfil (lista) y su cuenta de acceso (auth). */
+export async function deleteAmbassador(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   try {
     await assertAdmin();
     const id = String(formData.get("id") ?? "");
-    if (!id) return;
+    if (!id) return { ok: false, error: "Falta el identificador." };
 
     const admin = createAdminClient();
     // Guarda: nunca borrar un admin por este camino.
     const { data: prof } = await admin.from("profiles").select("role").eq("id", id).maybeSingle();
-    if (prof?.role !== "ambassador") return;
+    if (!prof) return { ok: false, error: "No se encontró ese embajador." };
+    if (prof.role !== "ambassador") return { ok: false, error: "Solo se pueden borrar embajadores." };
 
-    await admin.auth.admin.deleteUser(id); // cascade → borra la fila de profiles
+    // 1) Borrar la fila de profiles (es lo que aparece en la lista del admin).
+    const { error: pErr } = await admin.from("profiles").delete().eq("id", id);
+    if (pErr) return { ok: false, error: friendly(pErr.message) };
+
+    // 2) Borrar la cuenta de acceso (auth). Best-effort: el perfil ya no existe.
+    await admin.auth.admin.deleteUser(id);
 
     revalidatePath("/admin");
-  } catch {
-    // no-op
+    return { ok: true, message: "Embajador borrado." };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
   }
 }
 
 /** Borrar una publicación definitivamente (de cualquier universidad). */
-export async function deleteContent(formData: FormData) {
+export async function deleteContent(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
   try {
     await assertAdmin();
     const table = String(formData.get("table") ?? "") as ContentTable;
     const id = String(formData.get("id") ?? "");
-    if (!id || !CONTENT_TABLES.includes(table)) return;
+    if (!id || !CONTENT_TABLES.includes(table)) return { ok: false, error: "Datos inválidos." };
 
-    const supabase = await createClient();
-    await supabase.from(table).delete().eq("id", id);
+    const admin = createAdminClient();
+    const { error } = await admin.from(table).delete().eq("id", id);
+    if (error) return { ok: false, error: friendly(error.message) };
 
     revalidatePath("/admin");
     revalidatePath("/campus/[university]", "page");
     if (table === "news") revalidatePath("/novedades");
-  } catch {
-    // no-op
+    return { ok: true, message: "Publicación borrada." };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
   }
 }
 
