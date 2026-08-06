@@ -1,7 +1,9 @@
 import Image from "next/image";
 import { AmbassadorMore } from "./AmbassadorMore";
+import { SocialLinks } from "./SocialLinks";
 
 export type AmbassadorCardData = {
+  universityId: string;
   universityName: string;
   name: string | null;
   presentation: string | null;
@@ -55,7 +57,13 @@ function groupTrajectory(items: { year: string; title: string; detail: string }[
  * trayectoria completa). Se usa igual en la home ("Conocé a los embajadores")
  * y en la página pública de cada universidad.
  */
-export function AmbassadorCard({ data }: { data: AmbassadorCardData }) {
+export function AmbassadorCard({
+  data,
+  track = true,
+}: {
+  data: AmbassadorCardData;
+  track?: boolean;
+}) {
   const name = data.name ?? "Embajador";
   const socials = [
     data.email ? { label: "Mail", href: `mailto:${data.email}` } : null,
@@ -110,24 +118,7 @@ export function AmbassadorCard({ data }: { data: AmbassadorCardData }) {
 
         {data.bio && <p className="max-w-2xl leading-relaxed text-ink-soft">{data.bio}</p>}
 
-        {socials.length > 0 && (
-          <div className="flex flex-wrap gap-2.5">
-            {socials.map((s) => {
-              const external = !s.href.startsWith("mailto:");
-              return (
-                <a
-                  key={s.label}
-                  href={s.href}
-                  target={external ? "_blank" : undefined}
-                  rel={external ? "noopener noreferrer" : undefined}
-                  className="chip rounded-full px-3.5 py-1.5 text-sm font-medium text-ti-100 transition-colors hover:text-white"
-                >
-                  {s.label}
-                </a>
-              );
-            })}
-          </div>
-        )}
+        <SocialLinks universityId={data.universityId} socials={socials} track={track} />
 
         <AmbassadorMore name={name} bioFull={data.bioFull} groups={groups} />
       </div>

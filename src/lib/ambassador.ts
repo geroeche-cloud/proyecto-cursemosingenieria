@@ -22,9 +22,11 @@ export type AmbassadorRaw = {
 export function buildAmbassador(
   ambRaw: AmbassadorRaw,
   universityName: string,
+  universityId: string,
 ): AmbassadorCardData | null {
   if (!ambRaw || !(ambRaw.display_name || ambRaw.bio || ambRaw.photo_url)) return null;
   return {
+    universityId,
     universityName,
     name: ambRaw.display_name,
     presentation: ambRaw.presentation,

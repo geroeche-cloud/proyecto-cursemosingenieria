@@ -79,7 +79,7 @@ export default async function UniversityPage({
   );
   const professors = (profRes.data ?? []) as CampusProf[];
   const drives = (driveRes.data ?? []) as CampusDrive[];
-  const ambassador = buildAmbassador(ambProfileRes.data as AmbassadorRaw, uni.name);
+  const ambassador = buildAmbassador(ambProfileRes.data as AmbassadorRaw, uni.name, uni.id);
 
   return (
     <CampusView

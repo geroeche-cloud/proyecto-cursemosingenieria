@@ -2,20 +2,39 @@
 
 import type { ReactNode } from "react";
 import { createClient } from "@/lib/supabase/client";
+import { getVisitorId } from "@/lib/visitor";
 
+/** Clics de contenido: suman en el contador visible de la publicación. */
 export type ClickKind = "news" | "opportunities" | "professors" | "drives";
+
+/** Todos los eventos medibles (contenido + visitas + redes del embajador). */
+export type EventKind =
+  | ClickKind
+  | "visit"
+  | "social:instagram"
+  | "social:tiktok"
+  | "social:youtube"
+  | "social:linkedin"
+  | "social:mail";
 
 /** Evento interno para que el contador en pantalla suba al instante. */
 export const CLICK_EVENT = "cursemos:click";
 
+/** Envía el evento al servidor (el freno anti-abuso vive en la base). */
+export function sendEvent(kind: EventKind, id: string) {
+  createClient()
+    .rpc("track_event", { kind, row_id: id, vid: getVisitorId() })
+    .then(({ error }) => {
+      if (error) console.error("[informes] no se pudo registrar:", error.message);
+    });
+}
+
 /**
- * Suma un clic (una sola vez por sesión, para no inflar por recargas).
- *
- * Importante: el builder de Supabase es "lazy" — `rpc(...)` arma la consulta
- * pero recién la envía cuando se encadena un `.then()`. Sin eso la petición
- * nunca sale, que es exactamente por qué los contadores quedaban en cero.
+ * Registra un clic una sola vez por sesión (el servidor además deduplica por
+ * visitante y día). Importante: el builder de Supabase es "lazy" — sin el
+ * .then() del sendEvent la petición nunca saldría.
  */
-export function trackClick(kind: ClickKind, id: string) {
+export function trackClick(kind: EventKind, id: string) {
   try {
     const k = `clk:${kind}:${id}`;
     if (sessionStorage.getItem(k)) return;
@@ -24,11 +43,7 @@ export function trackClick(kind: ClickKind, id: string) {
     // El contador visible sube ya; la base se actualiza en paralelo.
     window.dispatchEvent(new CustomEvent(CLICK_EVENT, { detail: { kind, id } }));
 
-    createClient()
-      .rpc("bump_click", { kind, row_id: id })
-      .then(({ error }) => {
-        if (error) console.error("[clics] no se pudo registrar:", error.message);
-      });
+    sendEvent(kind, id);
   } catch {
     // el tracking nunca debe romper la navegación
   }
@@ -43,7 +58,7 @@ export function TrackedLink({
   className,
   children,
 }: {
-  kind: ClickKind;
+  kind: EventKind;
   id: string;
   href: string;
   track?: boolean;

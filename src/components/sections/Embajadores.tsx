@@ -50,6 +50,7 @@ async function loadAmbassadors(): Promise<AmbassadorCardData[]> {
     return ((profRes.data ?? []) as ProfileRow[])
       .filter((p) => uniName.has(p.university_id) && (p.display_name || p.bio || p.photo_url))
       .map((p) => ({
+        universityId: p.university_id,
         universityName: uniName.get(p.university_id) ?? "",
         name: p.display_name,
         presentation: p.presentation,

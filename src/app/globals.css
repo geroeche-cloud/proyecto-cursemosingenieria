@@ -631,3 +631,32 @@ input[type="file"] {
     transform: none !important;
   }
 }
+
+/* ---------- Informes: impresión / guardar como PDF ----------
+   Al imprimir, solo se ve el informe (.report-print) sobre fondo blanco:
+   el resto de la interfaz (nav oscura, fondos, botones) desaparece. */
+@media print {
+  body {
+    background: #fff !important;
+  }
+  body * {
+    visibility: hidden;
+  }
+  .report-print,
+  .report-print * {
+    visibility: visible;
+  }
+  .report-print {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+  .grain::after,
+  .site-glow,
+  .site-grid,
+  .site-base,
+  .site-sheen {
+    display: none !important;
+  }
+}

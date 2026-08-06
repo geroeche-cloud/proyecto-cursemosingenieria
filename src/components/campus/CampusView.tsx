@@ -7,6 +7,7 @@ import { CampusCrumb } from "@/components/campus/CampusCrumb";
 import { AmbassadorCard, type AmbassadorCardData } from "@/components/campus/AmbassadorCard";
 import { TrackedLink } from "@/components/campus/TrackedLink";
 import { TrackedNews } from "@/components/campus/TrackedNews";
+import { TrackVisit } from "@/components/campus/TrackVisit";
 import { ClickCount } from "@/components/campus/ClickCount";
 import { scheduleState, type ScheduleTone } from "@/lib/schedule";
 
@@ -36,7 +37,7 @@ const TONE: Record<ScheduleTone, string> = {
     "rounded-full border border-hair px-2.5 py-0.5 font-mono text-[0.55rem] uppercase tracking-[0.12em] text-ink-mute",
 };
 
-export type CampusUni = { name: string; short_name: string | null; city: string | null; slug: string };
+export type CampusUni = { id: string; name: string; short_name: string | null; city: string | null; slug: string };
 export type CampusNews = {
   id: string; title: string; summary: string | null; body?: string | null;
   status?: string; starts_at?: string | null; ends_at?: string | null; clicks?: number | null;
@@ -130,6 +131,7 @@ export function CampusView({
       <Nav />
       <main className="relative overflow-hidden">
         <GlobalNet />
+        {!preview && <TrackVisit universityId={uni.id} />}
 
         <div className="shell relative z-10 pt-32 pb-24 sm:pt-40">
           <Reveal>
@@ -153,7 +155,7 @@ export function CampusView({
           {ambassador && (
             <section className="mt-16 sm:mt-20">
               <Reveal>
-                <AmbassadorCard data={ambassador} />
+                <AmbassadorCard data={ambassador} track={!preview} />
               </Reveal>
             </section>
           )}
