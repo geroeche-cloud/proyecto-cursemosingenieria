@@ -7,6 +7,7 @@ import { CampusCrumb } from "@/components/campus/CampusCrumb";
 import { AmbassadorCard, type AmbassadorCardData } from "@/components/campus/AmbassadorCard";
 import { TrackedLink } from "@/components/campus/TrackedLink";
 import { TrackedNews } from "@/components/campus/TrackedNews";
+import { ClickCount } from "@/components/campus/ClickCount";
 import { scheduleState, type ScheduleTone } from "@/lib/schedule";
 
 const CARD = "linear-gradient(158deg, #121a2c 0%, #0b1020 100%)";
@@ -54,23 +55,6 @@ export type CampusDrive = {
   status?: string; clicks?: number | null;
 };
 
-/** Recuento de clics acumulado de una publicación. */
-function ClickCount({ clicks }: { clicks?: number | null }) {
-  const n = clicks ?? 0;
-  return (
-    <span
-      className="inline-flex items-center gap-1.5 font-mono text-[0.62rem] uppercase tracking-[0.1em] text-ink-mute"
-      title={`${n} ${n === 1 ? "clic" : "clics"} en total`}
-    >
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5" aria-hidden>
-        <path d="M9 11.5V5a1.5 1.5 0 0 1 3 0v6" />
-        <path d="M12 11V4.5a1.5 1.5 0 0 1 3 0V11" />
-        <path d="M15 11V6.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-1a6 6 0 0 1-5.2-3l-2-3.4a1.5 1.5 0 0 1 2.6-1.5L9 14" />
-      </svg>
-      {n} {n === 1 ? "clic" : "clics"}
-    </span>
-  );
-}
 
 function waLink(num: string | null, name?: string | null): string | null {
   if (!num) return null;
@@ -194,7 +178,7 @@ export function CampusView({
                     badge={
                       <StateBadge preview={preview} status={n.status} starts_at={n.starts_at} ends_at={n.ends_at} />
                     }
-                    footer={<ClickCount clicks={n.clicks} />}
+                    footer={<ClickCount kind="news" id={n.id} clicks={n.clicks} />}
                   />
                 </Reveal>
               ))}
@@ -240,7 +224,7 @@ export function CampusView({
                               Ver convocatoria
                             </TrackedLink>
                           )}
-                          <ClickCount clicks={o.clicks} />
+                          <ClickCount kind="opportunities" id={o.id} clicks={o.clicks} />
                         </div>
                       </article>
                     </Reveal>
@@ -283,7 +267,7 @@ export function CampusView({
                             </div>
                           )}
                           <div className="mt-3">
-                            <ClickCount clicks={p.clicks} />
+                            <ClickCount kind="professors" id={p.id} clicks={p.clicks} />
                           </div>
                         </div>
                         {wa && (
@@ -322,7 +306,7 @@ export function CampusView({
                           <p className="mt-0.5 font-mono text-xs uppercase tracking-[0.12em] text-ti-500">{d.career}</p>
                         )}
                         <div className="mt-2">
-                          <ClickCount clicks={d.clicks} />
+                          <ClickCount kind="drives" id={d.id} clicks={d.clicks} />
                         </div>
                       </div>
                       {d.href && (
