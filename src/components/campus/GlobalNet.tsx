@@ -79,6 +79,7 @@ export function GlobalNet() {
     // cuadro (180 por segundo); ahora se arman una vez y se reutilizan.
     let gBg: CanvasGradient | null = null;
     let gAura: CanvasGradient | null = null;
+    let gHalo: CanvasGradient | null = null;
     let gVig: CanvasGradient | null = null;
 
     const size = () => {
@@ -100,22 +101,36 @@ export function GlobalNet() {
         vx: (Math.random() - 0.5) * 0.12, vy: (Math.random() - 0.5) * 0.08,
       }));
 
+      // Base: grafito azulado en vez de casi negro — da aire sin lavar el texto.
       gBg = ctx.createLinearGradient(0, 0, 0, H);
-      gBg.addColorStop(0, "#04050b");
-      gBg.addColorStop(1, "#070a14");
+      gBg.addColorStop(0, "#080d1c");
+      gBg.addColorStop(0.55, "#0a1226");
+      gBg.addColorStop(1, "#070c1a");
 
-      // Se dibuja centrado en cy; el parallax se resuelve moviendo el lienzo.
+      // Aura de la esfera: más intensa y con azul más vivo.
+      // Se dibuja centrada en cy; el parallax se resuelve moviendo el lienzo.
       gAura = ctx.createRadialGradient(cx, cy, 0, cx, cy, Rd * 1.5);
-      gAura.addColorStop(0, "rgba(30,64,150,0.16)");
-      gAura.addColorStop(0.6, "rgba(20,44,110,0.06)");
+      gAura.addColorStop(0, "rgba(58,110,235,0.34)");
+      gAura.addColorStop(0.45, "rgba(38,78,180,0.16)");
       gAura.addColorStop(1, "rgba(0,0,0,0)");
 
-      gVig = ctx.createRadialGradient(
-        W * 0.5, H * 0.44, Math.min(W, H) * 0.2,
-        W * 0.5, H * 0.44, Math.max(W, H) * 0.9,
+      // Segundo halo, cian y descentrado: el matiz que aporta la vibración.
+      gHalo = ctx.createRadialGradient(
+        W * 0.72, cy - Rd * 0.35, 0,
+        W * 0.72, cy - Rd * 0.35, Rd * 1.15,
       );
-      gVig.addColorStop(0, "rgba(3,4,10,0)");
-      gVig.addColorStop(1, "rgba(2,3,8,0.78)");
+      gHalo.addColorStop(0, "rgba(70,180,240,0.20)");
+      gHalo.addColorStop(0.5, "rgba(60,120,220,0.08)");
+      gHalo.addColorStop(1, "rgba(0,0,0,0)");
+
+      // Viñeta más suave: sigue protegiendo la lectura en los bordes,
+      // pero deja de apagar el centro.
+      gVig = ctx.createRadialGradient(
+        W * 0.5, H * 0.44, Math.min(W, H) * 0.3,
+        W * 0.5, H * 0.44, Math.max(W, H) * 0.92,
+      );
+      gVig.addColorStop(0, "rgba(4,6,14,0)");
+      gVig.addColorStop(1, "rgba(3,5,12,0.55)");
     };
 
     const draw = () => {
@@ -134,6 +149,10 @@ export function GlobalNet() {
         ctx.translate(0, -par);
         ctx.fillStyle = gAura;
         ctx.fillRect(0, par, W, H);
+        if (gHalo) {
+          ctx.fillStyle = gHalo;
+          ctx.fillRect(0, par, W, H);
+        }
         ctx.restore();
       }
 
@@ -170,9 +189,9 @@ export function GlobalNet() {
         const b = pts[e.b];
         const depth = (a.depth + b.depth) / 2;
         const fade = 0.5 + 0.5 * Math.sin(t * e.sp + e.ph);
-        const o = depth * depth * 0.22 * fade;
+        const o = depth * depth * 0.34 * fade;
         if (o < 0.012) continue;
-        ctx.strokeStyle = `rgba(120,160,240,${o})`;
+        ctx.strokeStyle = `rgba(150,190,255,${o})`;
         ctx.lineWidth = 0.5;
         ctx.beginPath();
         ctx.moveTo(a.sx, a.sy);
@@ -181,9 +200,9 @@ export function GlobalNet() {
       }
 
       for (const p of pts) {
-        const a = 0.14 + p.depth * p.depth * 0.68;
-        const r = p.s * (0.5 + p.depth * 1.1);
-        ctx.fillStyle = `rgba(202,224,255,${a})`;
+        const a = 0.2 + p.depth * p.depth * 0.8;
+        const r = p.s * (0.55 + p.depth * 1.2);
+        ctx.fillStyle = `rgba(216,234,255,${a})`;
         ctx.beginPath();
         ctx.arc(p.sx, p.sy, r, 0, 6.283);
         ctx.fill();
