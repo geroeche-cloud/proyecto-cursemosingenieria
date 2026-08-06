@@ -19,7 +19,12 @@ export function GlobalNet() {
     if (!ctx) return;
 
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+
+    // La animación se mantiene en TODOS los dispositivos; lo que se adapta es
+    // cuánto trabajo cuesta cada cuadro. En pantallas chicas hay menos píxeles,
+    // así que con menos nodos se ve igual de densa y corre fluida.
+    const small = Math.min(window.innerWidth, window.innerHeight) < 700;
+    const dpr = Math.min(window.devicePixelRatio || 1, small ? 1.25 : 1.5);
 
     let W = 0;
     let H = 0;
@@ -29,7 +34,7 @@ export function GlobalNet() {
     let scrollTarget = 0;
 
     // Nube de puntos sobre una esfera (distribución de Fibonacci)
-    const N = 620;
+    const N = small ? 320 : 620;
     type Pt = { x: number; y: number; z: number; sx: number; sy: number; depth: number; s: number };
     const pts: Pt[] = [];
     const GA = Math.PI * (1 + Math.sqrt(5));
@@ -49,9 +54,10 @@ export function GlobalNet() {
     type Edge = { a: number; b: number; ph: number; sp: number };
     const edges: Edge[] = [];
     const COST = Math.cos(0.3);
+    const MAX_LINKS = small ? 3 : 4;
     for (let i = 0; i < N; i++) {
       let cnt = 0;
-      for (let j = i + 1; j < N && cnt < 4; j++) {
+      for (let j = i + 1; j < N && cnt < MAX_LINKS; j++) {
         const d = pts[i].x * pts[j].x + pts[i].y * pts[j].y + pts[i].z * pts[j].z;
         if (d > COST) {
           edges.push({ a: i, b: j, ph: Math.random() * 6.28, sp: 0.003 + Math.random() * 0.004 });
@@ -68,6 +74,12 @@ export function GlobalNet() {
     let cx = 0;
     let cy = 0;
     let Rd = 0;
+
+    // Los gradientes son lo más caro de este dibujo. Antes se creaban tres por
+    // cuadro (180 por segundo); ahora se arman una vez y se reutilizan.
+    let gBg: CanvasGradient | null = null;
+    let gAura: CanvasGradient | null = null;
+    let gVig: CanvasGradient | null = null;
 
     const size = () => {
       W = window.innerWidth;
@@ -87,6 +99,23 @@ export function GlobalNet() {
         x: Math.random() * W, y: Math.random() * H, z: Math.random(),
         vx: (Math.random() - 0.5) * 0.12, vy: (Math.random() - 0.5) * 0.08,
       }));
+
+      gBg = ctx.createLinearGradient(0, 0, 0, H);
+      gBg.addColorStop(0, "#04050b");
+      gBg.addColorStop(1, "#070a14");
+
+      // Se dibuja centrado en cy; el parallax se resuelve moviendo el lienzo.
+      gAura = ctx.createRadialGradient(cx, cy, 0, cx, cy, Rd * 1.5);
+      gAura.addColorStop(0, "rgba(30,64,150,0.16)");
+      gAura.addColorStop(0.6, "rgba(20,44,110,0.06)");
+      gAura.addColorStop(1, "rgba(0,0,0,0)");
+
+      gVig = ctx.createRadialGradient(
+        W * 0.5, H * 0.44, Math.min(W, H) * 0.2,
+        W * 0.5, H * 0.44, Math.max(W, H) * 0.9,
+      );
+      gVig.addColorStop(0, "rgba(3,4,10,0)");
+      gVig.addColorStop(1, "rgba(2,3,8,0.78)");
     };
 
     const draw = () => {
@@ -94,18 +123,19 @@ export function GlobalNet() {
       const par = Math.min(scrollY, 2200) * 0.028;
       const ccy = cy - par;
 
-      const bg = ctx.createLinearGradient(0, 0, 0, H);
-      bg.addColorStop(0, "#04050b");
-      bg.addColorStop(1, "#070a14");
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, W, H);
+      if (gBg) {
+        ctx.fillStyle = gBg;
+        ctx.fillRect(0, 0, W, H);
+      }
 
-      const ag = ctx.createRadialGradient(cx, ccy, 0, cx, ccy, Rd * 1.5);
-      ag.addColorStop(0, "rgba(30,64,150,0.16)");
-      ag.addColorStop(0.6, "rgba(20,44,110,0.06)");
-      ag.addColorStop(1, "rgba(0,0,0,0)");
-      ctx.fillStyle = ag;
-      ctx.fillRect(0, 0, W, H);
+      // El aura acompaña el parallax desplazando el lienzo, no recreándose.
+      if (gAura) {
+        ctx.save();
+        ctx.translate(0, -par);
+        ctx.fillStyle = gAura;
+        ctx.fillRect(0, par, W, H);
+        ctx.restore();
+      }
 
       ctx.globalCompositeOperation = "lighter";
 
@@ -177,14 +207,10 @@ export function GlobalNet() {
 
       ctx.globalCompositeOperation = "source-over";
 
-      const vg = ctx.createRadialGradient(
-        W * 0.5, H * 0.44, Math.min(W, H) * 0.2,
-        W * 0.5, H * 0.44, Math.max(W, H) * 0.9,
-      );
-      vg.addColorStop(0, "rgba(3,4,10,0)");
-      vg.addColorStop(1, "rgba(2,3,8,0.78)");
-      ctx.fillStyle = vg;
-      ctx.fillRect(0, 0, W, H);
+      if (gVig) {
+        ctx.fillStyle = gVig;
+        ctx.fillRect(0, 0, W, H);
+      }
 
       t++;
       if (!reduce) raf = requestAnimationFrame(draw);

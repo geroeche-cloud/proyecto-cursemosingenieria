@@ -424,16 +424,23 @@ body {
   outline: none;
 }
 
-/* ---------- Mobile performance ---------- */
+/* ---------- Móvil: adaptar, no apagar ----------
+   El sitio tiene que seguir sintiéndose vivo en celular. En vez de cortar las
+   animaciones, se aligeran: menos desenfoque (lo caro de pintar) y ciclos más
+   lentos (menos trabajo por segundo), pero el movimiento se conserva. */
 @media (max-width: 640px) {
   .ambient {
     filter: blur(60px);
     opacity: 0.4;
   }
-  .animate-drift,
-  .animate-drift-slow {
-    animation: none;
+  .animate-drift {
+    animation-duration: 38s;
   }
+  .animate-drift-slow {
+    animation-duration: 56s;
+  }
+  /* La textura de grano es estática y repinta en cada scroll: no aporta
+     movimiento y sí cuesta. Es lo único que se desactiva. */
   .grain::after {
     display: none;
   }
@@ -561,9 +568,31 @@ input[type="file"] {
   }
 }
 
-/* ---------- Tarjeta de universidad: placa reactiva al cursor ----------
-   La inclinación 3D solo tiene sentido con mouse: en táctil la tarjeta queda
-   quieta (igual de sólida) y con "reducir movimiento" se desactiva del todo. */
+/* ---------- Tarjeta de universidad: placa viva en todos los dispositivos ----------
+   Con mouse, la luz y la inclinación siguen al cursor.
+   En celular y tablet no hay cursor, así que los MISMOS efectos siguen
+   animándose solos: la placa respira y la luz recorre la superficie.
+   Todo con transform/opacity (trabajo del compositor, no repintado). */
+
+/* Luz que recorre la tarjeta por su cuenta — en táctil es la que le da vida. */
+.uni-ambient {
+  animation: uni-float 16s ease-in-out infinite;
+  will-change: transform;
+}
+@keyframes uni-float {
+  0%,
+  100% {
+    transform: translate3d(-12%, -18%, 0) scale(1);
+  }
+  33% {
+    transform: translate3d(78%, 8%, 0) scale(1.14);
+  }
+  66% {
+    transform: translate3d(28%, 72%, 0) scale(0.92);
+  }
+}
+
+/* Con mouse: la placa responde al cursor. */
 @media (hover: hover) and (pointer: fine) {
   .uni-card {
     transform: perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))
@@ -573,8 +602,32 @@ input[type="file"] {
     box-shadow: 0 48px 90px -30px rgba(0, 0, 0, 0.98);
   }
 }
-@media (prefers-reduced-motion: reduce) {
+
+/* Sin cursor (celular / tablet): la placa se mueve sola, con el mismo lenguaje. */
+@media (hover: none), (pointer: coarse) {
   .uni-card {
+    animation: uni-breathe 12s ease-in-out infinite;
+    will-change: transform;
+  }
+  .uni-ambient {
+    opacity: 0.6;
+  }
+}
+@keyframes uni-breathe {
+  0%,
+  100% {
+    transform: perspective(1200px) rotateX(1.4deg) rotateY(-2.2deg) translateY(0);
+  }
+  50% {
+    transform: perspective(1200px) rotateX(-1.4deg) rotateY(2.2deg) translateY(-5px);
+  }
+}
+
+/* Única excepción real: quien pidió menos movimiento en su sistema. */
+@media (prefers-reduced-motion: reduce) {
+  .uni-card,
+  .uni-ambient {
+    animation: none !important;
     transform: none !important;
   }
 }
