@@ -3,10 +3,14 @@ import { createClient } from "@/lib/supabase/server";
 import { UniversityForm } from "./UniversityForm";
 import { AmbassadorForm } from "./AmbassadorForm";
 import { AmbassadorProfileEditor, type ProfileRow } from "./AmbassadorProfileEditor";
+import { ConfirmButton } from "./ConfirmButton";
 import {
   setUniversityStatus,
   setAmbassadorStatus,
   unpublishContent,
+  deleteUniversity,
+  deleteAmbassador,
+  deleteContent,
 } from "./actions";
 
 type University = {
@@ -272,6 +276,15 @@ export default async function AdminPage() {
                           {active ? "Desactivar" : "Activar"}
                         </button>
                       </form>
+                      <form action={deleteUniversity}>
+                        <input type="hidden" name="id" value={u.id} />
+                        <ConfirmButton
+                          message={`¿Borrar "${u.name}"? Se eliminan también todas sus publicaciones y el perfil de su embajador. Esta acción no se puede deshacer.`}
+                          className="btn btn-ghost text-xs text-red-300"
+                        >
+                          Borrar
+                        </ConfirmButton>
+                      </form>
                     </div>
                   </li>
                 );
@@ -318,6 +331,15 @@ export default async function AdminPage() {
                         >
                           {active ? "Suspender" : "Reactivar"}
                         </button>
+                      </form>
+                      <form action={deleteAmbassador}>
+                        <input type="hidden" name="id" value={a.id} />
+                        <ConfirmButton
+                          message={`¿Borrar la cuenta de ${a.full_name || a.email || "este embajador"}? No podrá volver a ingresar. Esta acción no se puede deshacer.`}
+                          className="btn btn-ghost text-xs text-red-300"
+                        >
+                          Borrar
+                        </ConfirmButton>
                       </form>
                     </div>
                   </li>
@@ -366,13 +388,25 @@ export default async function AdminPage() {
                       {m.typeLabel} · {uniName.get(m.university_id) ?? "—"}
                     </p>
                   </div>
-                  <form action={unpublishContent} className="shrink-0">
-                    <input type="hidden" name="table" value={m.table} />
-                    <input type="hidden" name="id" value={m.id} />
-                    <button type="submit" className="btn btn-ghost text-xs text-red-300">
-                      Despublicar
-                    </button>
-                  </form>
+                  <div className="flex shrink-0 items-center gap-2">
+                    <form action={unpublishContent}>
+                      <input type="hidden" name="table" value={m.table} />
+                      <input type="hidden" name="id" value={m.id} />
+                      <button type="submit" className="btn btn-ghost text-xs text-amber-300">
+                        Despublicar
+                      </button>
+                    </form>
+                    <form action={deleteContent}>
+                      <input type="hidden" name="table" value={m.table} />
+                      <input type="hidden" name="id" value={m.id} />
+                      <ConfirmButton
+                        message="¿Borrar esta publicación definitivamente? Esta acción no se puede deshacer."
+                        className="btn btn-ghost text-xs text-red-300"
+                      >
+                        Borrar
+                      </ConfirmButton>
+                    </form>
+                  </div>
                 </li>
               ))}
             </ul>

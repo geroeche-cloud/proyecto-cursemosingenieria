@@ -235,6 +235,63 @@ export async function saveAmbassadorProfile(
   }
 }
 
+/** Borrar una universidad y, en cascada, todo su contenido. Irreversible. */
+export async function deleteUniversity(formData: FormData) {
+  try {
+    await assertAdmin();
+    const id = String(formData.get("id") ?? "");
+    if (!id) return;
+
+    const supabase = await createClient();
+    await supabase.from("universities").delete().eq("id", id);
+
+    revalidatePath("/admin");
+    revalidatePath("/campus");
+    revalidatePath("/campus/[university]", "page");
+  } catch {
+    // no-op
+  }
+}
+
+/** Borrar la cuenta de un embajador (auth + perfil). Su contenido queda sin autor. */
+export async function deleteAmbassador(formData: FormData) {
+  try {
+    await assertAdmin();
+    const id = String(formData.get("id") ?? "");
+    if (!id) return;
+
+    const admin = createAdminClient();
+    // Guarda: nunca borrar un admin por este camino.
+    const { data: prof } = await admin.from("profiles").select("role").eq("id", id).maybeSingle();
+    if (prof?.role !== "ambassador") return;
+
+    await admin.auth.admin.deleteUser(id); // cascade → borra la fila de profiles
+
+    revalidatePath("/admin");
+  } catch {
+    // no-op
+  }
+}
+
+/** Borrar una publicación definitivamente (de cualquier universidad). */
+export async function deleteContent(formData: FormData) {
+  try {
+    await assertAdmin();
+    const table = String(formData.get("table") ?? "") as ContentTable;
+    const id = String(formData.get("id") ?? "");
+    if (!id || !CONTENT_TABLES.includes(table)) return;
+
+    const supabase = await createClient();
+    await supabase.from(table).delete().eq("id", id);
+
+    revalidatePath("/admin");
+    revalidatePath("/campus/[university]", "page");
+    if (table === "news") revalidatePath("/novedades");
+  } catch {
+    // no-op
+  }
+}
+
 /** Moderación: bajar de público una publicación de cualquier universidad. */
 export async function unpublishContent(formData: FormData) {
   try {
