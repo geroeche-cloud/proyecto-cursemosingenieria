@@ -8,6 +8,7 @@ import { GlobalNet } from "@/components/campus/GlobalNet";
 import { CampusCrumb } from "@/components/campus/CampusCrumb";
 import { AmbassadorCard, type AmbassadorCardData } from "@/components/campus/AmbassadorCard";
 import { createPublicClient } from "@/lib/supabase/public";
+import { isActiveNow } from "@/lib/schedule";
 
 export const revalidate = 60;
 
@@ -77,10 +78,14 @@ function Section({ children }: { children: ReactNode }) {
   return <section className="mt-20 flex flex-col gap-8 sm:mt-24">{children}</section>;
 }
 
-type News = { id: string; title: string; summary: string | null; published_at: string | null };
+type News = {
+  id: string; title: string; summary: string | null; published_at: string | null;
+  starts_at: string | null; ends_at: string | null;
+};
 type Opp = {
   id: string; kind: string; title: string; org: string | null;
   description: string | null; deadline: string | null; requirements: string[] | null; href: string | null;
+  starts_at: string | null; ends_at: string | null;
 };
 type Prof = {
   id: string; name: string; title: string | null; modality: string;
@@ -106,15 +111,19 @@ export default async function UniversityPage({
 
   const uid = uni.id;
   const [newsRes, oppRes, profRes, driveRes, ambProfileRes] = await Promise.all([
-    supabase.from("news").select("id, title, summary, published_at").eq("university_id", uid).eq("status", "published").order("published_at", { ascending: false }).limit(30),
-    supabase.from("opportunities").select("id, kind, title, org, description, deadline, requirements, href").eq("university_id", uid).eq("status", "published").order("created_at", { ascending: false }),
+    supabase.from("news").select("id, title, summary, published_at, starts_at, ends_at").eq("university_id", uid).eq("status", "published").order("published_at", { ascending: false }).limit(30),
+    supabase.from("opportunities").select("id, kind, title, org, description, deadline, requirements, href, starts_at, ends_at").eq("university_id", uid).eq("status", "published").order("created_at", { ascending: false }),
     supabase.from("professors").select("id, name, title, modality, subjects, whatsapp").eq("university_id", uid).eq("status", "published"),
     supabase.from("drives").select("id, owner, career, href").eq("university_id", uid).eq("status", "published"),
     supabase.from("ambassador_profiles").select("display_name, presentation, bio, bio_full, photo_url, email, instagram, tiktok, youtube, linkedin, trajectory").eq("university_id", uid).maybeSingle(),
   ]);
 
-  const news = (newsRes.data ?? []) as News[];
-  const opportunities = (oppRes.data ?? []) as Opp[];
+  const news = ((newsRes.data ?? []) as News[]).filter((n) =>
+    isActiveNow(n.starts_at, n.ends_at),
+  );
+  const opportunities = ((oppRes.data ?? []) as Opp[]).filter((o) =>
+    isActiveNow(o.starts_at, o.ends_at),
+  );
   const professors = (profRes.data ?? []) as Prof[];
   const drives = (driveRes.data ?? []) as Drive[];
 

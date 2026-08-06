@@ -29,6 +29,8 @@ export async function createOpportunity(
     const description = String(formData.get("description") ?? "").trim() || null;
     const deadline = String(formData.get("deadline") ?? "").trim() || null;
     const href = String(formData.get("href") ?? "").trim() || null;
+    const starts_at = String(formData.get("starts_at") ?? "").trim() || null;
+    const ends_at = String(formData.get("ends_at") ?? "").trim() || null;
     const requirements = String(formData.get("requirements") ?? "")
       .split("\n")
       .map((s) => s.trim())
@@ -48,6 +50,8 @@ export async function createOpportunity(
       deadline,
       href,
       requirements,
+      starts_at,
+      ends_at,
       status: publish ? "published" : "draft",
       published_at: publish ? new Date().toISOString() : null,
     });

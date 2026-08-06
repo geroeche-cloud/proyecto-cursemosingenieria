@@ -27,6 +27,8 @@ export async function createNews(formData: FormData) {
   const title = String(formData.get("title") ?? "").trim();
   const summary = String(formData.get("summary") ?? "").trim() || null;
   const body = String(formData.get("body") ?? "").trim() || null;
+  const starts_at = String(formData.get("starts_at") ?? "").trim() || null;
+  const ends_at = String(formData.get("ends_at") ?? "").trim() || null;
   const publish = String(formData.get("intent") ?? "") === "publish";
   if (!title) return;
 
@@ -38,6 +40,8 @@ export async function createNews(formData: FormData) {
     slug,
     summary,
     body,
+    starts_at,
+    ends_at,
     status: publish ? "published" : "draft",
     published_at: publish ? new Date().toISOString() : null,
   });

@@ -60,6 +60,22 @@ export function OpportunityForm() {
           className={field}
         />
       </label>
+      <label className="flex flex-col gap-1">
+        <span className="text-xs text-ink-soft">
+          Activar desde <span className="text-ink-mute">(opcional)</span>
+        </span>
+        <input type="date" name="starts_at" className={field} />
+      </label>
+      <label className="flex flex-col gap-1">
+        <span className="text-xs text-ink-soft">
+          Caduca el <span className="text-ink-mute">(opcional)</span>
+        </span>
+        <input type="date" name="ends_at" className={field} />
+      </label>
+      <p className="text-[0.68rem] text-ink-mute sm:col-span-2">
+        Vacías = se publica ya y no caduca. Con fecha futura, se activa sola ese día;
+        al caducar deja de verse y en el panel figura como caducada.
+      </p>
       <div className="flex flex-col gap-2 sm:col-span-2">
         <div className="flex flex-wrap gap-2">
           <button

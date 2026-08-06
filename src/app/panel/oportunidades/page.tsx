@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { OpportunityForm } from "./OpportunityForm";
 import { setOpportunityStatus, deleteOpportunity } from "./actions";
+import { scheduleState, type ScheduleTone } from "@/lib/schedule";
 
 type Opportunity = {
   id: string;
@@ -10,6 +11,8 @@ type Opportunity = {
   deadline: string | null;
   requirements: string[] | null;
   status: "draft" | "published" | "archived";
+  starts_at: string | null;
+  ends_at: string | null;
 };
 
 const KIND_LABEL: Record<string, string> = {
@@ -21,12 +24,22 @@ const KIND_LABEL: Record<string, string> = {
   noticia: "Noticia",
 };
 
+const TONE: Record<ScheduleTone, string> = {
+  emerald:
+    "rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-emerald-300",
+  amber:
+    "rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-amber-300",
+  red: "rounded-full border border-red-500/40 bg-red-500/10 px-2.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-red-300",
+  muted:
+    "rounded-full border border-hair px-2.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-ink-mute",
+};
+
 export default async function OportunidadesPanelPage() {
   const supabase = await createClient();
 
   const { data } = await supabase
     .from("opportunities")
-    .select("id, kind, title, org, deadline, requirements, status")
+    .select("id, kind, title, org, deadline, requirements, status, starts_at, ends_at")
     .order("created_at", { ascending: false });
   const items = (data ?? []) as Opportunity[];
 
@@ -43,21 +56,15 @@ export default async function OportunidadesPanelPage() {
           {items.length === 0 ? (
             <p className="text-sm text-ink-mute">Todavía no cargaste oportunidades.</p>
           ) : (
-            items.map((o) => (
+            items.map((o) => {
+              const sched = scheduleState(o.status, o.starts_at, o.ends_at);
+              return (
               <article key={o.id} className="rounded-2xl border border-hair bg-surface p-5">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded-full border border-blue-500/40 bg-blue-500/10 px-2.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-blue-300">
                     {KIND_LABEL[o.kind] ?? o.kind}
                   </span>
-                  <span
-                    className={
-                      o.status === "published"
-                        ? "rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-emerald-300"
-                        : "rounded-full border border-hair px-2.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-ink-mute"
-                    }
-                  >
-                    {o.status === "published" ? "Publicada" : "Borrador"}
-                  </span>
+                  <span className={TONE[sched.tone]}>{sched.label}</span>
                   {o.deadline && (
                     <span className="font-mono text-[0.58rem] uppercase tracking-[0.1em] text-ink-mute">
                       {o.deadline}
@@ -100,7 +107,8 @@ export default async function OportunidadesPanelPage() {
                   </form>
                 </div>
               </article>
-            ))
+              );
+            })
           )}
         </div>
       </section>

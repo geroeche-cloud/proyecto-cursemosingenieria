@@ -1,4 +1,5 @@
 import { createPublicClient } from "@/lib/supabase/public";
+import { isActiveNow } from "@/lib/schedule";
 
 // ISR: la página se sirve cacheada y se regenera (acá o al publicar una noticia).
 export const revalidate = 60;
@@ -9,6 +10,8 @@ type Row = {
   title: string;
   summary: string | null;
   published_at: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
   universities: UniRef | UniRef[] | null;
 };
 
@@ -22,12 +25,12 @@ export default async function NovedadesPage() {
 
   const { data } = await supabase
     .from("news")
-    .select("id, title, summary, published_at, universities(name, short_name)")
+    .select("id, title, summary, published_at, starts_at, ends_at, universities(name, short_name)")
     .eq("status", "published")
     .order("published_at", { ascending: false })
     .limit(50);
 
-  const news = (data ?? []) as Row[];
+  const news = ((data ?? []) as Row[]).filter((n) => isActiveNow(n.starts_at, n.ends_at));
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-20 text-ink">

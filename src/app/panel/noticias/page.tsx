@@ -1,20 +1,27 @@
 import { createClient } from "@/lib/supabase/server";
 import { createNews, setNewsStatus, deleteNews } from "./actions";
+import { scheduleState, type ScheduleTone } from "@/lib/schedule";
 
 type News = {
   id: string;
   title: string;
   summary: string | null;
   status: "draft" | "published" | "archived";
+  starts_at: string | null;
+  ends_at: string | null;
 };
 
 const field =
   "rounded-lg border border-hair-strong bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:border-blue-500";
 
-const STATUS_LABEL: Record<News["status"], string> = {
-  draft: "Borrador",
-  published: "Publicada",
-  archived: "Archivada",
+const TONE: Record<ScheduleTone, string> = {
+  emerald:
+    "rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-emerald-300",
+  amber:
+    "rounded-full border border-amber-500/40 bg-amber-500/10 px-2.5 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-amber-300",
+  red: "rounded-full border border-red-500/40 bg-red-500/10 px-2.5 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-red-300",
+  muted:
+    "rounded-full border border-hair px-2.5 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ink-mute",
 };
 
 export default async function NoticiasPanelPage() {
@@ -22,7 +29,7 @@ export default async function NoticiasPanelPage() {
 
   const { data } = await supabase
     .from("news")
-    .select("id, title, summary, status")
+    .select("id, title, summary, status, starts_at, ends_at")
     .order("created_at", { ascending: false });
   const news = (data ?? []) as News[];
 
@@ -43,6 +50,24 @@ export default async function NoticiasPanelPage() {
             <span className="text-xs text-ink-soft">Contenido</span>
             <textarea name="body" rows={4} className={field} />
           </label>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-ink-soft">
+                Activar desde <span className="text-ink-mute">(opcional)</span>
+              </span>
+              <input type="date" name="starts_at" className={field} />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-xs text-ink-soft">
+                Caduca el <span className="text-ink-mute">(opcional)</span>
+              </span>
+              <input type="date" name="ends_at" className={field} />
+            </label>
+          </div>
+          <p className="text-[0.68rem] text-ink-mute">
+            Si dejás las fechas vacías, se publica ya y no caduca. Podés cargarla antes
+            con fecha futura y se activa sola ese día.
+          </p>
           <div className="flex flex-wrap gap-2">
             <button
               type="submit"
@@ -70,17 +95,11 @@ export default async function NoticiasPanelPage() {
           {news.length === 0 ? (
             <p className="text-sm text-ink-mute">Todavía no cargaste noticias.</p>
           ) : (
-            news.map((n) => (
+            news.map((n) => {
+              const sched = scheduleState(n.status, n.starts_at, n.ends_at);
+              return (
               <article key={n.id} className="rounded-2xl border border-hair bg-surface p-5">
-                <span
-                  className={
-                    n.status === "published"
-                      ? "rounded-full border border-emerald-500/40 bg-emerald-500/10 px-2.5 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-emerald-300"
-                      : "rounded-full border border-hair px-2.5 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ink-mute"
-                  }
-                >
-                  {STATUS_LABEL[n.status]}
-                </span>
+                <span className={TONE[sched.tone]}>{sched.label}</span>
                 <h3 className="mt-2 font-display text-lg font-semibold text-ink">{n.title}</h3>
                 {n.summary && <p className="mt-1 text-sm text-ink-soft">{n.summary}</p>}
 
@@ -110,7 +129,8 @@ export default async function NoticiasPanelPage() {
                   </form>
                 </div>
               </article>
-            ))
+              );
+            })
           )}
         </div>
       </section>
