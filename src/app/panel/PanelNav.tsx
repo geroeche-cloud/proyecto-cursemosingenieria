@@ -9,6 +9,7 @@ const tabs = [
   { href: "/panel/oportunidades", label: "Oportunidades" },
   { href: "/panel/profesores", label: "Profesores" },
   { href: "/panel/drives", label: "Drives" },
+  { href: "/panel/cuenta", label: "Cuenta" },
 ];
 
 export function PanelNav() {

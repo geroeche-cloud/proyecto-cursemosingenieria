@@ -99,12 +99,20 @@ export default async function PanelHome() {
           <span className="inline-flex items-center gap-2 rounded-full border border-hair px-3 py-1.5 font-mono text-xs text-ink-mute">
             {totalDrafts} borrador{totalDrafts === 1 ? "" : "es"}
           </span>
+          <a
+            href="/preview"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-ghost ml-auto text-sm"
+          >
+            Vista previa (con borradores) ↗
+          </a>
           {slug && (
             <a
               href={`/campus/${slug}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn btn-blue ml-auto text-sm"
+              className="btn btn-blue text-sm"
             >
               Ver mi campus público ↗
             </a>
