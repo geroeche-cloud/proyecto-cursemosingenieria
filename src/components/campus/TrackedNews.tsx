@@ -16,6 +16,7 @@ export function TrackedNews({
   body,
   track = true,
   badge,
+  footer,
 }: {
   id: string;
   title: string;
@@ -23,6 +24,7 @@ export function TrackedNews({
   body: string | null;
   track?: boolean;
   badge?: ReactNode;
+  footer?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -57,6 +59,7 @@ export function TrackedNews({
           </button>
         </>
       )}
+      {footer && <div className="mt-3">{footer}</div>}
     </article>
   );
 }

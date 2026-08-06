@@ -38,18 +38,39 @@ const TONE: Record<ScheduleTone, string> = {
 export type CampusUni = { name: string; short_name: string | null; city: string | null; slug: string };
 export type CampusNews = {
   id: string; title: string; summary: string | null; body?: string | null;
-  status?: string; starts_at?: string | null; ends_at?: string | null;
+  status?: string; starts_at?: string | null; ends_at?: string | null; clicks?: number | null;
 };
 export type CampusOpp = {
   id: string; kind: string; title: string; org: string | null;
   description: string | null; deadline: string | null; requirements: string[] | null; href: string | null;
-  status?: string; starts_at?: string | null; ends_at?: string | null;
+  status?: string; starts_at?: string | null; ends_at?: string | null; clicks?: number | null;
 };
 export type CampusProf = {
   id: string; name: string; title: string | null; modality: string;
-  subjects: string[] | null; whatsapp: string | null; status?: string;
+  subjects: string[] | null; whatsapp: string | null; status?: string; clicks?: number | null;
 };
-export type CampusDrive = { id: string; owner: string; career: string | null; href: string | null; status?: string };
+export type CampusDrive = {
+  id: string; owner: string; career: string | null; href: string | null;
+  status?: string; clicks?: number | null;
+};
+
+/** Recuento de clics acumulado de una publicación. */
+function ClickCount({ clicks }: { clicks?: number | null }) {
+  const n = clicks ?? 0;
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 font-mono text-[0.62rem] uppercase tracking-[0.1em] text-ink-mute"
+      title={`${n} ${n === 1 ? "clic" : "clics"} en total`}
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" className="h-3.5 w-3.5" aria-hidden>
+        <path d="M9 11.5V5a1.5 1.5 0 0 1 3 0v6" />
+        <path d="M12 11V4.5a1.5 1.5 0 0 1 3 0V11" />
+        <path d="M15 11V6.5a1.5 1.5 0 0 1 3 0V14a6 6 0 0 1-6 6h-1a6 6 0 0 1-5.2-3l-2-3.4a1.5 1.5 0 0 1 2.6-1.5L9 14" />
+      </svg>
+      {n} {n === 1 ? "clic" : "clics"}
+    </span>
+  );
+}
 
 function waLink(num: string | null, name?: string | null): string | null {
   if (!num) return null;
@@ -173,6 +194,7 @@ export function CampusView({
                     badge={
                       <StateBadge preview={preview} status={n.status} starts_at={n.starts_at} ends_at={n.ends_at} />
                     }
+                    footer={<ClickCount clicks={n.clicks} />}
                   />
                 </Reveal>
               ))}
@@ -212,11 +234,14 @@ export function CampusView({
                             </ul>
                           </div>
                         )}
-                        {o.href && (
-                          <TrackedLink kind="opportunities" id={o.id} href={o.href} track={!preview} className="btn btn-blue mt-auto w-full text-sm">
-                            Ver convocatoria
-                          </TrackedLink>
-                        )}
+                        <div className="mt-auto flex flex-col gap-3">
+                          {o.href && (
+                            <TrackedLink kind="opportunities" id={o.id} href={o.href} track={!preview} className="btn btn-blue w-full text-sm">
+                              Ver convocatoria
+                            </TrackedLink>
+                          )}
+                          <ClickCount clicks={o.clicks} />
+                        </div>
                       </article>
                     </Reveal>
                   ))}
@@ -257,10 +282,13 @@ export function CampusView({
                               ))}
                             </div>
                           )}
+                          <div className="mt-3">
+                            <ClickCount clicks={p.clicks} />
+                          </div>
                         </div>
                         {wa && (
                           <TrackedLink kind="professors" id={p.id} href={wa} track={!preview} className="btn btn-blue shrink-0 self-start text-sm sm:self-auto">
-                            Escribime
+                            Enviar WhatsApp
                           </TrackedLink>
                         )}
                       </article>
@@ -293,6 +321,9 @@ export function CampusView({
                         {d.career && (
                           <p className="mt-0.5 font-mono text-xs uppercase tracking-[0.12em] text-ti-500">{d.career}</p>
                         )}
+                        <div className="mt-2">
+                          <ClickCount clicks={d.clicks} />
+                        </div>
                       </div>
                       {d.href && (
                         <TrackedLink kind="drives" id={d.id} href={d.href} track={!preview} className="btn btn-blue shrink-0 self-start text-sm sm:self-auto">
