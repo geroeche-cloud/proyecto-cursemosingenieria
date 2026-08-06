@@ -82,6 +82,9 @@ export default async function OportunidadesPanelPage() {
                 )}
 
                 <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <a href={`/panel/oportunidades/${o.id}`} className="btn btn-ghost text-xs">
+                    Editar
+                  </a>
                   {o.status !== "published" ? (
                     <form action={setOpportunityStatus}>
                       <input type="hidden" name="id" value={o.id} />

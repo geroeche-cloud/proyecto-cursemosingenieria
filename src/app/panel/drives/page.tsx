@@ -59,6 +59,9 @@ export default async function DrivesPanelPage() {
                 )}
 
                 <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <a href={`/panel/drives/${d.id}`} className="btn btn-ghost text-xs">
+                    Editar
+                  </a>
                   {d.status !== "published" ? (
                     <form action={setDriveStatus}>
                       <input type="hidden" name="id" value={d.id} />

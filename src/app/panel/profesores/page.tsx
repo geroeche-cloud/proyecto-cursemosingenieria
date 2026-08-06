@@ -70,6 +70,9 @@ export default async function ProfesoresPanelPage() {
                 {p.whatsapp && <p className="mt-2 font-mono text-xs text-ink-mute">WhatsApp: {p.whatsapp}</p>}
 
                 <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <a href={`/panel/profesores/${p.id}`} className="btn btn-ghost text-xs">
+                    Editar
+                  </a>
                   {p.status !== "published" ? (
                     <form action={setProfessorStatus}>
                       <input type="hidden" name="id" value={p.id} />

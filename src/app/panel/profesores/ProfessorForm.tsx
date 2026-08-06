@@ -1,24 +1,43 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useState } from "react";
-import { createProfessor, type ActionState } from "./actions";
+import { useRouter } from "next/navigation";
+import { createProfessor, updateProfessor, type ActionState } from "./actions";
 
 const field =
   "rounded-lg border border-hair-strong bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:border-blue-500";
 
-const initial: ActionState = { ok: false };
+const initialState: ActionState = { ok: false };
 
-export function ProfessorForm() {
-  const [state, action, pending] = useActionState(createProfessor, initial);
+export type ProfessorInitial = {
+  id: string;
+  name: string;
+  title: string | null;
+  modality: string;
+  whatsapp: string | null;
+  subjects: string[] | null;
+};
+
+export function ProfessorForm({ initial }: { initial?: ProfessorInitial }) {
+  const isEdit = !!initial;
+  const router = useRouter();
+  const [state, action, pending] = useActionState(
+    isEdit ? updateProfessor : createProfessor,
+    initialState,
+  );
   const formRef = useRef<HTMLFormElement>(null);
-  const [subjects, setSubjects] = useState<string[]>([""]);
+  const [subjects, setSubjects] = useState<string[]>(
+    initial?.subjects && initial.subjects.length > 0 ? initial.subjects : [""],
+  );
 
   useEffect(() => {
-    if (state.ok) {
+    if (!state.ok) return;
+    if (isEdit) router.push("/panel/profesores");
+    else {
       formRef.current?.reset();
       setSubjects([""]);
     }
-  }, [state]);
+  }, [state, isEdit, router]);
 
   const updateSubject = (i: number, v: string) =>
     setSubjects((prev) => prev.map((s, idx) => (idx === i ? v : s)));
@@ -28,17 +47,18 @@ export function ProfessorForm() {
 
   return (
     <form ref={formRef} action={action} className="mt-4 grid gap-3 sm:grid-cols-2">
+      {isEdit && <input type="hidden" name="id" value={initial.id} />}
       <label className="flex flex-col gap-1">
         <span className="text-xs text-ink-soft">Nombre</span>
-        <input name="name" required placeholder="Profe Seba" className={field} />
+        <input name="name" required defaultValue={initial?.name ?? ""} placeholder="Profe Seba" className={field} />
       </label>
       <label className="flex flex-col gap-1">
         <span className="text-xs text-ink-soft">Título</span>
-        <input name="title" placeholder="Ingeniero Químico · Matemática" className={field} />
+        <input name="title" defaultValue={initial?.title ?? ""} placeholder="Ingeniero Químico · Matemática" className={field} />
       </label>
       <label className="flex flex-col gap-1">
         <span className="text-xs text-ink-soft">Modalidad</span>
-        <select name="modality" defaultValue="ambas" className={field}>
+        <select name="modality" defaultValue={initial?.modality ?? "ambas"} className={field}>
           <option value="ambas">Presencial y virtual</option>
           <option value="presencial">Presencial</option>
           <option value="virtual">Virtual</option>
@@ -48,10 +68,9 @@ export function ProfessorForm() {
         <span className="text-xs text-ink-soft">
           WhatsApp <span className="text-ink-mute">(mensaje directo)</span>
         </span>
-        <input name="whatsapp" placeholder="+54 9 299 ..." className={field} />
+        <input name="whatsapp" defaultValue={initial?.whatsapp ?? ""} placeholder="+54 9 299 ..." className={field} />
       </label>
 
-      {/* Materias: un input por materia, con "Añadir otra materia" */}
       <div className="flex flex-col gap-2 sm:col-span-2">
         <span className="text-xs text-ink-soft">Materias que da</span>
         {subjects.map((s, i) => (
@@ -86,24 +105,20 @@ export function ProfessorForm() {
 
       <div className="flex flex-col gap-2 sm:col-span-2">
         <div className="flex flex-wrap gap-2">
-          <button
-            type="submit"
-            name="intent"
-            value="publish"
-            disabled={pending}
-            className="btn btn-blue text-sm disabled:opacity-60"
-          >
-            {pending ? "Guardando…" : "Cargar y publicar"}
-          </button>
-          <button
-            type="submit"
-            name="intent"
-            value="draft"
-            disabled={pending}
-            className="btn btn-ghost text-sm disabled:opacity-60"
-          >
-            Guardar como borrador
-          </button>
+          {isEdit ? (
+            <button type="submit" disabled={pending} className="btn btn-blue text-sm disabled:opacity-60">
+              {pending ? "Guardando…" : "Guardar cambios"}
+            </button>
+          ) : (
+            <>
+              <button type="submit" name="intent" value="publish" disabled={pending} className="btn btn-blue text-sm disabled:opacity-60">
+                {pending ? "Guardando…" : "Cargar y publicar"}
+              </button>
+              <button type="submit" name="intent" value="draft" disabled={pending} className="btn btn-ghost text-sm disabled:opacity-60">
+                Guardar como borrador
+              </button>
+            </>
+          )}
         </div>
         {state.error && <p className="text-sm text-red-400">{state.error}</p>}
         {state.ok && state.message && <p className="text-sm text-emerald-400">{state.message}</p>}

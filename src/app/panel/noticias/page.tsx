@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { createNews, setNewsStatus, deleteNews } from "./actions";
+import { setNewsStatus, deleteNews } from "./actions";
+import { NoticiaForm } from "./NoticiaForm";
 import { scheduleState, type ScheduleTone } from "@/lib/schedule";
 
 type News = {
@@ -10,9 +11,6 @@ type News = {
   starts_at: string | null;
   ends_at: string | null;
 };
-
-const field =
-  "rounded-lg border border-hair-strong bg-surface px-3 py-2 text-sm text-ink outline-none focus-visible:border-blue-500";
 
 const TONE: Record<ScheduleTone, string> = {
   emerald:
@@ -37,56 +35,7 @@ export default async function NoticiasPanelPage() {
     <div className="flex flex-col gap-12">
       <section>
         <h2 className="font-display text-xl font-semibold">Nueva noticia</h2>
-        <form action={createNews} className="mt-4 flex flex-col gap-3">
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-ink-soft">Título</span>
-            <input name="title" required className={field} />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-ink-soft">Resumen</span>
-            <input name="summary" className={field} />
-          </label>
-          <label className="flex flex-col gap-1">
-            <span className="text-xs text-ink-soft">Contenido</span>
-            <textarea name="body" rows={4} className={field} />
-          </label>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <label className="flex flex-col gap-1">
-              <span className="text-xs text-ink-soft">
-                Activar desde <span className="text-ink-mute">(opcional)</span>
-              </span>
-              <input type="date" name="starts_at" className={field} />
-            </label>
-            <label className="flex flex-col gap-1">
-              <span className="text-xs text-ink-soft">
-                Caduca el <span className="text-ink-mute">(opcional)</span>
-              </span>
-              <input type="date" name="ends_at" className={field} />
-            </label>
-          </div>
-          <p className="text-[0.68rem] text-ink-mute">
-            Si dejás las fechas vacías, se publica ya y no caduca. Podés cargarla antes
-            con fecha futura y se activa sola ese día.
-          </p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="submit"
-              name="intent"
-              value="publish"
-              className="btn btn-blue text-sm"
-            >
-              Crear y publicar
-            </button>
-            <button
-              type="submit"
-              name="intent"
-              value="draft"
-              className="btn btn-ghost text-sm"
-            >
-              Guardar como borrador
-            </button>
-          </div>
-        </form>
+        <NoticiaForm />
       </section>
 
       <section>
@@ -104,6 +53,9 @@ export default async function NoticiasPanelPage() {
                 {n.summary && <p className="mt-1 text-sm text-ink-soft">{n.summary}</p>}
 
                 <div className="mt-4 flex flex-wrap items-center gap-2">
+                  <a href={`/panel/noticias/${n.id}`} className="btn btn-ghost text-xs">
+                    Editar
+                  </a>
                   {n.status !== "published" ? (
                     <form action={setNewsStatus}>
                       <input type="hidden" name="id" value={n.id} />

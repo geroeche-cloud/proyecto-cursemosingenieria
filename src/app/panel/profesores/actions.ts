@@ -61,6 +61,42 @@ export async function createProfessor(
   }
 }
 
+export async function updateProfessor(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    await assertAmbassador();
+    const id = String(formData.get("id") ?? "");
+    if (!id) return { ok: false, error: "Falta el identificador." };
+
+    const name = String(formData.get("name") ?? "").trim();
+    const title = String(formData.get("title") ?? "").trim() || null;
+    const modality = String(formData.get("modality") ?? "ambas");
+    const whatsapp = String(formData.get("whatsapp") ?? "").trim() || null;
+    const subjects = formData
+      .getAll("subjects")
+      .map((s) => String(s).trim())
+      .filter(Boolean);
+
+    if (!name) return { ok: false, error: "El nombre es obligatorio." };
+    if (!MODALITIES.includes(modality)) return { ok: false, error: "Modalidad inválida." };
+
+    const supabase = await createClient();
+    const { error } = await supabase
+      .from("professors")
+      .update({ name, title, modality, whatsapp, subjects })
+      .eq("id", id);
+    if (error) return { ok: false, error: error.message };
+
+    revalidatePath("/panel/profesores");
+    revalidatePath("/campus/[university]", "page");
+    return { ok: true, message: "Cambios guardados." };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+  }
+}
+
 export async function setProfessorStatus(formData: FormData) {
   try {
     await assertAmbassador();
