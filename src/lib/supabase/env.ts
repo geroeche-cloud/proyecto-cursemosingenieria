@@ -1,11 +1,14 @@
 /**
- * Variables de entorno de Supabase — con saneo y validación estricta.
+ * Variables de entorno de Supabase — con saneo TOLERANTE.
  *
- * Por qué: al copiar/pegar en Vercel es fácil dejar un salto de línea o texto
- * de más pegado a la key (o una barra/ruta de más en la URL). Antes eso pasaba
- * silencioso y el sitio quedaba "vacío" sin explicación. Ahora:
- *   1) saneamos (recortamos y tomamos solo el primer token válido), y
- *   2) validamos el formato y fallamos con un mensaje claro si algo está mal.
+ * Aprendizaje (importante): antes validábamos de forma estricta y hacíamos
+ * `throw` en el build si el valor venía raro. Eso, en Vercel, hacía FALLAR todo
+ * el deploy cuando una env var tenía un salto de línea o texto pegado por error.
+ * Peor el remedio que la enfermedad.
+ *
+ * Ahora: saneamos siempre (tomamos el primer token válido, que descarta saltos
+ * de línea o contenido pegado) y NUNCA tiramos error en el build. Si algo está
+ * raro, lo avisamos por consola (visible en los logs), pero el deploy sigue.
  *
  * La service_role NUNCA se expone al navegador — vive solo en admin.ts (servidor).
  */
@@ -18,30 +21,25 @@ export function firstToken(v: string | undefined): string {
 const rawUrl = firstToken(process.env.NEXT_PUBLIC_SUPABASE_URL);
 const anonKey = firstToken(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
 
-if (!rawUrl || !anonKey) {
-  throw new Error(
-    "Faltan NEXT_PUBLIC_SUPABASE_URL o NEXT_PUBLIC_SUPABASE_ANON_KEY. " +
-      "Definilas en .env.local (local) o en Vercel → Settings → Environment Variables.",
-  );
-}
-
-// Normalizamos la URL a su origen: descarta ruta, barra final o querystring.
-let origin: string;
+// Normalizamos la URL a su origen (descarta ruta, barra final o querystring).
+// Si por algún motivo no parsea, usamos el valor saneado tal cual (no rompemos).
+let url = rawUrl;
 try {
-  origin = new URL(rawUrl).origin;
+  if (rawUrl) url = new URL(rawUrl).origin;
 } catch {
-  throw new Error(
-    `NEXT_PUBLIC_SUPABASE_URL con formato inválido: "${rawUrl}". ` +
-      "Tiene que ser https://<proyecto>.supabase.co (sin espacios, ruta ni barra final).",
-  );
+  if (typeof window === "undefined") {
+    console.error(`[supabase] NEXT_PUBLIC_SUPABASE_URL con formato inesperado: "${rawUrl}"`);
+  }
 }
 
-if (!anonKey.startsWith("eyJ")) {
-  throw new Error(
-    "NEXT_PUBLIC_SUPABASE_ANON_KEY no parece una key válida (debe empezar con 'eyJ'). " +
-      "Revisá que no tenga saltos de línea ni texto pegado.",
-  );
+// Aviso (no bloqueante) si falta algo o la key no parece un JWT.
+if (typeof window === "undefined") {
+  if (!url || !anonKey) {
+    console.error("[supabase] Falta NEXT_PUBLIC_SUPABASE_URL o NEXT_PUBLIC_SUPABASE_ANON_KEY.");
+  } else if (!anonKey.startsWith("eyJ")) {
+    console.error("[supabase] NEXT_PUBLIC_SUPABASE_ANON_KEY no parece un JWT (no empieza con 'eyJ').");
+  }
 }
 
-export const supabaseUrl: string = origin;
+export const supabaseUrl: string = url;
 export const supabaseAnonKey: string = anonKey;

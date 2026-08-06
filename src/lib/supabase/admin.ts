@@ -17,12 +17,6 @@ export function createAdminClient() {
   if (!serviceKey) {
     throw new Error("Falta SUPABASE_SERVICE_ROLE_KEY (solo servidor) en .env.local o en Vercel.");
   }
-  if (!serviceKey.startsWith("eyJ")) {
-    throw new Error(
-      "SUPABASE_SERVICE_ROLE_KEY no parece una key válida (debe empezar con 'eyJ'). " +
-        "Revisá que no tenga saltos de línea ni texto pegado.",
-    );
-  }
 
   return createSupabaseClient(supabaseUrl, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
