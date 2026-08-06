@@ -113,30 +113,43 @@ export default async function CampusPage() {
                 <Reveal key={u.id} delay={0.05 * i}>
                   <Link
                     href={`/campus/${u.slug}`}
-                    className="group relative flex min-h-[17rem] flex-col justify-between overflow-hidden rounded-[1.75rem] p-7 transition-all duration-500 hover:-translate-y-1 sm:min-h-[18rem] sm:p-9"
+                    className="chrome-edge group relative flex min-h-[17rem] flex-col justify-between overflow-hidden rounded-[1.75rem] p-7 transition-all duration-500 hover:-translate-y-1 sm:min-h-[18rem] sm:p-9"
                     style={{
                       background:
-                        "linear-gradient(158deg, rgba(20,27,45,0.9) 0%, rgba(8,11,22,0.94) 100%)",
-                      border: "1px solid rgba(255,255,255,0.12)",
+                        "linear-gradient(158deg, #1b2338 0%, #131a2c 46%, #0b0f1c 100%)",
                       boxShadow:
-                        "0 34px 66px -26px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.09)",
-                      backdropFilter: "blur(14px)",
+                        "0 40px 80px -30px rgba(0,0,0,0.95), inset 0 1px 0 rgba(255,255,255,0.14)",
                     }}
                   >
-                    {/* Monograma gigante de la sigla */}
+                    {/* Trama de blueprint: textura de ingeniería dentro de la tarjeta */}
                     <span
-                      className="pointer-events-none absolute -bottom-10 -right-3 select-none whitespace-nowrap font-display text-[9rem] font-bold leading-none text-white/[0.045] transition-colors duration-500 group-hover:text-blue-300/[0.1]"
+                      className="pointer-events-none absolute inset-0 opacity-[0.35] transition-opacity duration-500 group-hover:opacity-60"
+                      style={{
+                        backgroundImage:
+                          "linear-gradient(rgba(156,182,255,0.09) 1px, transparent 1px), linear-gradient(90deg, rgba(156,182,255,0.09) 1px, transparent 1px)",
+                        backgroundSize: "30px 30px",
+                        maskImage:
+                          "radial-gradient(ellipse 80% 70% at 30% 20%, #000 20%, transparent 75%)",
+                        WebkitMaskImage:
+                          "radial-gradient(ellipse 80% 70% at 30% 20%, #000 20%, transparent 75%)",
+                      }}
+                      aria-hidden
+                    />
+
+                    {/* Monograma gigante de la sigla — identidad de cada universidad */}
+                    <span
+                      className="pointer-events-none absolute -bottom-12 -right-4 select-none whitespace-nowrap font-display text-[10rem] font-bold leading-none text-white/[0.07] transition-all duration-700 group-hover:scale-105 group-hover:text-blue-300/[0.14]"
                       aria-hidden
                     >
                       {u.short_name}
                     </span>
 
-                    {/* Línea superior luminosa */}
+                    {/* Barra de acento superior — define el borde de arriba */}
                     <span
-                      className="pointer-events-none absolute inset-x-6 top-0 h-px opacity-70 transition-opacity duration-500 group-hover:opacity-100"
+                      className="pointer-events-none absolute inset-x-0 top-0 h-[3px] transition-all duration-500"
                       style={{
                         background:
-                          "linear-gradient(90deg, transparent, rgba(130,160,255,0.9), transparent)",
+                          "linear-gradient(90deg, rgba(59,107,255,0.15), rgba(150,180,255,0.95) 45%, rgba(59,107,255,0.6) 75%, transparent)",
                       }}
                       aria-hidden
                     />
@@ -175,18 +188,18 @@ export default async function CampusPage() {
                     {/* Encabezado: placa con pin + sigla con punto vivo */}
                     <div className="relative flex items-start justify-between gap-4">
                       <span
-                        className="flex h-16 w-16 items-center justify-center rounded-2xl text-blue-100 transition-all duration-500 group-hover:scale-105"
+                        className="flex h-16 w-16 items-center justify-center rounded-2xl text-white transition-all duration-500 group-hover:scale-105"
                         style={{
                           background:
-                            "linear-gradient(158deg, rgba(59,107,255,0.4), rgba(26,58,168,0.16))",
-                          border: "1px solid rgba(120,150,255,0.42)",
+                            "linear-gradient(158deg, rgba(110,147,255,0.85), rgba(26,58,168,0.55))",
+                          border: "1px solid rgba(170,195,255,0.6)",
                           boxShadow:
-                            "0 10px 24px -10px rgba(59,107,255,0.7), inset 0 1px 0 rgba(255,255,255,0.2)",
+                            "0 14px 30px -10px rgba(59,107,255,0.85), inset 0 1px 0 rgba(255,255,255,0.4)",
                         }}
                       >
                         <PinIcon />
                       </span>
-                      <span className="chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 font-mono text-[0.6rem] uppercase tracking-[0.2em] text-ti-100">
+                      <span className="chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 font-mono text-[0.6rem] uppercase tracking-[0.2em] text-white">
                         <span
                           className="h-1.5 w-1.5 rounded-full"
                           style={{
@@ -208,17 +221,22 @@ export default async function CampusPage() {
                       </span>
                     </div>
 
-                    {/* CTA en pill */}
+                    {/* CTA sólido — se lee como botón, no como etiqueta */}
                     <div className="relative mt-7">
                       <span
-                        className="inline-flex items-center gap-2 rounded-full px-4 py-2 font-mono text-xs uppercase tracking-[0.18em] text-blue-200 transition-all duration-500 group-hover:text-white"
+                        className="inline-flex items-center gap-3 rounded-full py-2.5 pl-5 pr-2.5 font-mono text-xs uppercase tracking-[0.18em] text-white transition-all duration-500"
                         style={{
-                          background: "rgba(59,107,255,0.12)",
-                          border: "1px solid rgba(110,147,255,0.35)",
+                          background:
+                            "linear-gradient(180deg, rgba(110,147,255,0.95), rgba(30,66,176,0.95))",
+                          boxShadow:
+                            "0 14px 30px -14px rgba(59,107,255,0.9), inset 0 1px 0 rgba(255,255,255,0.25)",
                         }}
                       >
                         Ver campus
-                        <span className="transition-transform duration-300 group-hover:translate-x-1.5">
+                        <span
+                          className="flex h-7 w-7 items-center justify-center rounded-full transition-transform duration-500 group-hover:translate-x-1"
+                          style={{ background: "rgba(255,255,255,0.2)" }}
+                        >
                           <Arrow />
                         </span>
                       </span>
