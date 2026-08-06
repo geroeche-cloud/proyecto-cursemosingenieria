@@ -30,15 +30,15 @@ export default async function PanelHome() {
 
   const [uniRes, newsRes, oppRes, profRes, driveRes, topRes] = await Promise.all([
     supabase.from("universities").select("name, slug").eq("id", user.university_id).single(),
-    supabase.from("news").select("status"),
-    supabase.from("opportunities").select("status"),
-    supabase.from("professors").select("status"),
-    supabase.from("drives").select("status"),
+    supabase.from("news").select("status").is("deleted_at", null),
+    supabase.from("opportunities").select("status").is("deleted_at", null),
+    supabase.from("professors").select("status").is("deleted_at", null),
+    supabase.from("drives").select("status").is("deleted_at", null),
     Promise.all([
-      supabase.from("news").select("id, title, clicks").order("clicks", { ascending: false }).limit(5),
-      supabase.from("opportunities").select("id, title, clicks").order("clicks", { ascending: false }).limit(5),
-      supabase.from("professors").select("id, name, clicks").order("clicks", { ascending: false }).limit(5),
-      supabase.from("drives").select("id, owner, clicks").order("clicks", { ascending: false }).limit(5),
+      supabase.from("news").select("id, title, clicks").is("deleted_at", null).order("clicks", { ascending: false }).limit(5),
+      supabase.from("opportunities").select("id, title, clicks").is("deleted_at", null).order("clicks", { ascending: false }).limit(5),
+      supabase.from("professors").select("id, name, clicks").is("deleted_at", null).order("clicks", { ascending: false }).limit(5),
+      supabase.from("drives").select("id, owner, clicks").is("deleted_at", null).order("clicks", { ascending: false }).limit(5),
     ]),
   ]);
 

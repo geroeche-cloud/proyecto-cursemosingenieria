@@ -256,7 +256,23 @@ export async function saveAmbassadorProfile(
   }
 }
 
-/** Borrar una universidad y, en cascada, todo su contenido. Irreversible. */
+/** Refresca todo lo que puede verse afectado por un cambio de contenido. */
+function revalidarTodo() {
+  revalidatePath("/admin", "layout");
+  revalidatePath("/panel", "layout");
+  revalidatePath("/campus");
+  revalidatePath("/campus/[university]", "page");
+  revalidatePath("/novedades");
+  revalidatePath("/");
+}
+
+// ---------------------------------------------------------------------------
+// Papelera: "Borrar" ya no destruye. Marca deleted_at y baja el elemento de
+// público; el dato queda recuperable desde /admin/papelera. El borrado
+// definitivo es una segunda acción, explícita, dentro de la papelera.
+// ---------------------------------------------------------------------------
+
+/** Manda una universidad a la papelera (deja de verse, no se pierde). */
 export async function deleteUniversity(
   _prev: ActionState,
   formData: FormData,
@@ -266,22 +282,21 @@ export async function deleteUniversity(
     const id = String(formData.get("id") ?? "");
     if (!id) return { ok: false, error: "Falta el identificador." };
 
-    // Cliente service_role: saltea RLS, garantiza el borrado.
     const admin = createAdminClient();
-    const { error } = await admin.from("universities").delete().eq("id", id);
+    const { error } = await admin
+      .from("universities")
+      .update({ deleted_at: new Date().toISOString(), status: "inactive" })
+      .eq("id", id);
     if (error) return { ok: false, error: friendly(error.message) };
 
-    revalidatePath("/admin");
-    revalidatePath("/campus");
-    revalidatePath("/campus/[university]", "page");
-    revalidatePath("/");
-    return { ok: true, message: "Universidad borrada." };
+    revalidarTodo();
+    return { ok: true, message: "Universidad enviada a la papelera." };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
   }
 }
 
-/** Borrar un embajador: su perfil (lista) y su cuenta de acceso (auth). */
+/** Manda un embajador a la papelera: no puede ingresar, pero la cuenta existe. */
 export async function deleteAmbassador(
   _prev: ActionState,
   formData: FormData,
@@ -292,27 +307,25 @@ export async function deleteAmbassador(
     if (!id) return { ok: false, error: "Falta el identificador." };
 
     const admin = createAdminClient();
-    // Guarda: nunca borrar un admin por este camino.
+    // Guarda: nunca tocar a un admin por este camino.
     const { data: prof } = await admin.from("profiles").select("role").eq("id", id).maybeSingle();
     if (!prof) return { ok: false, error: "No se encontró ese embajador." };
     if (prof.role !== "ambassador") return { ok: false, error: "Solo se pueden borrar embajadores." };
 
-    // 1) Borrar la fila de profiles (es lo que aparece en la lista del admin).
-    const { error: pErr } = await admin.from("profiles").delete().eq("id", id);
-    if (pErr) return { ok: false, error: friendly(pErr.message) };
+    const { error } = await admin
+      .from("profiles")
+      .update({ deleted_at: new Date().toISOString(), status: "suspended" })
+      .eq("id", id);
+    if (error) return { ok: false, error: friendly(error.message) };
 
-    // 2) Borrar la cuenta de acceso (auth). Best-effort: el perfil ya no existe.
-    await admin.auth.admin.deleteUser(id);
-
-    revalidatePath("/admin");
-    revalidatePath("/");
-    return { ok: true, message: "Embajador borrado." };
+    revalidarTodo();
+    return { ok: true, message: "Embajador enviado a la papelera." };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
   }
 }
 
-/** Borrar una publicación definitivamente (de cualquier universidad). */
+/** Manda una publicación a la papelera. */
 export async function deleteContent(
   _prev: ActionState,
   formData: FormData,
@@ -324,13 +337,77 @@ export async function deleteContent(
     if (!id || !CONTENT_TABLES.includes(table)) return { ok: false, error: "Datos inválidos." };
 
     const admin = createAdminClient();
-    const { error } = await admin.from(table).delete().eq("id", id);
+    const { error } = await admin
+      .from(table)
+      .update({ deleted_at: new Date().toISOString(), status: "archived" })
+      .eq("id", id);
     if (error) return { ok: false, error: friendly(error.message) };
 
-    revalidatePath("/admin");
-    revalidatePath("/campus/[university]", "page");
-    if (table === "news") revalidatePath("/novedades");
-    return { ok: true, message: "Publicación borrada." };
+    revalidarTodo();
+    return { ok: true, message: "Publicación enviada a la papelera." };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+  }
+}
+
+/** Saca un elemento de la papelera y lo devuelve como borrador / inactivo. */
+export async function restoreItem(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    await assertAdmin();
+    const table = String(formData.get("table") ?? "");
+    const id = String(formData.get("id") ?? "");
+    if (!id) return { ok: false, error: "Falta el identificador." };
+
+    const admin = createAdminClient();
+    if (table === "universities" || table === "profiles" || CONTENT_TABLES.includes(table as ContentTable)) {
+      const { error } = await admin.from(table).update({ deleted_at: null }).eq("id", id);
+      if (error) return { ok: false, error: friendly(error.message) };
+    } else {
+      return { ok: false, error: "Datos inválidos." };
+    }
+
+    revalidarTodo();
+    return {
+      ok: true,
+      message:
+        "Restaurado. Queda inactivo o como borrador: revisalo y volvé a publicarlo cuando quieras.",
+    };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+  }
+}
+
+/** Borrado definitivo desde la papelera. Esto sí es irreversible. */
+export async function purgeItem(
+  _prev: ActionState,
+  formData: FormData,
+): Promise<ActionState> {
+  try {
+    await assertAdmin();
+    const table = String(formData.get("table") ?? "");
+    const id = String(formData.get("id") ?? "");
+    if (!id) return { ok: false, error: "Falta el identificador." };
+
+    const admin = createAdminClient();
+
+    if (table === "profiles") {
+      const { data: prof } = await admin.from("profiles").select("role").eq("id", id).maybeSingle();
+      if (prof?.role !== "ambassador") return { ok: false, error: "Solo se pueden borrar embajadores." };
+      const { error } = await admin.from("profiles").delete().eq("id", id);
+      if (error) return { ok: false, error: friendly(error.message) };
+      await admin.auth.admin.deleteUser(id); // recién acá desaparece la cuenta
+    } else if (table === "universities" || CONTENT_TABLES.includes(table as ContentTable)) {
+      const { error } = await admin.from(table).delete().eq("id", id);
+      if (error) return { ok: false, error: friendly(error.message) };
+    } else {
+      return { ok: false, error: "Datos inválidos." };
+    }
+
+    revalidarTodo();
+    return { ok: true, message: "Eliminado definitivamente." };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
   }

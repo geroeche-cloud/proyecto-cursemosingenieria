@@ -87,9 +87,9 @@ export function UniversitiesList({ universities }: { universities: UniRow[] }) {
                     <DangerForm
                       action={deleteUniversity}
                       hidden={{ id: u.id }}
-                      confirm={`¿Borrar "${u.name}"? Se eliminan también sus ${u.publicaciones} publicación${
-                        u.publicaciones === 1 ? "" : "es"
-                      } y el perfil de su embajador. Esta acción no se puede deshacer.`}
+                      confirm={`¿Enviar "${u.name}" a la papelera? Deja de verse en el sitio junto con sus ${
+                        u.publicaciones
+                      } publicación${u.publicaciones === 1 ? "" : "es"}. Podés restaurarla desde la papelera.`}
                       label="Borrar"
                       className="btn btn-ghost text-xs text-red-300"
                     />

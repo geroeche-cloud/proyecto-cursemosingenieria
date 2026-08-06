@@ -7,8 +7,8 @@ export default async function AdminUniversidadesPage() {
   const supabase = await createClient();
 
   const [uniRes, ambRes, newsRes, oppRes, profRes, driveRes] = await Promise.all([
-    supabase.from("universities").select("id, name, short_name, city, status").order("name"),
-    supabase.from("profiles").select("full_name, email, university_id").eq("role", "ambassador"),
+    supabase.from("universities").select("id, name, short_name, city, status").is("deleted_at", null).order("name"),
+    supabase.from("profiles").select("full_name, email, university_id").eq("role", "ambassador").is("deleted_at", null),
     supabase.from("news").select("university_id").eq("status", "published"),
     supabase.from("opportunities").select("university_id").eq("status", "published"),
     supabase.from("professors").select("university_id").eq("status", "published"),

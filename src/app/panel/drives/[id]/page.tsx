@@ -14,6 +14,7 @@ export default async function EditDrivePage({
     .from("drives")
     .select("id, owner, career, href")
     .eq("id", id)
+    .is("deleted_at", null)
     .maybeSingle();
   if (!data) notFound();
 

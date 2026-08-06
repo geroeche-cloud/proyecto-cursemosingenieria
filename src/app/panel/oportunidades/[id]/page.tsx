@@ -14,6 +14,7 @@ export default async function EditOpportunityPage({
     .from("opportunities")
     .select("id, kind, title, org, description, deadline, href, requirements, starts_at, ends_at")
     .eq("id", id)
+    .is("deleted_at", null)
     .maybeSingle();
   if (!data) notFound();
 

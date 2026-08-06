@@ -17,6 +17,7 @@ export default async function DrivesPanelPage() {
   const { data } = await supabase
     .from("drives")
     .select("id, owner, career, href, status, clicks")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
   const items = (data ?? []) as Drive[];
 

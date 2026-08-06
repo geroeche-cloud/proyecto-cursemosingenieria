@@ -6,8 +6,12 @@ export default async function AdminPerfilesPage() {
   const supabase = await createClient();
 
   const [uniRes, ambRes, profRes] = await Promise.all([
-    supabase.from("universities").select("id, name").order("name"),
-    supabase.from("profiles").select("id, full_name, university_id").eq("role", "ambassador"),
+    supabase.from("universities").select("id, name").is("deleted_at", null).order("name"),
+    supabase
+      .from("profiles")
+      .select("id, full_name, university_id")
+      .eq("role", "ambassador")
+      .is("deleted_at", null),
     supabase
       .from("ambassador_profiles")
       .select(

@@ -7,11 +7,12 @@ export default async function AdminEmbajadoresPage() {
   const supabase = await createClient();
 
   const [uniRes, ambRes, newsRes, oppRes, profRes, driveRes] = await Promise.all([
-    supabase.from("universities").select("id, name, short_name").order("name"),
+    supabase.from("universities").select("id, name, short_name").is("deleted_at", null).order("name"),
     supabase
       .from("profiles")
       .select("id, email, full_name, university_id, status")
       .eq("role", "ambassador")
+      .is("deleted_at", null)
       .order("email"),
     supabase.from("news").select("university_id").eq("status", "published"),
     supabase.from("opportunities").select("university_id").eq("status", "published"),

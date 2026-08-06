@@ -90,9 +90,9 @@ export function AmbassadorsList({ ambassadors }: { ambassadors: AmbRow[] }) {
                     <DangerForm
                       action={deleteAmbassador}
                       hidden={{ id: a.id }}
-                      confirm={`¿Borrar la cuenta de ${
+                      confirm={`¿Enviar a ${
                         a.full_name || a.email || "este embajador"
-                      }? No podrá volver a ingresar. Sus publicaciones quedan, pero sin autor. Esta acción no se puede deshacer.`}
+                      } a la papelera? Deja de poder ingresar, pero la cuenta no se elimina: podés restaurarla desde la papelera.`}
                       label="Borrar"
                       className="btn btn-ghost text-xs text-red-300"
                     />

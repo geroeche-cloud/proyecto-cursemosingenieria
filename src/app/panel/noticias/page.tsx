@@ -29,6 +29,7 @@ export default async function NoticiasPanelPage() {
   const { data } = await supabase
     .from("news")
     .select("id, title, summary, status, starts_at, ends_at, clicks")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
   const news = (data ?? []) as News[];
 

@@ -14,6 +14,7 @@ export default async function EditProfessorPage({
     .from("professors")
     .select("id, name, title, modality, whatsapp, subjects")
     .eq("id", id)
+    .is("deleted_at", null)
     .maybeSingle();
   if (!data) notFound();
 

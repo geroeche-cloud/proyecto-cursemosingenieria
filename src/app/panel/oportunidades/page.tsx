@@ -41,6 +41,7 @@ export default async function OportunidadesPanelPage() {
   const { data } = await supabase
     .from("opportunities")
     .select("id, kind, title, org, deadline, requirements, status, starts_at, ends_at, clicks")
+    .is("deleted_at", null)
     .order("created_at", { ascending: false });
   const items = (data ?? []) as Opportunity[];
 

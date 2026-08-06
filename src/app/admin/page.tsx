@@ -10,8 +10,8 @@ export default async function AdminResumenPage() {
   const supabase = await createClient();
 
   const [uniRes, ambRes, newsRes, oppRes, profRes, driveRes] = await Promise.all([
-    supabase.from("universities").select("id, name, short_name, status"),
-    supabase.from("profiles").select("id, status").eq("role", "ambassador"),
+    supabase.from("universities").select("id, name, short_name, status").is("deleted_at", null),
+    supabase.from("profiles").select("id, status").eq("role", "ambassador").is("deleted_at", null),
     supabase.from("news").select("id, title, university_id, status, clicks"),
     supabase.from("opportunities").select("id, title, university_id, status, clicks"),
     supabase.from("professors").select("id, name, university_id, status, clicks"),

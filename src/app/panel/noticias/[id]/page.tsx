@@ -14,6 +14,7 @@ export default async function EditNoticiaPage({
     .from("news")
     .select("id, title, summary, body, starts_at, ends_at")
     .eq("id", id)
+    .is("deleted_at", null)
     .maybeSingle();
   if (!data) notFound();
 

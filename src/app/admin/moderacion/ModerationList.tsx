@@ -95,7 +95,7 @@ export function ModerationList({ items }: { items: ModRow[] }) {
                   <DangerForm
                     action={deleteContent}
                     hidden={{ table: m.tabla, id: m.id }}
-                    confirm="¿Borrar esta publicación definitivamente? Esta acción no se puede deshacer."
+                    confirm="¿Enviar esta publicación a la papelera? Deja de verse en el sitio, pero podés restaurarla."
                     label="Borrar"
                     className="btn btn-ghost text-xs text-red-300"
                   />
