@@ -7,9 +7,9 @@
  */
 
 export const CAMPUS = {
-  eyebrow: "Campus",
+  eyebrow: "La red de ingeniería",
   title: "Campus",
-  lead: "La comunidad de tu universidad, conectada en un solo lugar.",
+  lead: "Cada universidad, un nodo. Todas conectadas en una misma red.",
   description:
-    "Cada campus reúne embajadores, alianzas académicas, oportunidades, empresas y recursos para construir una experiencia universitaria más completa, colaborativa y preparada para los desafíos del futuro.",
+    "Cada campus reúne a su embajador, alianzas académicas, oportunidades, empresas y recursos de estudio. Y ninguno está aislado: lo que se construye en una facultad puede impulsar a un estudiante a mil kilómetros de distancia.",
 } as const;
