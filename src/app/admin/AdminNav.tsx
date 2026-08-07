@@ -11,6 +11,7 @@ const tabs = [
   { href: "/admin/perfiles", label: "Perfiles" },
   { href: "/admin/moderacion", label: "Moderación" },
   { href: "/admin/papelera", label: "Papelera" },
+  { href: "/admin/diagnostico", label: "Diagnóstico" },
 ];
 
 export function AdminNav() {
