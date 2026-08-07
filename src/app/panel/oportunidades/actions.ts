@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionUser } from "@/lib/auth";
+import { traducirYReportar } from "@/lib/errores";
 
 export type ActionState = { ok: boolean; error?: string; message?: string };
 
@@ -55,7 +56,7 @@ export async function createOpportunity(
       status: publish ? "published" : "draft",
       published_at: publish ? new Date().toISOString() : null,
     });
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: traducirYReportar(error).mensaje };
 
     revalidatePath("/panel/oportunidades");
     if (publish) revalidatePath("/campus/[university]", "page");
@@ -66,7 +67,7 @@ export async function createOpportunity(
         : "Oportunidad creada como borrador.",
     };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+    return { ok: false, error: traducirYReportar(e).mensaje };
   }
 }
 
@@ -100,13 +101,13 @@ export async function updateOpportunity(
       .from("opportunities")
       .update({ kind, title, org, description, deadline, href, requirements, starts_at, ends_at })
       .eq("id", id);
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: traducirYReportar(error).mensaje };
 
     revalidatePath("/panel/oportunidades");
     revalidatePath("/campus/[university]", "page");
     return { ok: true, message: "Cambios guardados." };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+    return { ok: false, error: traducirYReportar(e).mensaje };
   }
 }
 

@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionUser } from "@/lib/auth";
+import { traducirYReportar } from "@/lib/errores";
 
 export type ActionState = { ok: boolean; error?: string; message?: string };
 
@@ -46,7 +47,7 @@ export async function createProfessor(
       subjects,
       status: publish ? "published" : "draft",
     });
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: traducirYReportar(error).mensaje };
 
     revalidatePath("/panel/profesores");
     if (publish) revalidatePath("/campus/[university]", "page");
@@ -57,7 +58,7 @@ export async function createProfessor(
         : "Profesor cargado como borrador.",
     };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+    return { ok: false, error: traducirYReportar(e).mensaje };
   }
 }
 
@@ -87,13 +88,13 @@ export async function updateProfessor(
       .from("professors")
       .update({ name, title, modality, whatsapp, subjects })
       .eq("id", id);
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: traducirYReportar(error).mensaje };
 
     revalidatePath("/panel/profesores");
     revalidatePath("/campus/[university]", "page");
     return { ok: true, message: "Cambios guardados." };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+    return { ok: false, error: traducirYReportar(e).mensaje };
   }
 }
 

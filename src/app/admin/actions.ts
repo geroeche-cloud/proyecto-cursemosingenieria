@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/auth";
+import { traducirYReportar } from "@/lib/errores";
 
 export type ActionState = { ok: boolean; error?: string; message?: string };
 
@@ -16,18 +17,14 @@ function slugify(s: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-/** Traduce errores técnicos a mensajes claros para el admin. */
-function friendly(msg: string): string {
-  if (/already been registered/i.test(msg)) {
-    return "Ese email ya tiene una cuenta. Usá uno distinto.";
-  }
-  if (/password/i.test(msg) && /(least|length|weak|short|6)/i.test(msg)) {
-    return "La contraseña es muy corta. Usá al menos 8 caracteres.";
-  }
-  if (/duplicate key|unique/i.test(msg)) {
-    return "Ya existe una universidad con ese nombre o sigla.";
-  }
-  return msg;
+/**
+ * Traduce errores técnicos a mensajes claros para el admin.
+ *
+ * Usa el traductor compartido con el panel del embajador, pero en modo admin:
+ * cuando el problema es de configuración, agrega qué migración lo resuelve.
+ */
+function friendly(msg: unknown): string {
+  return traducirYReportar(msg, { admin: true, donde: "panel de administración" }).mensaje;
 }
 
 async function assertAdmin() {
@@ -55,12 +52,12 @@ export async function createUniversity(
       city,
       slug: slugify(short_name || name),
     });
-    if (error) return { ok: false, error: friendly(error.message) };
+    if (error) return { ok: false, error: friendly(error) };
 
     revalidatePath("/admin");
     return { ok: true, message: `Universidad "${name}" creada.` };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+    return { ok: false, error: friendly(e) };
   }
 }
 
@@ -91,7 +88,7 @@ export async function createAmbassador(
       email_confirm: true,
       user_metadata: { full_name },
     });
-    if (createErr) return { ok: false, error: friendly(createErr.message) };
+    if (createErr) return { ok: false, error: friendly(createErr) };
 
     const userId = created.user?.id;
     if (!userId) return { ok: false, error: "No se pudo crear la cuenta." };
@@ -104,7 +101,7 @@ export async function createAmbassador(
       university_id,
       status: "active",
     });
-    if (profileErr) return { ok: false, error: friendly(profileErr.message) };
+    if (profileErr) return { ok: false, error: friendly(profileErr) };
 
     await admin
       .from("ambassador_profiles")
@@ -114,7 +111,7 @@ export async function createAmbassador(
     revalidatePath("/campus");
     return { ok: true, message: `Embajador ${email} creado.` };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+    return { ok: false, error: friendly(e) };
   }
 }
 
@@ -209,7 +206,7 @@ export async function saveAmbassadorProfile(
       const { error: upErr } = await admin.storage
         .from("ambassadors")
         .upload(path, photo, { contentType: photo.type, upsert: true });
-      if (upErr) return { ok: false, error: friendly(upErr.message) };
+      if (upErr) return { ok: false, error: friendly(upErr) };
       photo_url = admin.storage.from("ambassadors").getPublicUrl(path).data.publicUrl;
     }
 
@@ -245,14 +242,14 @@ export async function saveAmbassadorProfile(
       },
       { onConflict: "university_id" },
     );
-    if (error) return { ok: false, error: friendly(error.message) };
+    if (error) return { ok: false, error: friendly(error) };
 
     revalidatePath("/admin");
     revalidatePath("/campus/[university]", "page");
     revalidatePath("/");
     return { ok: true, message: "Perfil del embajador actualizado." };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+    return { ok: false, error: friendly(e) };
   }
 }
 
@@ -287,12 +284,12 @@ export async function deleteUniversity(
       .from("universities")
       .update({ deleted_at: new Date().toISOString(), status: "inactive" })
       .eq("id", id);
-    if (error) return { ok: false, error: friendly(error.message) };
+    if (error) return { ok: false, error: friendly(error) };
 
     revalidarTodo();
     return { ok: true, message: "Universidad enviada a la papelera." };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+    return { ok: false, error: friendly(e) };
   }
 }
 
@@ -316,12 +313,12 @@ export async function deleteAmbassador(
       .from("profiles")
       .update({ deleted_at: new Date().toISOString(), status: "suspended" })
       .eq("id", id);
-    if (error) return { ok: false, error: friendly(error.message) };
+    if (error) return { ok: false, error: friendly(error) };
 
     revalidarTodo();
     return { ok: true, message: "Embajador enviado a la papelera." };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+    return { ok: false, error: friendly(e) };
   }
 }
 
@@ -341,12 +338,12 @@ export async function deleteContent(
       .from(table)
       .update({ deleted_at: new Date().toISOString(), status: "archived" })
       .eq("id", id);
-    if (error) return { ok: false, error: friendly(error.message) };
+    if (error) return { ok: false, error: friendly(error) };
 
     revalidarTodo();
     return { ok: true, message: "Publicación enviada a la papelera." };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+    return { ok: false, error: friendly(e) };
   }
 }
 
@@ -364,7 +361,7 @@ export async function restoreItem(
     const admin = createAdminClient();
     if (table === "universities" || table === "profiles" || CONTENT_TABLES.includes(table as ContentTable)) {
       const { error } = await admin.from(table).update({ deleted_at: null }).eq("id", id);
-      if (error) return { ok: false, error: friendly(error.message) };
+      if (error) return { ok: false, error: friendly(error) };
     } else {
       return { ok: false, error: "Datos inválidos." };
     }
@@ -376,7 +373,7 @@ export async function restoreItem(
         "Restaurado. Queda inactivo o como borrador: revisalo y volvé a publicarlo cuando quieras.",
     };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+    return { ok: false, error: friendly(e) };
   }
 }
 
@@ -397,11 +394,11 @@ export async function purgeItem(
       const { data: prof } = await admin.from("profiles").select("role").eq("id", id).maybeSingle();
       if (prof?.role !== "ambassador") return { ok: false, error: "Solo se pueden borrar embajadores." };
       const { error } = await admin.from("profiles").delete().eq("id", id);
-      if (error) return { ok: false, error: friendly(error.message) };
+      if (error) return { ok: false, error: friendly(error) };
       await admin.auth.admin.deleteUser(id); // recién acá desaparece la cuenta
     } else if (table === "universities" || CONTENT_TABLES.includes(table as ContentTable)) {
       const { error } = await admin.from(table).delete().eq("id", id);
-      if (error) return { ok: false, error: friendly(error.message) };
+      if (error) return { ok: false, error: friendly(error) };
     } else {
       return { ok: false, error: "Datos inválidos." };
     }
@@ -409,7 +406,7 @@ export async function purgeItem(
     revalidarTodo();
     return { ok: true, message: "Eliminado definitivamente." };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+    return { ok: false, error: friendly(e) };
   }
 }
 

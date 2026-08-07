@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionUser } from "@/lib/auth";
+import { traducirYReportar } from "@/lib/errores";
 
 export type ActionState = { ok: boolean; error?: string; message?: string };
 
@@ -51,7 +52,7 @@ export async function createNews(
       status: publish ? "published" : "draft",
       published_at: publish ? new Date().toISOString() : null,
     });
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: traducirYReportar(error).mensaje };
 
     revalidatePath("/panel/noticias");
     if (publish) {
@@ -63,7 +64,7 @@ export async function createNews(
       message: publish ? "Noticia publicada." : "Noticia guardada como borrador.",
     };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+    return { ok: false, error: traducirYReportar(e).mensaje };
   }
 }
 
@@ -88,14 +89,14 @@ export async function updateNews(
       .from("news")
       .update({ title, summary, body, starts_at, ends_at })
       .eq("id", id);
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: traducirYReportar(error).mensaje };
 
     revalidatePath("/panel/noticias");
     revalidatePath("/novedades");
     revalidatePath("/campus/[university]", "page");
     return { ok: true, message: "Cambios guardados." };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+    return { ok: false, error: traducirYReportar(e).mensaje };
   }
 }
 
@@ -114,7 +115,7 @@ export async function setNewsStatus(formData: FormData) {
       published_at: status === "published" ? new Date().toISOString() : null,
     })
     .eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(traducirYReportar(error).mensaje);
 
   revalidatePath("/panel/noticias");
   revalidatePath("/novedades");
@@ -129,7 +130,7 @@ export async function deleteNews(formData: FormData) {
 
   const supabase = await createClient();
   const { error } = await supabase.from("news").delete().eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error(traducirYReportar(error).mensaje);
 
   revalidatePath("/panel/noticias");
   revalidatePath("/novedades");

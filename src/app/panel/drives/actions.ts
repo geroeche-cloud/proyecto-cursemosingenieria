@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionUser } from "@/lib/auth";
+import { traducirYReportar } from "@/lib/errores";
 
 export type ActionState = { ok: boolean; error?: string; message?: string };
 
@@ -36,7 +37,7 @@ export async function createDrive(
       href,
       status: publish ? "published" : "draft",
     });
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: traducirYReportar(error).mensaje };
 
     revalidatePath("/panel/drives");
     if (publish) revalidatePath("/campus/[university]", "page");
@@ -47,7 +48,7 @@ export async function createDrive(
         : "Drive cargado como borrador.",
     };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+    return { ok: false, error: traducirYReportar(e).mensaje };
   }
 }
 
@@ -67,13 +68,13 @@ export async function updateDrive(
 
     const supabase = await createClient();
     const { error } = await supabase.from("drives").update({ owner, career, href }).eq("id", id);
-    if (error) return { ok: false, error: error.message };
+    if (error) return { ok: false, error: traducirYReportar(error).mensaje };
 
     revalidatePath("/panel/drives");
     revalidatePath("/campus/[university]", "page");
     return { ok: true, message: "Cambios guardados." };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "Error inesperado." };
+    return { ok: false, error: traducirYReportar(e).mensaje };
   }
 }
 
