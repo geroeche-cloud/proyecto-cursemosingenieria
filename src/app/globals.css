@@ -489,7 +489,9 @@ body {
   border-radius: 50%;
   filter: blur(100px);
   pointer-events: none;
-  will-change: transform;
+  /* Sin will-change: estas luces son fijas, nunca se transforman. Pedirle al
+     navegador una capa de GPU permanente para algo que no se mueve gasta
+     memoria de video sin acelerar nada. */
 }
 @media (max-width: 640px) {
   .site-glow {

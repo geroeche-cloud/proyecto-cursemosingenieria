@@ -3,6 +3,7 @@ import { Inter, Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { IntroLoader } from "@/components/ui/IntroLoader";
 import { SiteBackdrop } from "@/components/ui/SiteBackdrop";
+import { SoloPublico } from "@/components/ui/SoloPublico";
 import { SITE_URL } from "@/lib/site";
 
 const inter = Inter({
@@ -80,7 +81,11 @@ export default function RootLayout({
     >
       <body className="min-h-full grain">
         <SiteBackdrop />
-        <IntroLoader />
+        {/* La intro cinematográfica (con sonido) es para quien llega al sitio.
+            Nadie que entra a publicar una noticia quiere verla otra vez. */}
+        <SoloPublico>
+          <IntroLoader />
+        </SoloPublico>
         {children}
       </body>
     </html>
