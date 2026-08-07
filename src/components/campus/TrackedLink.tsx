@@ -34,11 +34,11 @@ let avisoMigracion = false;
 export function sendEvent(kind: EventKind, id: string) {
   const supabase = createClient();
   supabase
-    .rpc("track_event", { kind, row_id: id, vid: getVisitorId() })
+    .rpc("track_event", { p_kind: kind, p_row: id, p_vid: getVisitorId() })
     .then(({ error }) => {
       if (!error) return;
 
-      // PGRST202 = la función no existe todavía en la base.
+      // PGRST202 = la función no existe todavía con esos nombres de parámetro.
       if (error.code === "PGRST202") {
         if (!avisoMigracion) {
           avisoMigracion = true;
