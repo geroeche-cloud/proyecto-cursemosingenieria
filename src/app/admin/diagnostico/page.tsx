@@ -1,4 +1,7 @@
 import { correrDiagnostico, type Estado } from "@/lib/diagnostico";
+import { enlaceEditorSQL } from "@/lib/migraciones";
+import { supabaseUrl } from "@/lib/supabase/env";
+import { BloqueSQL } from "@/components/admin/BloqueSQL";
 
 const CARD = "linear-gradient(158deg, #121a2c 0%, #0b1020 100%)";
 
@@ -24,6 +27,7 @@ const COLOR: Record<Estado, { chip: string; texto: string }> = {
 
 export default async function AdminDiagnosticoPage() {
   const chequeos = await correrDiagnostico();
+  const editor = enlaceEditorSQL(supabaseUrl);
 
   const fallas = chequeos.filter((c) => c.estado === "falla").length;
   const avisos = chequeos.filter((c) => c.estado === "aviso").length;
@@ -90,6 +94,13 @@ export default async function AdminDiagnosticoPage() {
                       <span className="font-medium text-ink">Cómo resolverlo: </span>
                       {c.arreglo}
                     </p>
+                  )}
+                  {c.sql && (
+                    <BloqueSQL
+                      archivo={c.sql.archivo}
+                      contenido={c.sql.contenido}
+                      editor={editor}
+                    />
                   )}
                 </div>
               </div>

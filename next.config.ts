@@ -75,6 +75,12 @@ const nextConfig: NextConfig = {
       bodySizeLimit: "6mb",
     },
   },
+  // El diagnóstico muestra el SQL exacto de cada arreglo leyendo el archivo
+  // real del repo. Sin esto, los .sql no viajan al servidor en Vercel y el
+  // panel mostraría el problema pero no la solución.
+  outputFileTracingIncludes: {
+    "/admin/diagnostico": ["./supabase/migrations/*.sql"],
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

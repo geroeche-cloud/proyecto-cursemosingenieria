@@ -1,6 +1,7 @@
 // SOLO SERVIDOR: usa la clave de administración.
 import { createAdminClient } from "@/lib/supabase/admin";
 import { firstToken } from "@/lib/supabase/env";
+import { leerMigracion } from "@/lib/migraciones";
 
 export type Estado = "ok" | "falla" | "aviso";
 
@@ -10,6 +11,11 @@ export type Chequeo = {
   detalle: string;
   /** Qué hacer si falla. Vacío cuando está todo bien. */
   arreglo?: string;
+  /**
+   * SQL exacto para pegar en Supabase, cuando el arreglo es correr una
+   * migración. Se lee del archivo real del repo, así nunca queda desactualizado.
+   */
+  sql?: { archivo: string; contenido: string };
 };
 
 /** Ejecuta un chequeo sin que una excepción tumbe todo el diagnóstico. */
@@ -27,6 +33,12 @@ async function correr(
       arreglo: "Revisá los logs del servidor en Vercel → Runtime Logs.",
     };
   }
+}
+
+/** Adjunta el SQL de una migración al chequeo, si el archivo está disponible. */
+async function conSQL(archivo: string): Promise<Chequeo["sql"]> {
+  const contenido = await leerMigracion(archivo);
+  return contenido ? { archivo, contenido } : undefined;
 }
 
 /**
@@ -94,7 +106,8 @@ export async function correrDiagnostico(): Promise<Chequeo[]> {
         return {
           estado: "falla",
           detalle: "Falta la columna deleted_at",
-          arreglo: "Correr supabase/migrations/0008_papelera.sql en el SQL Editor.",
+          arreglo: "Copiá el SQL de abajo y pegalo en el editor de Supabase.",
+          sql: await conSQL("0008_papelera.sql"),
         };
       }
       return { estado: "ok", detalle: "Borrar es reversible" };
@@ -109,7 +122,8 @@ export async function correrDiagnostico(): Promise<Chequeo[]> {
         return {
           estado: "falla",
           detalle: "Falta la tabla click_events",
-          arreglo: "Correr supabase/migrations/0009_click_events.sql en el SQL Editor.",
+          arreglo: "Copiá el SQL de abajo y pegalo en el editor de Supabase.",
+          sql: await conSQL("0009_click_events.sql"),
         };
       }
       return { estado: "ok", detalle: "Tabla de eventos disponible" };
@@ -132,8 +146,9 @@ export async function correrDiagnostico(): Promise<Chequeo[]> {
           estado: "falla",
           detalle: falta ? "La función track_event no existe" : error.message,
           arreglo: falta
-            ? "Correr 0010_informes.sql y 0011_fix_ambiguedad.sql en el SQL Editor."
-            : "Correr supabase/migrations/0011_fix_ambiguedad.sql (corrige el error de ambigüedad).",
+            ? "Copiá el SQL de abajo y pegalo en Supabase. Después corré también 0011_fix_ambiguedad.sql."
+            : "Copiá el SQL de abajo: corrige el error de ambigüedad de columnas.",
+          sql: await conSQL(falta ? "0010_informes.sql" : "0011_fix_ambiguedad.sql"),
         };
       }
       return { estado: "ok", detalle: "Visitas, clics y redes se registran" };
@@ -151,10 +166,15 @@ export async function correrDiagnostico(): Promise<Chequeo[]> {
           estado: "falla",
           detalle: error.message,
           arreglo: sinPermiso
-            ? "Correr supabase/migrations/0012_permisos_informes.sql (le da acceso al rol del servidor)."
+            ? "Copiá el SQL de abajo: le da acceso al rol del servidor."
             : noExiste
-              ? "Correr supabase/migrations/0010_informes.sql en el SQL Editor."
+              ? "Copiá el SQL de abajo y pegalo en el editor de Supabase."
               : "Revisar la función report_stats en Supabase.",
+          sql: sinPermiso
+            ? await conSQL("0012_permisos_informes.sql")
+            : noExiste
+              ? await conSQL("0010_informes.sql")
+              : undefined,
         };
       }
       return { estado: "ok", detalle: "Los informes calculan correctamente" };
@@ -178,7 +198,8 @@ export async function correrDiagnostico(): Promise<Chequeo[]> {
           estado: "falla",
           detalle: "No existe el bucket 'ambassadors'",
           arreglo:
-            "Correr la parte de Storage de 0003_ambassador_profile_fields.sql, o crear el bucket público 'ambassadors' en Supabase → Storage.",
+            "Copiá el SQL de abajo, o creá a mano un bucket público llamado 'ambassadors' en Supabase → Storage.",
+          sql: await conSQL("0003_ambassador_profile_fields.sql"),
         };
       }
       if (!b.public) {
