@@ -9,7 +9,9 @@ import { TrackedLink } from "@/components/campus/TrackedLink";
 import { TrackedNews } from "@/components/campus/TrackedNews";
 import { TrackVisit } from "@/components/campus/TrackVisit";
 import { ClickCount } from "@/components/campus/ClickCount";
+import { ShareButtons } from "@/components/campus/ShareButtons";
 import { scheduleState, type ScheduleTone } from "@/lib/schedule";
+import { SITE_URL } from "@/lib/site";
 
 const CARD = "linear-gradient(158deg, #121a2c 0%, #0b1020 100%)";
 
@@ -126,6 +128,9 @@ export function CampusView({
   ambassador: AmbassadorCardData | null;
   preview?: boolean;
 }) {
+  // Enlace público de esta universidad: cada publicación se comparte con su ancla.
+  const baseUrl = `${SITE_URL}/campus/${uni.slug}`;
+
   return (
     <>
       <Nav />
@@ -181,6 +186,7 @@ export function CampusView({
                       <StateBadge preview={preview} status={n.status} starts_at={n.starts_at} ends_at={n.ends_at} />
                     }
                     footer={<ClickCount kind="news" id={n.id} clicks={n.clicks} />}
+                    baseUrl={baseUrl}
                   />
                 </Reveal>
               ))}
@@ -188,7 +194,11 @@ export function CampusView({
                 <div className="grid gap-4 sm:grid-cols-2">
                   {opportunities.map((o) => (
                     <Reveal key={o.id}>
-                      <article className="chrome-edge flex h-full flex-col gap-4 rounded-3xl border border-hair-strong p-6 lift" style={{ background: CARD }}>
+                      <article
+                        id={`pub-${o.id}`}
+                        className="chrome-edge flex h-full flex-col gap-4 rounded-3xl border border-hair-strong p-6 lift scroll-mt-28"
+                        style={{ background: CARD }}
+                      >
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="rounded-full border border-blue-500/40 bg-blue-500/10 px-3 py-1 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-blue-300">
                             {KIND_LABEL[o.kind] ?? o.kind}
@@ -226,7 +236,10 @@ export function CampusView({
                               Ver convocatoria
                             </TrackedLink>
                           )}
-                          <ClickCount kind="opportunities" id={o.id} clicks={o.clicks} />
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <ClickCount kind="opportunities" id={o.id} clicks={o.clicks} />
+                            <ShareButtons baseUrl={baseUrl} anchor={`pub-${o.id}`} titulo={o.title} />
+                          </div>
                         </div>
                       </article>
                     </Reveal>

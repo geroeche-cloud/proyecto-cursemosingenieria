@@ -2,6 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { trackClick } from "./TrackedLink";
+import { ShareButtons } from "./ShareButtons";
 
 const CARD = "linear-gradient(158deg, #121a2c 0%, #0b1020 100%)";
 
@@ -17,6 +18,7 @@ export function TrackedNews({
   track = true,
   badge,
   footer,
+  baseUrl,
 }: {
   id: string;
   title: string;
@@ -25,6 +27,7 @@ export function TrackedNews({
   track?: boolean;
   badge?: ReactNode;
   footer?: ReactNode;
+  baseUrl: string;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -34,7 +37,11 @@ export function TrackedNews({
   };
 
   return (
-    <article className="chrome-edge rounded-2xl border border-hair-strong p-6" style={{ background: CARD }}>
+    <article
+      id={`pub-${id}`}
+      className="chrome-edge scroll-mt-28 rounded-2xl border border-hair-strong p-6"
+      style={{ background: CARD }}
+    >
       <div className="flex flex-wrap items-center gap-2">
         <span className="rounded-full border border-hair px-2.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-ink-mute">
           Noticia
@@ -59,7 +66,10 @@ export function TrackedNews({
           </button>
         </>
       )}
-      {footer && <div className="mt-3">{footer}</div>}
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+        {footer}
+        <ShareButtons baseUrl={baseUrl} anchor={`pub-${id}`} titulo={title} />
+      </div>
     </article>
   );
 }
