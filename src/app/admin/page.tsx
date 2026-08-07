@@ -1,79 +1,23 @@
 import Link from "next/link";
-import { createClient } from "@/lib/supabase/server";
-import { logIfError } from "@/lib/log";
+import { getAdminResumen } from "@/lib/resumenes";
 
 const CARD = "linear-gradient(158deg, #121a2c 0%, #0b1020 100%)";
 
-type Row = { university_id: string; clicks: number | null; label: string; tipo: string };
-
 export default async function AdminResumenPage() {
-  const supabase = await createClient();
+  // Todo el resumen del país lo calcula la base (migración 0013). Antes esta
+  // pantalla se traía TODAS las filas de los cuatro módulos de TODAS las
+  // universidades para contarlas y ordenarlas acá.
+  const r = await getAdminResumen();
 
-  const [uniRes, ambRes, newsRes, oppRes, profRes, driveRes] = await Promise.all([
-    supabase.from("universities").select("id, name, short_name, status").is("deleted_at", null),
-    supabase.from("profiles").select("id, status").eq("role", "ambassador").is("deleted_at", null),
-    supabase.from("news").select("id, title, university_id, status, clicks"),
-    supabase.from("opportunities").select("id, title, university_id, status, clicks"),
-    supabase.from("professors").select("id, name, university_id, status, clicks"),
-    supabase.from("drives").select("id, owner, university_id, status, clicks"),
-  ]);
-
-  logIfError("admin resumen universities", uniRes.error);
-  logIfError("admin resumen profiles", ambRes.error);
-  logIfError("admin resumen news", newsRes.error);
-  logIfError("admin resumen opportunities", oppRes.error);
-  logIfError("admin resumen professors", profRes.error);
-  logIfError("admin resumen drives", driveRes.error);
-
-  const unis = (uniRes.data ?? []) as { id: string; name: string; short_name: string | null; status: string }[];
-  const ambs = (ambRes.data ?? []) as { id: string; status: string }[];
-  const uniName = new Map(unis.map((u) => [u.id, u.short_name || u.name]));
-
-  const pub = <T extends { status: string }>(rows: T[] | null) =>
-    (rows ?? []).filter((r) => r.status === "published");
-
-  const news = pub(newsRes.data as { status: string; university_id: string; clicks: number | null; title: string; id: string }[] | null);
-  const opps = pub(oppRes.data as { status: string; university_id: string; clicks: number | null; title: string; id: string }[] | null);
-  const profs = pub(profRes.data as { status: string; university_id: string; clicks: number | null; name: string; id: string }[] | null);
-  const drives = pub(driveRes.data as { status: string; university_id: string; clicks: number | null; owner: string; id: string }[] | null);
-
-  const todo: Row[] = [
-    ...news.map((r) => ({ university_id: r.university_id, clicks: r.clicks, label: r.title, tipo: "Noticia" })),
-    ...opps.map((r) => ({ university_id: r.university_id, clicks: r.clicks, label: r.title, tipo: "Oportunidad" })),
-    ...profs.map((r) => ({ university_id: r.university_id, clicks: r.clicks, label: r.name, tipo: "Profesor" })),
-    ...drives.map((r) => ({ university_id: r.university_id, clicks: r.clicks, label: `Drive de ${r.owner}`, tipo: "Drive" })),
-  ];
-
-  const totalPublicado = todo.length;
-  const totalClics = todo.reduce((n, r) => n + (r.clicks ?? 0), 0);
-  const activas = unis.filter((u) => u.status === "active").length;
-  const embActivos = ambs.filter((a) => a.status === "active").length;
-  const suspendidos = ambs.length - embActivos;
-
-  const ranking = todo
-    .filter((r) => (r.clicks ?? 0) > 0)
-    .sort((a, b) => (b.clicks ?? 0) - (a.clicks ?? 0))
-    .slice(0, 8);
-
-  // Actividad por universidad: cuánto publicó y cuántos clics acumula.
-  const porUni = unis
-    .map((u) => {
-      const items = todo.filter((r) => r.university_id === u.id);
-      return {
-        id: u.id,
-        nombre: u.short_name || u.name,
-        publicaciones: items.length,
-        clics: items.reduce((n, r) => n + (r.clicks ?? 0), 0),
-        activa: u.status === "active",
-      };
-    })
-    .sort((a, b) => b.clics - a.clics || b.publicaciones - a.publicaciones);
+  const ranking = r.ranking;
+  const porUni = r.por_universidad;
+  const suspendidos = r.embajadores_suspendidos;
 
   const stats = [
-    { label: "Universidades activas", value: activas, sub: `${unis.length} en total` },
-    { label: "Embajadores activos", value: embActivos, sub: `${suspendidos} suspendido${suspendidos === 1 ? "" : "s"}` },
-    { label: "Publicaciones en vivo", value: totalPublicado, sub: "en todo el país" },
-    { label: "Clics acumulados", value: totalClics, sub: "sobre el contenido publicado" },
+    { label: "Universidades activas", value: r.universidades_activas, sub: `${r.universidades_total} en total` },
+    { label: "Embajadores activos", value: r.embajadores_activos, sub: `${suspendidos} suspendido${suspendidos === 1 ? "" : "s"}` },
+    { label: "Publicaciones en vivo", value: r.publicaciones, sub: "en todo el país" },
+    { label: "Clics acumulados", value: r.clics, sub: "sobre el contenido publicado" },
   ];
 
   return (
@@ -115,7 +59,7 @@ export default async function AdminResumenPage() {
                     <div className="min-w-0">
                       <p className="text-sm text-ink break-anywhere">{r.label}</p>
                       <p className="font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ink-mute">
-                        {r.tipo} · {uniName.get(r.university_id) ?? "—"}
+                        {r.tipo} · {r.universidad ?? "—"}
                       </p>
                     </div>
                   </div>

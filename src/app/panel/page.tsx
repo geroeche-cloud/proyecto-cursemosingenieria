@@ -2,8 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSessionUser } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
-
-type Row = { status: "draft" | "published" | "archived" };
+import { getPanelResumen } from "@/lib/resumenes";
 
 type ModuleStat = {
   key: string;
@@ -14,48 +13,26 @@ type ModuleStat = {
   drafts: number;
 };
 
-function countBy(rows: Row[] | null) {
-  const list = rows ?? [];
-  return {
-    published: list.filter((r) => r.status === "published").length,
-    drafts: list.filter((r) => r.status === "draft").length,
-  };
-}
-
 export default async function PanelHome() {
   const user = await getSessionUser();
   if (!user?.university_id) redirect("/login");
 
   const supabase = await createClient();
 
-  const [uniRes, newsRes, oppRes, profRes, driveRes, topRes] = await Promise.all([
+  // Los conteos y el ranking los calcula la base (0013): antes esta pantalla se
+  // traía todas las filas de los cuatro módulos solo para contarlas acá.
+  const [uniRes, resumen] = await Promise.all([
     supabase.from("universities").select("name, slug").eq("id", user.university_id).single(),
-    supabase.from("news").select("status").is("deleted_at", null),
-    supabase.from("opportunities").select("status").is("deleted_at", null),
-    supabase.from("professors").select("status").is("deleted_at", null),
-    supabase.from("drives").select("status").is("deleted_at", null),
-    Promise.all([
-      supabase.from("news").select("id, title, clicks").is("deleted_at", null).order("clicks", { ascending: false }).limit(5),
-      supabase.from("opportunities").select("id, title, clicks").is("deleted_at", null).order("clicks", { ascending: false }).limit(5),
-      supabase.from("professors").select("id, name, clicks").is("deleted_at", null).order("clicks", { ascending: false }).limit(5),
-      supabase.from("drives").select("id, owner, clicks").is("deleted_at", null).order("clicks", { ascending: false }).limit(5),
-    ]),
+    getPanelResumen(),
   ]);
 
   const slug = uniRes.data?.slug ?? null;
+  const ranking = resumen.ranking.map((r) => ({ label: r.label, kind: r.tipo, clicks: r.clicks }));
 
-  // Ranking "lo más visto" (clics acumulados) entre todos los módulos.
-  type Clicked = { clicks?: number | null };
-  const [nTop, oTop, pTop, dTop] = topRes;
-  const ranking = [
-    ...((nTop.data ?? []) as (Clicked & { title: string })[]).map((r) => ({ label: r.title, kind: "Noticia", clicks: r.clicks ?? 0 })),
-    ...((oTop.data ?? []) as (Clicked & { title: string })[]).map((r) => ({ label: r.title, kind: "Oportunidad", clicks: r.clicks ?? 0 })),
-    ...((pTop.data ?? []) as (Clicked & { name: string })[]).map((r) => ({ label: r.name, kind: "Profesor", clicks: r.clicks ?? 0 })),
-    ...((dTop.data ?? []) as (Clicked & { owner: string })[]).map((r) => ({ label: `Drive de ${r.owner}`, kind: "Drive", clicks: r.clicks ?? 0 })),
-  ]
-    .filter((x) => x.clicks > 0)
-    .sort((a, b) => b.clicks - a.clicks)
-    .slice(0, 6);
+  const cuenta = (m: string) => ({
+    published: resumen.conteos[m]?.publicadas ?? 0,
+    drafts: resumen.conteos[m]?.borradores ?? 0,
+  });
 
   const modules: ModuleStat[] = [
     {
@@ -63,28 +40,28 @@ export default async function PanelHome() {
       label: "Noticias",
       href: "/panel/noticias",
       lead: "Novedades y avisos para tu facultad.",
-      ...countBy(newsRes.data as Row[] | null),
+      ...cuenta("news"),
     },
     {
       key: "oportunidades",
       label: "Oportunidades",
       href: "/panel/oportunidades",
       lead: "Becas, pasantías, programas y convocatorias.",
-      ...countBy(oppRes.data as Row[] | null),
+      ...cuenta("opportunities"),
     },
     {
       key: "profesores",
       label: "Profesores",
       href: "/panel/profesores",
       lead: "Tutorías, mentorías y clases particulares.",
-      ...countBy(profRes.data as Row[] | null),
+      ...cuenta("professors"),
     },
     {
       key: "drives",
       label: "Drives",
       href: "/panel/drives",
       lead: "Material de estudio compartido en Google Drive.",
-      ...countBy(driveRes.data as Row[] | null),
+      ...cuenta("drives"),
     },
   ];
 
