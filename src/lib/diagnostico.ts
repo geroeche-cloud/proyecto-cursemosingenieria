@@ -218,5 +218,56 @@ export async function correrDiagnostico(): Promise<Chequeo[]> {
     }),
   );
 
+  // ---- Monitoreo de errores ----
+  // El DSN se incrusta al COMPILAR, no se lee en vivo: por eso cargarlo en
+  // Vercel no alcanza, hay que volver a desplegar. Este chequeo distingue los
+  // tres casos que confunden (no está / está mal escrito / falta el redeploy).
+  chequeos.push(
+    await correr("Monitoreo de errores (Sentry)", async () => {
+      const crudo = process.env.NEXT_PUBLIC_SENTRY_DSN ?? "";
+      const dsn = firstToken(crudo);
+
+      if (!dsn) {
+        return {
+          estado: "aviso",
+          detalle: "No configurado — los errores no se reportan a ningún lado",
+          arreglo:
+            "Vercel → Settings → Environment Variables: agregá NEXT_PUBLIC_SENTRY_DSN (el nombre debe ser exacto, con el prefijo NEXT_PUBLIC_) marcada para Production. Después Deployments → Redeploy: el valor se incrusta al compilar, no basta con guardarlo.",
+        };
+      }
+
+      let host = "";
+      try {
+        const u = new URL(dsn);
+        host = u.hostname;
+        if (!u.protocol.startsWith("http") || !u.username) throw new Error("formato");
+      } catch {
+        return {
+          estado: "falla",
+          detalle: "El DSN no tiene el formato esperado",
+          arreglo:
+            "Copiá el DSN completo desde Sentry → Settings → Client Keys. Es una URL que empieza con https:// e incluye una clave antes del @.",
+        };
+      }
+
+      if (crudo.trim() !== dsn) {
+        return {
+          estado: "falla",
+          detalle: "Hay texto de más pegado al DSN",
+          arreglo: "Dejá el valor en una sola línea, sin comillas ni saltos de línea. Después, Redeploy.",
+        };
+      }
+
+      const mapas = Boolean(process.env.SENTRY_AUTH_TOKEN);
+      return {
+        estado: "ok",
+        detalle: `Reportando a ${host}${mapas ? "" : " · sin mapas de código (los errores muestran el código comprimido)"}`,
+        arreglo: mapas
+          ? undefined
+          : "Opcional: agregá SENTRY_ORG, SENTRY_PROJECT y SENTRY_AUTH_TOKEN para ver la línea exacta del código original.",
+      };
+    }),
+  );
+
   return chequeos;
 }
