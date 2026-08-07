@@ -1,8 +1,8 @@
 name: Pruebas
 
-# Corre en cada push y en cada Pull Request. GitHub Actions es gratuito para
-# repositorios públicos y trae 2.000 minutos por mes en los privados; esta
-# suite tarda ~1 minuto, así que no hay costo real.
+# Corre en cada push a main y en cada Pull Request. GitHub Actions es gratuito
+# para repositorios públicos y trae 2.000 minutos por mes en los privados; esta
+# suite tarda ~2 minutos, así que no hay costo real.
 on:
   push:
     branches: [main]
@@ -12,6 +12,13 @@ jobs:
   verificar:
     runs-on: ubuntu-latest
     timeout-minutes: 15
+
+    # Las claves viven a nivel del job para poder preguntar si existen antes de
+    # correr las pruebas de navegador (ver el paso "Pruebas...").
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
     steps:
       - uses: actions/checkout@v4
@@ -24,28 +31,33 @@ jobs:
       - name: Instalar dependencias
         run: npm ci
 
+      # Tipos y estilo no tocan la base: corren siempre, con o sin claves.
       - name: Tipos
         run: npx tsc --noEmit
 
       - name: Estilo de código
         run: npm run lint
 
+      # Compilar y las pruebas de navegador SÍ necesitan la base: el build
+      # pre-renderiza páginas que leen contenido real. Sin claves se saltean en
+      # vez de fallar — un CI en rojo por configuración faltante es ruido, no
+      # información, y termina enseñando a ignorar los avisos.
       - name: Compilar
+        if: env.NEXT_PUBLIC_SUPABASE_URL != ''
         run: npm run build
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
       - name: Instalar navegador de pruebas
+        if: env.NEXT_PUBLIC_SUPABASE_URL != ''
         run: npx playwright install --with-deps chromium
 
       - name: Pruebas de los flujos críticos
+        if: env.NEXT_PUBLIC_SUPABASE_URL != ''
         run: npx playwright test --project=escritorio
-        env:
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      - name: Aviso si faltan las claves
+        if: env.NEXT_PUBLIC_SUPABASE_URL == ''
+        run: |
+          echo "::warning::Solo se verificaron tipos y estilo. Para activar el build y las pruebas, cargá NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY y SUPABASE_SERVICE_ROLE_KEY en Settings > Secrets and variables > Actions."
 
       - name: Guardar el informe si algo falla
         if: failure()
