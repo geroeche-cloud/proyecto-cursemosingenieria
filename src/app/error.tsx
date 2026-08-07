@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
+import * as Sentry from "@sentry/nextjs";
 
 /**
  * Pantalla de error de la aplicación. Sin esto, cualquier fallo mostraba la
@@ -16,8 +17,10 @@ export default function Error({
   reset: () => void;
 }) {
   useEffect(() => {
-    // Queda registrado en los logs del servidor (Vercel → Runtime Logs).
+    // Queda en los logs del servidor y, si Sentry está configurado, llega
+    // con la página, el navegador y la fecha del incidente.
     console.error("[app] error no controlado:", error.message, error.digest ?? "");
+    Sentry.captureException(error);
   }, [error]);
 
   return (

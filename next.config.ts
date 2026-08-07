@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 // Content-Security-Policy tuned for this self-contained site:
 // self-hosted fonts (next/font), next/image (data/blob), inline styles from
@@ -16,6 +17,17 @@ try {
 }
 const supabaseWs = supabaseOrigin.replace(/^https/, "wss");
 
+// Origen de Sentry — sin esto, la política de seguridad bloquearía el envío de
+// errores y el monitoreo no reportaría nada (fallando, además, en silencio).
+let sentryOrigin = "";
+try {
+  sentryOrigin = process.env.NEXT_PUBLIC_SENTRY_DSN
+    ? new URL(process.env.NEXT_PUBLIC_SENTRY_DSN).origin
+    : "";
+} catch {
+  sentryOrigin = "";
+}
+
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -27,7 +39,7 @@ const csp = [
   "style-src 'self' 'unsafe-inline'",
   // 'unsafe-eval' only in dev (React dev tooling); strict in production.
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
-  `connect-src 'self'${supabaseOrigin ? " " + supabaseOrigin + " " + supabaseWs : ""}${isDev ? " ws:" : ""}`,
+  `connect-src 'self'${supabaseOrigin ? " " + supabaseOrigin + " " + supabaseWs : ""}${sentryOrigin ? " " + sentryOrigin : ""}${isDev ? " ws:" : ""}`,
   "upgrade-insecure-requests",
 ].join("; ");
 
@@ -68,4 +80,20 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+/**
+ * Sentry solo se enchufa si hay DSN configurado. Sin él, el proyecto compila y
+ * se despliega exactamente igual que antes: cero peso agregado, cero cambios.
+ */
+export default sentryOrigin
+  ? withSentryConfig(nextConfig, {
+      org: process.env.SENTRY_ORG,
+      project: process.env.SENTRY_PROJECT,
+      // Sin token no se suben mapas de código; el build sigue funcionando.
+      authToken: process.env.SENTRY_AUTH_TOKEN,
+      silent: true,
+      // Menos peso en el navegador: se quitan los mensajes de depuración.
+      disableLogger: true,
+      // Evita que los bloqueadores de publicidad corten el envío de errores.
+      tunnelRoute: "/monitoring",
+    })
+  : nextConfig;

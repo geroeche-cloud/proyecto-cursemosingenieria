@@ -26,6 +26,15 @@
 *.tsbuildinfo
 next-env.d.ts
 
+# pruebas
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache
+
+# sentry
+.sentryclirc
+
 # varios
 .DS_Store
 *.pem
