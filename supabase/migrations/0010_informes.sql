@@ -23,6 +23,10 @@ alter table public.click_events add column if not exists vid text;
 --   · visit                                       → visita al campus (row_id = universidad)
 --   · social:instagram|tiktok|youtube|linkedin|mail → clic a una red (row_id = universidad)
 -- ---------------------------------------------------------------------------
+-- Nota: los parámetros se copian a variables locales (v_kind, v_row, v_raw_vid)
+-- y SOLO esas se usan dentro del SQL. Si se usan los parámetros directamente,
+-- Postgres no puede distinguirlos de las columnas homónimas de click_events y
+-- falla con "column reference is ambiguous" (42702).
 create or replace function public.track_event(kind text, row_id uuid, vid text default null)
   returns void
   language plpgsql
@@ -30,6 +34,9 @@ create or replace function public.track_event(kind text, row_id uuid, vid text d
   set search_path = public
 as $$
 declare
+  v_kind    text := kind;
+  v_row     uuid := row_id;
+  v_raw_vid text := vid;
   v_uni     uuid;
   v_ip      text;
   v_day     date;
@@ -37,31 +44,31 @@ declare
   v_vid     text;
   v_content boolean := false;
 begin
-  if kind in ('news', 'opportunities', 'professors', 'drives') then
+  if v_kind in ('news', 'opportunities', 'professors', 'drives') then
     v_content := true;
-  elsif kind not in ('visit', 'social:instagram', 'social:tiktok', 'social:youtube', 'social:linkedin', 'social:mail') then
+  elsif v_kind not in ('visit', 'social:instagram', 'social:tiktok', 'social:youtube', 'social:linkedin', 'social:mail') then
     return;
   end if;
 
   if v_content then
     -- El contenido tiene que existir, estar publicado y no estar en la papelera.
-    if kind = 'news' then
+    if v_kind = 'news' then
       select university_id into v_uni from public.news
-        where id = row_id and status = 'published' and deleted_at is null;
-    elsif kind = 'opportunities' then
+        where id = v_row and status = 'published' and deleted_at is null;
+    elsif v_kind = 'opportunities' then
       select university_id into v_uni from public.opportunities
-        where id = row_id and status = 'published' and deleted_at is null;
-    elsif kind = 'professors' then
+        where id = v_row and status = 'published' and deleted_at is null;
+    elsif v_kind = 'professors' then
       select university_id into v_uni from public.professors
-        where id = row_id and status = 'published' and deleted_at is null;
+        where id = v_row and status = 'published' and deleted_at is null;
     else
       select university_id into v_uni from public.drives
-        where id = row_id and status = 'published' and deleted_at is null;
+        where id = v_row and status = 'published' and deleted_at is null;
     end if;
   else
     -- Visitas y redes: el id ES la universidad, que debe estar activa.
     select id into v_uni from public.universities
-      where id = row_id and status = 'active' and deleted_at is null;
+      where id = v_row and status = 'active' and deleted_at is null;
   end if;
 
   if v_uni is null then
@@ -86,12 +93,12 @@ begin
 
   -- Identidad persistente anónima: hash del id aleatorio del navegador.
   v_vid := case
-    when vid is null or vid = '' then null
-    else encode(sha256(convert_to(left(vid, 64) || '|cursemos-vid', 'utf8')), 'hex')
+    when v_raw_vid is null or v_raw_vid = '' then null
+    else encode(sha256(convert_to(left(v_raw_vid, 64) || '|cursemos-vid', 'utf8')), 'hex')
   end;
 
   insert into public.click_events (kind, row_id, university_id, visitor, day, vid)
-  values (kind, row_id, v_uni, v_visitor, v_day, v_vid)
+  values (v_kind, v_row, v_uni, v_visitor, v_day, v_vid)
   on conflict (kind, row_id, visitor, day) do nothing;
 
   if not found then
@@ -99,14 +106,14 @@ begin
   end if;
 
   if v_content then
-    if kind = 'news' then
-      update public.news set clicks = clicks + 1 where id = row_id;
-    elsif kind = 'opportunities' then
-      update public.opportunities set clicks = clicks + 1 where id = row_id;
-    elsif kind = 'professors' then
-      update public.professors set clicks = clicks + 1 where id = row_id;
+    if v_kind = 'news' then
+      update public.news set clicks = clicks + 1 where id = v_row;
+    elsif v_kind = 'opportunities' then
+      update public.opportunities set clicks = clicks + 1 where id = v_row;
+    elsif v_kind = 'professors' then
+      update public.professors set clicks = clicks + 1 where id = v_row;
     else
-      update public.drives set clicks = clicks + 1 where id = row_id;
+      update public.drives set clicks = clicks + 1 where id = v_row;
     end if;
   end if;
 end;

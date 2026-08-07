@@ -20,12 +20,40 @@ export type EventKind =
 /** Evento interno para que el contador en pantalla suba al instante. */
 export const CLICK_EVENT = "cursemos:click";
 
-/** Envía el evento al servidor (el freno anti-abuso vive en la base). */
+const CONTENIDO = ["news", "opportunities", "professors", "drives"];
+let avisoMigracion = false;
+
+/**
+ * Envía el evento al servidor (el freno anti-abuso vive en la base).
+ *
+ * Si la migración de informes todavía no corrió, `track_event` no existe:
+ * en ese caso los clics de contenido siguen contando con `bump_click`, y las
+ * visitas y clics a redes simplemente esperan. Se avisa una sola vez por
+ * sesión para no ensuciar la consola.
+ */
 export function sendEvent(kind: EventKind, id: string) {
-  createClient()
+  const supabase = createClient();
+  supabase
     .rpc("track_event", { kind, row_id: id, vid: getVisitorId() })
     .then(({ error }) => {
-      if (error) console.error("[informes] no se pudo registrar:", error.message);
+      if (!error) return;
+
+      // PGRST202 = la función no existe todavía en la base.
+      if (error.code === "PGRST202") {
+        if (!avisoMigracion) {
+          avisoMigracion = true;
+          console.info(
+            "[informes] Métricas en espera: falta correr la migración 0010 en Supabase. " +
+              "Los clics se siguen contando.",
+          );
+        }
+        if (CONTENIDO.includes(kind)) {
+          supabase.rpc("bump_click", { kind, row_id: id }).then(() => {});
+        }
+        return;
+      }
+
+      console.error("[informes] no se pudo registrar:", error.message);
     });
 }
 
