@@ -64,6 +64,48 @@ test("las tarjetas del campus se pueden tocar de inmediato", async ({ page }) =>
   expect(tardo, "la tarjeta no estaba quieta").toBeLessThan(5000);
 });
 
+/**
+ * Cuenta el contenido que está en la página pero con opacidad cero.
+ *
+ * Esto existe porque `toBeVisible()` de Playwright NO mira la opacidad, e
+ * `innerText` tampoco: un elemento invisible pasa las dos comprobaciones. Con
+ * eso, una página completamente en blanco daba todo verde mientras en
+ * producción no se veía nada. La medición tiene que ser "se ve", no "existe".
+ */
+async function contenidoInvisible(page: import("@playwright/test").Page) {
+  return page.evaluate(() =>
+    [...document.querySelectorAll<HTMLElement>("[data-reveal]")].filter((el) => {
+      const r = el.getBoundingClientRect();
+      const dentro = r.top < window.innerHeight && r.bottom > 0;
+      return dentro && parseFloat(getComputedStyle(el).opacity) < 0.9;
+    }).length,
+  );
+}
+
+test("al NAVEGAR (no recargar) el contenido se ve, no queda invisible", async ({ page }) => {
+  await sinIntro(page);
+  await page.goto("/");
+
+  // Navegación del lado del cliente: el layout NO se vuelve a montar. Si algo
+  // depende de ese montaje para mostrar contenido, acá se cae.
+  await page.locator('a[href="/campus"]').first().click();
+  await page.waitForURL("**/campus");
+  await page.waitForTimeout(1500);
+
+  const tapado = await contenidoInvisible(page);
+  expect(tapado, "hay contenido del Campus en opacidad 0 tras navegar").toBe(0);
+
+  await page.locator('a[href^="/campus/"]').first().click();
+  await page.waitForURL(/\/campus\/[^/]+$/);
+  await page.waitForTimeout(1500);
+  expect(await contenidoInvisible(page), "contenido invisible en la universidad").toBe(0);
+
+  await page.goBack();
+  await page.waitForURL("**/campus");
+  await page.waitForTimeout(1500);
+  expect(await contenidoInvisible(page), "contenido invisible al volver atrás").toBe(0);
+});
+
 test("navegar y volver atrás deja el contenido completo", async ({ page }) => {
   await sinIntro(page);
   await page.goto("/");
