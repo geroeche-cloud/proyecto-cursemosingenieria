@@ -1,5 +1,6 @@
 import { createPublicClient } from "@/lib/supabase/public";
 import { isActiveNow } from "@/lib/schedule";
+import { unwrapOrThrow } from "@/lib/log";
 
 // ISR: la página se sirve cacheada y se regenera (acá o al publicar una noticia).
 export const revalidate = 60;
@@ -23,12 +24,18 @@ function uniOf(row: Row): UniRef | null {
 export default async function NovedadesPage() {
   const supabase = createPublicClient();
 
-  const { data } = await supabase
-    .from("news")
-    .select("id, title, summary, published_at, starts_at, ends_at, universities(name, short_name)")
-    .eq("status", "published")
-    .order("published_at", { ascending: false })
-    .limit(50);
+  // Si la consulta falla no se cachea una página vacía: Next conserva la
+  // última versión buena. Cero noticias legítimas sí es un estado válido.
+  const data = unwrapOrThrow(
+    "novedades",
+    await supabase
+      .from("news")
+      .select("id, title, summary, published_at, starts_at, ends_at, universities(name, short_name)")
+      .eq("status", "published")
+      .order("published_at", { ascending: false })
+      .limit(50),
+    [],
+  );
 
   const news = ((data ?? []) as Row[]).filter((n) => isActiveNow(n.starts_at, n.ends_at));
 

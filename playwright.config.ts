@@ -6,10 +6,19 @@ import { defineConfig, devices } from "@playwright/test";
  * Todo gratuito: Playwright es de código abierto y corre local o en GitHub
  * Actions. No depende de ningún servicio pago.
  *
- * Levanta el sitio solo antes de correr las pruebas (`npm run dev`) y lo baja
- * al terminar. Si ya hay uno andando en el 3000, lo reutiliza.
+ * SE PRUEBA CONTRA EL BUILD DE PRODUCCIÓN, no contra el servidor de desarrollo.
+ * Dos motivos, los dos aprendidos a la mala:
+ *
+ * 1. El servidor de desarrollo compila cada página la primera vez que se la
+ *    pide. Con varias pruebas en paralelo esas compilaciones se pisaban y la
+ *    suite fallaba de a ratos — ruido que enseña a ignorar los avisos.
+ * 2. Más importante: el modo desarrollo NO es lo que ve la gente. Probar ahí
+ *    deja pasar cualquier problema que aparezca solo al compilar.
+ *
+ * Corre en el puerto 3100 para no chocar con un `npm run dev` abierto.
  */
-const baseURL = process.env.PW_BASE_URL ?? "http://localhost:3000";
+const PUERTO = 3100;
+const baseURL = process.env.PW_BASE_URL ?? `http://localhost:${PUERTO}`;
 
 export default defineConfig({
   testDir: "./tests",
@@ -41,9 +50,10 @@ export default defineConfig({
   webServer: process.env.PW_BASE_URL
     ? undefined
     : {
-        command: "npm run dev",
-        url: "http://localhost:3000",
+        command: `npm run build && npx next start -p ${PUERTO}`,
+        url: `http://localhost:${PUERTO}`,
         reuseExistingServer: true,
-        timeout: 120_000,
+        // El build tarda; sin margen suficiente la suite falla antes de empezar.
+        timeout: 300_000,
       },
 });

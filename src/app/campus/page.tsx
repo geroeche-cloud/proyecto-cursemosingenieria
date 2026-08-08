@@ -6,7 +6,7 @@ import { GlobalNet } from "@/components/campus/GlobalNet";
 import { UniversityCard } from "@/components/campus/UniversityCard";
 import { CAMPUS } from "@/lib/campus";
 import { createPublicClient } from "@/lib/supabase/public";
-import { logIfError } from "@/lib/log";
+import { unwrapOrThrow } from "@/lib/log";
 
 export const metadata: Metadata = {
   title: "Campus",
@@ -44,13 +44,17 @@ type University = {
 
 export default async function CampusPage() {
   const supabase = createPublicClient();
-  const { data, error } = await supabase
-    .from("universities")
-    .select("id, name, short_name, city, slug")
-    .eq("status", "active")
-    .order("name");
-  logIfError("campus universities", error);
-  const universities = (data ?? []) as University[];
+  // unwrapOrThrow, no unwrap: si la consulta falla no se cachea un campus
+  // vacío para todo el mundo — Next sigue sirviendo la última versión buena.
+  const universities = unwrapOrThrow(
+    "campus universities",
+    await supabase
+      .from("universities")
+      .select("id, name, short_name, city, slug")
+      .eq("status", "active")
+      .order("name"),
+    [] as University[],
+  ) as University[];
 
   return (
     <>

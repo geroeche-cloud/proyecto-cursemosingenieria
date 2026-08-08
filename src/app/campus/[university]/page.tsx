@@ -47,12 +47,22 @@ export default async function UniversityPage({
   const { university } = await params;
   const supabase = createPublicClient();
 
-  const { data: uni } = await supabase
+  const uniRes = await supabase
     .from("universities")
     .select("id, name, short_name, city, slug")
     .eq("slug", university)
     .eq("status", "active")
     .maybeSingle();
+
+  // Distinguir "no existe" de "falló la consulta" es crítico acá.
+  // Antes ambos casos terminaban en notFound(), y como esta página se cachea,
+  // un hipo momentáneo de la base dejaba la universidad devolviendo 404 a todo
+  // el mundo. Ahora un fallo LANZA: Next conserva la última versión buena.
+  if (uniRes.error) {
+    logIfError(`campus/${university} universidad`, uniRes.error);
+    throw new Error(`[supabase] campus/${university}: ${uniRes.error.message}`);
+  }
+  const uni = uniRes.data;
   if (!uni) notFound();
 
   const uid = uni.id;
@@ -64,12 +74,22 @@ export default async function UniversityPage({
     supabase.from("ambassador_profiles").select(AMB_COLS).eq("university_id", uid).maybeSingle(),
   ]);
 
-  // Si alguna consulta falla, queda registrada (no más "vacío en silencio").
-  logIfError(`campus/${university} news`, newsRes.error);
-  logIfError(`campus/${university} opportunities`, oppRes.error);
-  logIfError(`campus/${university} professors`, profRes.error);
-  logIfError(`campus/${university} drives`, driveRes.error);
-  logIfError(`campus/${university} ambassador_profile`, ambProfileRes.error);
+  // Si el CONTENIDO de la universidad falla, tampoco se cachea una página
+  // vacía: se lanza y Next sigue sirviendo la última versión buena. Una
+  // sección legítimamente vacía (todavía no cargaron profesores) no es error
+  // y pasa sin problema — solo se lanza cuando la consulta falló.
+  for (const [que, res] of [
+    ["news", newsRes],
+    ["opportunities", oppRes],
+    ["professors", profRes],
+    ["drives", driveRes],
+    ["ambassador_profile", ambProfileRes],
+  ] as const) {
+    if (res.error) {
+      logIfError(`campus/${university} ${que}`, res.error);
+      throw new Error(`[supabase] campus/${university} ${que}: ${res.error.message}`);
+    }
+  }
 
   const news = ((newsRes.data ?? []) as CampusNews[]).filter((n) =>
     isActiveNow(n.starts_at ?? null, n.ends_at ?? null),
