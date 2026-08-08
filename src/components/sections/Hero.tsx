@@ -161,19 +161,33 @@ export function Hero() {
 
           {/* Símbolo del logo */}
           <div className="hero-simbolo relative order-1 flex justify-center lg:order-2 lg:justify-end">
+            {/*
+              `ellipse`, NO `circle`, y apagado antes del borde.
+
+              Estas dos luces miden un porcentaje del contenedor, y en celular
+              ese contenedor es bajo y ancho: la caja termina siendo 280x121 px,
+              un rectángulo. Un degradado `circle` adentro dibuja una
+              circunferencia que la caja recorta, y eso se veía como un parche
+              con bordes rectos detrás del logo. Antes lo tapaba el desenfoque;
+              al sacarlo por rendimiento, quedó a la vista.
+
+              Un degradado `ellipse` se adapta a la forma de la caja, y llevando
+              el transparente al 62-68% se apaga bastante antes del borde, así
+              no hay nada que recortar.
+            */}
             <div
-              className="pointer-events-none absolute left-1/2 top-1/2 h-[80%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-full"
+              className="pointer-events-none absolute left-1/2 top-1/2 h-[80%] w-[80%] -translate-x-1/2 -translate-y-1/2"
               style={{
                 background:
-                  "radial-gradient(circle, rgba(59,107,255,0.4) 0%, rgba(59,107,255,0.18) 40%, rgba(59,107,255,0.05) 64%, transparent 82%)",
+                  "radial-gradient(ellipse at center, rgba(59,107,255,0.38) 0%, rgba(59,107,255,0.14) 34%, transparent 68%)",
               }}
               aria-hidden
             />
             <div
-              className="pointer-events-none absolute left-[8%] top-[10%] h-[42%] w-[42%] rounded-full"
+              className="pointer-events-none absolute left-[8%] top-[10%] h-[42%] w-[42%]"
               style={{
                 background:
-                  "radial-gradient(circle, rgba(200,215,255,0.2) 0%, rgba(200,215,255,0.09) 42%, transparent 78%)",
+                  "radial-gradient(ellipse at center, rgba(200,215,255,0.16) 0%, rgba(200,215,255,0.06) 36%, transparent 62%)",
               }}
               aria-hidden
             />
