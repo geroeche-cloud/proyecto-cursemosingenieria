@@ -12,6 +12,17 @@ import { test, expect, type Page } from "@playwright/test";
  * la prueba crea y borra contenido.
  */
 
+/**
+ * De a una, no en paralelo.
+ *
+ * Las tres pruebas usan la MISMA cuenta. En paralelo abrían tres sesiones a la
+ * vez del mismo usuario, cada una haciendo varias consultas seguidas contra una
+ * base que está a unos 250 ms de ida y vuelta. La página del panel llegaba a
+ * agotar el tiempo de espera: no por un fallo del sitio, sino por las pruebas
+ * peleándose entre ellas por una cuenta compartida.
+ */
+test.describe.configure({ mode: "serial" });
+
 const EMAIL = process.env.PW_EMAIL;
 const PASSWORD = process.env.PW_PASSWORD;
 

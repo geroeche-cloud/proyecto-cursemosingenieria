@@ -56,6 +56,20 @@ export default defineConfig({
   // fallo del entorno, no del sitio: al segundo intento la página ya está
   // compilada. Sin esto, la suite falla de a ratos y se vuelve ruido.
   retries: 1,
+  /**
+   * Menos trabajadores en paralelo de los que Playwright elegiría solo.
+   *
+   * Por defecto usa uno por núcleo (acá, ocho). Cada prueba abre páginas que
+   * consultan la base, y esa base está a unos 250 ms de ida y vuelta: ocho a la
+   * vez saturaban el servidor local y alguna prueba distinta agotaba el tiempo
+   * en cada corrida. No fallaba nunca lo mismo, que es la señal de que el
+   * problema no era ninguna prueba en particular.
+   *
+   * Con cuatro, la suite tarda casi igual y deja de dar falsas alarmas. Una
+   * suite que falla de a ratos enseña a ignorar los avisos, y ahí se pierde
+   * todo el valor de tenerla.
+   */
+  workers: process.env.CI ? 2 : 4,
   reporter: process.env.CI ? "github" : "list",
   timeout: 45_000,
 
@@ -69,8 +83,44 @@ export default defineConfig({
   },
 
   projects: [
-    { name: "escritorio", use: { ...devices["Desktop Chrome"] } },
-    { name: "celular", use: { ...devices["Pixel 7"] } },
+    // El grueso de la suite, en paralelo, en los dos tamaños de pantalla.
+    // Se excluye la prueba de suspensión: ver abajo por qué.
+    {
+      name: "escritorio",
+      use: { ...devices["Desktop Chrome"] },
+      testIgnore: /suspension\.spec\.ts/,
+    },
+    {
+      name: "celular",
+      use: { ...devices["Pixel 7"] },
+      // El panel se prueba en un solo tamaño: lo que se verifica ahí es que la
+      // función ande (crear, listar, borrar), no cómo se ve. Correrlo en los
+      // dos duplicaba las sesiones simultáneas sobre la MISMA cuenta de prueba
+      // y la página del panel llegaba a agotar el tiempo — no por un fallo del
+      // sitio, sino por seis sesiones peleando por la misma cuenta contra una
+      // base que está a 250 ms. Lo específico de celular (tamaño de letra en
+      // los campos, desborde horizontal) se cubre en otras pruebas.
+      testIgnore: /(suspension|panel)\.spec\.ts/,
+    },
+    /**
+     * La prueba de suspensión corre SOLA y AL FINAL.
+     *
+     * Suspende temporalmente la cuenta de prueba para comprobar que pierda el
+     * acceso de verdad. Pero esa cuenta es la misma que usan las pruebas del
+     * panel — y mientras está suspendida, sus escrituras se rechazan, que es
+     * exactamente lo que debe pasar.
+     *
+     * Corriendo en paralelo, las del panel fallaban de a ratos por culpa de
+     * esta: no era un fallo del sitio, era que dos pruebas se pisaban usando
+     * la misma cuenta. `dependencies` la deja para el final, cuando ya no hay
+     * nadie más usándola.
+     */
+    {
+      name: "seguridad",
+      testMatch: /suspension\.spec\.ts/,
+      use: { ...devices["Desktop Chrome"] },
+      dependencies: ["escritorio", "celular"],
+    },
   ],
 
   webServer: process.env.PW_BASE_URL

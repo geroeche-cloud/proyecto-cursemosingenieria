@@ -5,6 +5,8 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/auth";
 import { traducirYReportar, exigirOk } from "@/lib/errores";
+import { texto, LIMITES } from "@/lib/validar";
+import { normalizarRed, normalizarMail } from "@/lib/redes";
 
 export type ActionState = { ok: boolean; error?: string; message?: string };
 
@@ -174,21 +176,24 @@ export async function saveAmbassadorProfile(
     const university_id = String(formData.get("university_id") ?? "");
     if (!university_id) return { ok: false, error: "Elegí una universidad." };
 
-    const display_name = String(formData.get("display_name") ?? "").trim() || null;
-    const presentation = String(formData.get("presentation") ?? "").trim() || null;
+    const display_name = texto(formData.get("display_name"), "El nombre", LIMITES.nombre);
+    const presentation = texto(
+      formData.get("presentation"),
+      "La presentación",
+      LIMITES.presentacion,
+    );
+    const bio = texto(formData.get("bio"), "La bio corta", LIMITES.bioCorta);
+    const bio_full = texto(formData.get("bio_full"), "La bio completa", LIMITES.bioLarga);
 
-    const bio = String(formData.get("bio") ?? "").trim() || null;
-    if (bio && bio.length > 240) {
-      return { ok: false, error: "La bio corta no puede superar los 240 caracteres." };
-    }
-    const bio_full = String(formData.get("bio_full") ?? "").trim() || null;
-
-    // Redes: se guardan tal cual (URL o mail). Vacío => null.
-    const email = String(formData.get("email") ?? "").trim() || null;
-    const instagram = String(formData.get("instagram") ?? "").trim() || null;
-    const tiktok = String(formData.get("tiktok") ?? "").trim() || null;
-    const youtube = String(formData.get("youtube") ?? "").trim() || null;
-    const linkedin = String(formData.get("linkedin") ?? "").trim() || null;
+    // Redes: se acepta el nombre de usuario suelto (@juanperez), el dominio con
+    // usuario, o el enlace completo. Se guarda siempre la URL limpia, sin los
+    // parámetros de seguimiento que se pegan al copiar desde una app.
+    // Antes había que armar las cuatro URLs a mano, por cada embajador.
+    const email = normalizarMail(formData.get("email"));
+    const instagram = normalizarRed(formData.get("instagram"), "instagram");
+    const tiktok = normalizarRed(formData.get("tiktok"), "tiktok");
+    const youtube = normalizarRed(formData.get("youtube"), "youtube");
+    const linkedin = normalizarRed(formData.get("linkedin"), "linkedin");
 
     // Foto: si suben un archivo nuevo, lo guardamos en Storage; si no, se
     // conserva la foto actual (o se limpia si tildaron "quitar foto").

@@ -34,6 +34,29 @@ function trajectoryToText(items: TrajItem[]): string {
     .join("\n");
 }
 
+/**
+ * Qué tan cargado está un perfil, contando lo que se ve en el sitio público.
+ *
+ * Sin esto había que abrir universidad por universidad para saber cuál faltaba
+ * completar. Con cientos de embajadores eso es inviable: ahora el estado se ve
+ * en la propia lista, sin entrar a ninguna.
+ */
+const CLAVES = ["display_name", "presentation", "bio", "photo_url"] as const;
+
+function completitud(p: ProfileRow) {
+  const puestos = CLAVES.filter((k) => Boolean(p[k])).length;
+  const redes = [p.email, p.instagram, p.tiktok, p.youtube, p.linkedin].filter(Boolean).length;
+  return { puestos, total: CLAVES.length, redes, listo: puestos === CLAVES.length };
+}
+
+/** Etiqueta corta para ver el estado de un vistazo en el desplegable. */
+function etiquetaEstado(p: ProfileRow): string {
+  const c = completitud(p);
+  if (c.listo) return c.redes > 0 ? "✓ completo" : "✓ sin redes";
+  if (c.puestos === 0) return "○ vacío";
+  return `◐ falta ${c.total - c.puestos}`;
+}
+
 export function AmbassadorProfileEditor({ profiles }: { profiles: ProfileRow[] }) {
   const [state, action, pending] = useActionState(saveAmbassadorProfile, initial);
   const [selectedId, setSelectedId] = useState(profiles[0]?.university_id ?? "");
@@ -51,7 +74,18 @@ export function AmbassadorProfileEditor({ profiles }: { profiles: ProfileRow[] }
   return (
     <div className="mt-4 rounded-2xl border border-hair p-5">
       <label className="flex flex-col gap-1">
-        <span className="text-xs text-ink-soft">Universidad</span>
+        <span className="flex items-center justify-between text-xs text-ink-soft">
+          <span>Universidad</span>
+          {/* Cuántos faltan, sin tener que entrar a cada uno. */}
+          <span className="font-mono text-[0.65rem] text-ink-mute">
+            {(() => {
+              const faltan = profiles.filter((p) => !completitud(p).listo).length;
+              return faltan === 0
+                ? `${profiles.length} perfiles completos`
+                : `${faltan} de ${profiles.length} sin completar`;
+            })()}
+          </span>
+        </span>
         <select
           value={selectedId}
           onChange={(e) => setSelectedId(e.target.value)}
@@ -59,7 +93,7 @@ export function AmbassadorProfileEditor({ profiles }: { profiles: ProfileRow[] }
         >
           {profiles.map((p) => (
             <option key={p.university_id} value={p.university_id}>
-              {p.university_name}
+              {etiquetaEstado(p)} · {p.university_name}
               {p.ambassador_name ? ` · ${p.ambassador_name}` : ""}
             </option>
           ))}
@@ -155,20 +189,20 @@ export function AmbassadorProfileEditor({ profiles }: { profiles: ProfileRow[] }
           <input name="email" defaultValue={selected.email ?? ""} placeholder="nombre@mail.com" className={field} />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-xs text-ink-soft">Instagram (URL)</span>
-          <input name="instagram" defaultValue={selected.instagram ?? ""} placeholder="https://instagram.com/…" className={field} />
+          <span className="text-xs text-ink-soft">Instagram <span className="text-ink-mute">(@usuario o enlace)</span></span>
+          <input name="instagram" defaultValue={selected.instagram ?? ""} placeholder="@juanperez" className={field} />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-xs text-ink-soft">TikTok (URL)</span>
-          <input name="tiktok" defaultValue={selected.tiktok ?? ""} placeholder="https://tiktok.com/@…" className={field} />
+          <span className="text-xs text-ink-soft">TikTok <span className="text-ink-mute">(@usuario o enlace)</span></span>
+          <input name="tiktok" defaultValue={selected.tiktok ?? ""} placeholder="@juanperez" className={field} />
         </label>
         <label className="flex flex-col gap-1">
-          <span className="text-xs text-ink-soft">YouTube (URL)</span>
-          <input name="youtube" defaultValue={selected.youtube ?? ""} placeholder="https://youtube.com/@…" className={field} />
+          <span className="text-xs text-ink-soft">YouTube <span className="text-ink-mute">(@canal o enlace)</span></span>
+          <input name="youtube" defaultValue={selected.youtube ?? ""} placeholder="@sucanal" className={field} />
         </label>
         <label className="flex flex-col gap-1 sm:col-span-2">
-          <span className="text-xs text-ink-soft">LinkedIn (URL)</span>
-          <input name="linkedin" defaultValue={selected.linkedin ?? ""} placeholder="https://linkedin.com/in/…" className={field} />
+          <span className="text-xs text-ink-soft">LinkedIn <span className="text-ink-mute">(usuario o enlace)</span></span>
+          <input name="linkedin" defaultValue={selected.linkedin ?? ""} placeholder="juan-perez" className={field} />
         </label>
 
         {/* Trayectoria */}
