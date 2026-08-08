@@ -50,24 +50,47 @@ export function Hero() {
         aria-hidden
       />
 
-      {/* Atmósfera azul cinematográfica */}
+      {/*
+        Atmósfera azul cinematográfica.
+
+        SIN `blur-[...]`, a propósito. Antes cada una de estas luces era un
+        círculo de ~700 px con blur(120px) — y las tres se animan con deriva,
+        así que el navegador tenía que recomponer tres capas desenfocadas
+        gigantes en cada cuadro. Medido con Lighthouse: 1.203 ms de pintado y
+        1.088 ms de estilo/layout, que era casi todo el retraso en mostrar el
+        titular en celular.
+
+        El desenfoque era redundante: un degradado radial YA es un degradado
+        suave. Se compensó ensanchando las paradas de color, así que el
+        resultado se ve igual y no cuesta nada.
+      */}
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden>
         {/* Key light azul intenso (arriba-izquierda) */}
         <div
-          className="animate-drift-slow absolute -left-[14%] -top-[8%] h-[50rem] w-[50rem] rounded-full blur-[120px]"
-          style={{ background: "radial-gradient(circle, rgba(59,107,255,0.5), transparent 65%)" }}
+          className="animate-drift-slow absolute -left-[14%] -top-[8%] h-[50rem] w-[50rem] rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(59,107,255,0.42) 0%, rgba(59,107,255,0.2) 34%, rgba(59,107,255,0.06) 58%, transparent 76%)",
+          }}
         />
         {/* Halo acero (derecha, detrás del logo) */}
         <div
-          className="animate-drift absolute -right-[8%] top-[20%] h-[40rem] w-[40rem] rounded-full blur-[120px]"
-          style={{ background: "radial-gradient(circle, rgba(120,150,235,0.26), transparent 70%)" }}
+          className="animate-drift absolute -right-[8%] top-[20%] h-[40rem] w-[40rem] rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(120,150,235,0.24) 0%, rgba(120,150,235,0.12) 38%, rgba(120,150,235,0.04) 62%, transparent 80%)",
+          }}
         />
         {/* Relleno índigo profundo (abajo-izquierda) */}
         <div
-          className="animate-drift absolute -bottom-[26%] left-[14%] h-[42rem] w-[42rem] rounded-full blur-[130px]"
-          style={{ background: "radial-gradient(circle, rgba(18,42,130,0.55), transparent 72%)" }}
+          className="animate-drift absolute -bottom-[26%] left-[14%] h-[42rem] w-[42rem] rounded-full"
+          style={{
+            background:
+              "radial-gradient(circle, rgba(18,42,130,0.5) 0%, rgba(18,42,130,0.26) 36%, rgba(18,42,130,0.08) 60%, transparent 80%)",
+          }}
         />
-        {/* Destello anamórfico horizontal */}
+        {/* Destello anamórfico horizontal — 6px de desenfoque sobre 3px de
+            alto es barato y no tiene equivalente en degradado. Se conserva. */}
         <div
           className="absolute inset-x-0 top-[43%] h-[3px] opacity-70 blur-[6px]"
           style={{
@@ -139,13 +162,19 @@ export function Hero() {
           {/* Símbolo del logo */}
           <div className="hero-simbolo relative order-1 flex justify-center lg:order-2 lg:justify-end">
             <div
-              className="pointer-events-none absolute left-1/2 top-1/2 h-[80%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[70px]"
-              style={{ background: "radial-gradient(circle, rgba(59,107,255,0.45), transparent 70%)" }}
+              className="pointer-events-none absolute left-1/2 top-1/2 h-[80%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-full"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(59,107,255,0.4) 0%, rgba(59,107,255,0.18) 40%, rgba(59,107,255,0.05) 64%, transparent 82%)",
+              }}
               aria-hidden
             />
             <div
-              className="pointer-events-none absolute left-[8%] top-[10%] h-[42%] w-[42%] rounded-full blur-[60px]"
-              style={{ background: "radial-gradient(circle, rgba(200,215,255,0.22), transparent 70%)" }}
+              className="pointer-events-none absolute left-[8%] top-[10%] h-[42%] w-[42%] rounded-full"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(200,215,255,0.2) 0%, rgba(200,215,255,0.09) 42%, transparent 78%)",
+              }}
               aria-hidden
             />
             <Image

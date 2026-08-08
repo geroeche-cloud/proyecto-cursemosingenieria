@@ -26,7 +26,10 @@ export function SiteBackdrop() {
         <>
           <div className="site-grid absolute inset-0" />
 
-          {/* Campo de luces (fijas) */}
+          {/* Campo de luces (fijas).
+              Sin `filter: blur()`: los degradados ya traen la suavidad, con
+              paradas de color ensanchadas. Cuatro capas desenfocadas del
+              tamaño de media pantalla eran de lo más caro de pintar del sitio. */}
           <div
             className="site-glow"
             style={{
@@ -34,7 +37,8 @@ export function SiteBackdrop() {
               height: "56vw",
               top: "-12%",
               left: "-6%",
-              background: "radial-gradient(circle, rgba(46,107,255,0.30), transparent 66%)",
+              background:
+                "radial-gradient(circle, rgba(46,107,255,0.26) 0%, rgba(46,107,255,0.12) 38%, rgba(46,107,255,0.04) 60%, transparent 78%)",
             }}
           />
           <div
@@ -44,7 +48,8 @@ export function SiteBackdrop() {
               height: "46vw",
               top: "22%",
               right: "-12%",
-              background: "radial-gradient(circle, rgba(186,200,228,0.16), transparent 68%)",
+              background:
+                "radial-gradient(circle, rgba(186,200,228,0.14) 0%, rgba(186,200,228,0.07) 40%, transparent 78%)",
             }}
           />
           <div
@@ -54,7 +59,8 @@ export function SiteBackdrop() {
               height: "50vw",
               bottom: "-16%",
               left: "16%",
-              background: "radial-gradient(circle, rgba(59,107,255,0.22), transparent 66%)",
+              background:
+                "radial-gradient(circle, rgba(59,107,255,0.2) 0%, rgba(59,107,255,0.09) 38%, rgba(59,107,255,0.03) 60%, transparent 78%)",
             }}
           />
           <div
@@ -64,7 +70,8 @@ export function SiteBackdrop() {
               height: "34vw",
               top: "58%",
               left: "-10%",
-              background: "radial-gradient(circle, rgba(205,218,242,0.12), transparent 70%)",
+              background:
+                "radial-gradient(circle, rgba(205,218,242,0.11) 0%, rgba(205,218,242,0.05) 42%, transparent 80%)",
             }}
           />
 

@@ -105,9 +105,12 @@ export function UniversityCard({
             En celular y tablet es la que mantiene viva la tarjeta (no hay cursor).
             Se anima con transform → la resuelve el compositor, sin repintar. */}
         <span
-          className="uni-ambient pointer-events-none absolute -left-16 -top-16 h-56 w-56 rounded-full opacity-45 blur-[64px]"
+          className="uni-ambient pointer-events-none absolute -left-16 -top-16 h-56 w-56 rounded-full opacity-45"
           style={{
-            background: `radial-gradient(circle, rgba(${accent.glow},0.75), transparent 70%)`,
+            // Sin blur: hay una de estas por tarjeta y todas se animan. Con
+            // muchas universidades en pantalla, cada desenfoque se recompone
+            // en cada cuadro. El degradado ensanchado se ve igual.
+            background: `radial-gradient(circle, rgba(${accent.glow},0.7) 0%, rgba(${accent.glow},0.3) 40%, rgba(${accent.glow},0.08) 62%, transparent 80%)`,
             animationDelay: `${(index % 5) * -3.2}s`,
           }}
           aria-hidden

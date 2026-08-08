@@ -375,7 +375,9 @@ body {
 .ambient {
   position: absolute;
   border-radius: 50%;
-  filter: blur(90px);
+  /* Sin filter: blur(). Mismo motivo que .site-glow: estas luces derivan con
+     una animación, así que el desenfoque había que recomponerlo en cada
+     cuadro. `will-change` sí se mantiene: acá el elemento SÍ se transforma. */
   opacity: 0.5;
   pointer-events: none;
   will-change: transform;
@@ -404,6 +406,11 @@ body {
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
 }
+/* Textura de grano. El SVG genera ruido con feTurbulence, que el navegador
+   tiene que CALCULAR, y va en una capa fija sobre toda la pantalla. En
+   escritorio el costo se absorbe; en celular es de lo más caro que hay y a
+   3% de opacidad, sobre una pantalla de 6 pulgadas, nadie lo distingue.
+   Por eso abajo se apaga en pantallas chicas. */
 .grain::after {
   content: "";
   position: fixed;
@@ -430,7 +437,6 @@ body {
    lentos (menos trabajo por segundo), pero el movimiento se conserva. */
 @media (max-width: 640px) {
   .ambient {
-    filter: blur(60px);
     opacity: 0.4;
   }
   .animate-drift {
@@ -481,8 +487,11 @@ body {
   opacity: 0.7;
 }
 .site-sheen {
-  background: linear-gradient(122deg, transparent 42%, rgba(216, 226, 240, 0.035) 50%, transparent 58%);
-  mix-blend-mode: screen;
+  /* Sin mix-blend-mode: obligaba al navegador a fusionar una capa del tamaño
+     de la pantalla contra todo lo que tiene debajo, en cada repintado. Sobre
+     un fondo oscuro, "screen" con un gris tenue equivale a sumar luz: se
+     consigue lo mismo subiendo apenas la opacidad del degradado. */
+  background: linear-gradient(122deg, transparent 42%, rgba(222, 232, 245, 0.045) 50%, transparent 58%);
 }
 /* ============================================================
    CAMBIO DE PESTAÑA (sección Colaborar). Ver Collaborate.tsx.
@@ -635,13 +644,20 @@ body {
 }
 .intro-glow {
   position: absolute;
-  height: 42vmin;
-  width: 42vmin;
+  height: 52vmin;
+  width: 52vmin;
   border-radius: 50%;
-  filter: blur(80px);
   pointer-events: none;
-  background: radial-gradient(circle, rgba(59, 107, 255, 0.55), transparent 70%);
-  opacity: 0.7;
+  /* Sin desenfoque: es lo primero que se pinta en la página, el peor momento
+     posible para pedirle al navegador un filtro caro. */
+  background: radial-gradient(
+    circle,
+    rgba(59, 107, 255, 0.45) 0%,
+    rgba(59, 107, 255, 0.2) 38%,
+    rgba(59, 107, 255, 0.06) 62%,
+    transparent 80%
+  );
+  opacity: 0.75;
 }
 .intro-logo {
   animation: intro-aparecer 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -748,15 +764,24 @@ body {
 .site-glow {
   position: absolute;
   border-radius: 50%;
-  filter: blur(100px);
   pointer-events: none;
+  /* Sin filter: blur(). Un degradado radial ya ES un degradado suave; el
+     desenfoque encima era redundante y costaba carísimo — cuatro capas del
+     tamaño de media pantalla que el navegador tenía que recomponer. La
+     suavidad ahora viene de las paradas de color (ver SiteBackdrop.tsx). */
   /* Sin will-change: estas luces son fijas, nunca se transforman. Pedirle al
      navegador una capa de GPU permanente para algo que no se mueve gasta
      memoria de video sin acelerar nada. */
 }
+@media (max-width: 768px) {
+  /* Ver el comentario de .grain::after: ruido calculado a pantalla completa,
+     imperceptible a 3% de opacidad en un celular. */
+  .grain::after {
+    display: none;
+  }
+}
 @media (max-width: 640px) {
   .site-glow {
-    filter: blur(64px);
     opacity: 0.7;
   }
   .site-grid {

@@ -48,8 +48,11 @@ export function Collaborate() {
           {/* Active track panel */}
           <div className="glass-lux chrome-edge relative min-h-[18rem] overflow-hidden rounded-3xl p-8 sm:p-10">
             <div
-              className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-60 blur-3xl"
-              style={{ background: "radial-gradient(circle, rgba(59,107,255,0.35), transparent 70%)" }}
+              className="pointer-events-none absolute -right-16 -top-16 h-56 w-56 rounded-full opacity-60"
+              style={{
+                background:
+                  "radial-gradient(circle, rgba(59,107,255,0.3) 0%, rgba(59,107,255,0.14) 40%, transparent 78%)",
+              }}
               aria-hidden
             />
             {/* Al cambiar la pestaña cambia la key: React vuelve a montar el
