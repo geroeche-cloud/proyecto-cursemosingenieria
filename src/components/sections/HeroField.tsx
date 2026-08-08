@@ -27,6 +27,30 @@ export function HeroField() {
     type P = { x: number; y: number; vx: number; vy: number; r: number };
     let points: P[] = [];
 
+    const nuevoPunto = (): P => ({
+      x: Math.random() * width,
+      y: Math.random() * height,
+      vx: (Math.random() - 0.5) * 0.3,
+      vy: (Math.random() - 0.5) * 0.3,
+      r: Math.random() * 1.5 + 0.6,
+    });
+
+    let anchoAnterior = -1;
+
+    /**
+     * Reajusta el lienzo.
+     *
+     * IMPORTANTE: los nodos NO se vuelven a generar salvo que cambie el ancho.
+     *
+     * En un celular, `resize` se dispara constantemente al scrollear, porque la
+     * barra de direcciones del navegador se esconde y aparece y eso cambia el
+     * alto de la ventana. Antes cada uno de esos avisos regeneraba todos los
+     * nodos en posiciones nuevas al azar: la red entera saltaba de golpe. Ese
+     * era el efecto "buggeado" en el teléfono.
+     *
+     * Ahora, si solo cambió el alto, se conservan los nodos y se los mantiene
+     * dentro del nuevo alto. La red sigue su movimiento sin enterarse.
+     */
     const resize = () => {
       const parent = canvas.parentElement;
       const rect = parent
@@ -40,19 +64,23 @@ export function HeroField() {
       canvas.style.height = `${height}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+      // Cambio de alto solamente (la barra del navegador): se conservan.
+      if (points.length > 0 && Math.abs(width - anchoAnterior) < 40) {
+        for (const p of points) {
+          if (p.y > height) p.y = Math.random() * height;
+          if (p.x > width) p.x = Math.random() * width;
+        }
+        return;
+      }
+      anchoAnterior = width;
+
       // Los enlaces se calculan entre TODOS los pares, o sea que el costo crece
       // al cuadrado: 96 nodos son ~4.600 comparaciones por cuadro. En un
       // celular eso bloquea el hilo principal. Se baja el techo en pantallas
       // chicas, donde además el efecto casi no se aprecia.
       const techo = width < 768 ? 44 : 88;
       const count = Math.min(techo, Math.max(28, Math.round((width * height) / 22000)));
-      points = Array.from({ length: count }, () => ({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: (Math.random() - 0.5) * 0.3,
-        r: Math.random() * 1.5 + 0.6,
-      }));
+      points = Array.from({ length: count }, nuevoPunto);
     };
 
     const LINK = 132;
@@ -62,13 +90,10 @@ export function HeroField() {
     // mitad de trabajo que 60. La diferencia no se percibe; el bloqueo del
     // hilo principal sí.
     const PASO = 1000 / 30;
-    let ultimo = 0;
+    let ultimo = -Infinity;
 
-    const draw = (t = 0) => {
-      if (!reduce) raf = requestAnimationFrame(draw);
-      if (t - ultimo < PASO) return;
-      ultimo = t;
-
+    /** Dibuja un cuadro. Separado del bucle para poder pintar uno suelto. */
+    const pintar = () => {
       ctx.clearRect(0, 0, width, height);
 
       for (const p of points) {
@@ -122,6 +147,14 @@ export function HeroField() {
       }
     };
 
+    /** Bucle: avanza el movimiento a 30 cuadros por segundo. */
+    const bucle = (t = 0) => {
+      raf = requestAnimationFrame(bucle);
+      if (t - ultimo < PASO) return;
+      ultimo = t;
+      pintar();
+    };
+
     const onMove = (e: MouseEvent) => {
       const rect = canvas.getBoundingClientRect();
       mouse.x = e.clientX - rect.left;
@@ -136,23 +169,23 @@ export function HeroField() {
     // nadie mira gasta batería y hilo principal a cambio de nada.
     const onVisibilidad = () => {
       cancelAnimationFrame(raf);
-      if (!document.hidden && !reduce) {
-        ultimo = 0;
-        draw();
+      if (!document.hidden && !reduce && arrancado) {
+        ultimo = -Infinity;
+        bucle();
       }
     };
 
     resize();
-    // Un cuadro estático de inmediato para que no haya un hueco visual, pero
-    // la animación NO arranca durante la carga: se espera a que el navegador
-    // termine lo importante. Es el trabajo que más bloqueaba el hilo principal
-    // justo cuando se mide la aparición del contenido.
-    ctx.clearRect(0, 0, width, height);
+    // Un cuadro fijo YA, para que la red se vea desde el primer instante. Lo
+    // que se pospone es el MOVIMIENTO, no el dibujo: así no hay un hueco visual
+    // mientras el navegador termina lo importante de la carga.
+    pintar();
+
     let arrancado = false;
     const arrancar = () => {
-      if (arrancado) return;
+      if (arrancado || reduce) return;
       arrancado = true;
-      draw();
+      bucle();
     };
     const idle =
       typeof window.requestIdleCallback === "function"

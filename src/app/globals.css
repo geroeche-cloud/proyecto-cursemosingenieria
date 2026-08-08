@@ -186,7 +186,9 @@ body {
 .lift {
   transition: transform 0.5s var(--ease-out-expo), box-shadow 0.5s var(--ease-out-expo),
     border-color 0.5s ease;
-  will-change: transform;
+  /* Sin will-change: hay una de estas por publicación. En una universidad con
+     muchas, eran otras tantas capas de GPU reservadas para siempre por un
+     efecto que solo existe con mouse. */
 }
 .lift:hover {
   transform: translateY(-6px);
@@ -333,7 +335,9 @@ body {
   font-size: 0.95rem;
   transition: transform 0.3s var(--ease-out-expo), background 0.3s ease, box-shadow 0.3s ease,
     filter 0.3s ease;
-  will-change: transform;
+  /* Sin will-change: reservaba una capa de GPU en CADA botón del sitio, de
+     forma permanente, para un movimiento de 2 px que solo ocurre al pasar el
+     mouse por encima — algo que en un celular no pasa nunca. */
 }
 .btn:hover {
   transform: translateY(-2px);
@@ -390,8 +394,24 @@ body {
 .animate-drift { animation: drift 26s ease-in-out infinite; }
 .animate-drift-slow { animation: drift 40s ease-in-out infinite reverse; }
 
+/*
+  Brillo metálico que recorre el texto.
+
+  `background-position` NO es una propiedad que el navegador pueda resolver en
+  la GPU: cada cuadro obliga a volver a rasterizar el texto recortado por el
+  degradado. Y esto está sobre los títulos más grandes del sitio, incluido el
+  de la portada, que es el que Google cronometra.
+
+  Antes era infinito: un repintado permanente del texto más grande de cada
+  página, en todos los dispositivos, para siempre. Ahora son dos pasadas y se
+  detiene. El efecto se ve —justo al llegar, que es cuando se mira— y después
+  la página se asienta y deja de consumir.
+*/
 @keyframes shimmer { to { background-position: 200% center; } }
-.animate-shimmer { animation: shimmer 7s linear infinite; }
+.animate-shimmer { animation: shimmer 7s linear 2; }
+@media (prefers-reduced-motion: reduce) {
+  .animate-shimmer { animation: none; }
+}
 
 /* ---------- Backdrops ---------- */
 .grid-bg {
@@ -497,7 +517,7 @@ body {
    CAMBIO DE PESTAÑA (sección Colaborar). Ver Collaborate.tsx.
    ============================================================ */
 .cambio-pestana {
-  animation: cambio-pestana 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: cambio-pestana 0.35s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 @keyframes cambio-pestana {
   from {
@@ -524,8 +544,10 @@ body {
    opacity 0 significaba decirle al navegador "no lo pintes todavía", y la
    nota se calculaba sobre el final de la animación en vez del momento en que
    el contenido ya estaba listo. Solo se desliza: se pinta de inmediato. */
+/* `backwards` por el mismo motivo que .entrada-ruta: no dejar un transform
+   colgado que rompa el posicionamiento fijo de lo que tenga adentro. */
 .hero-texto {
-  animation: hero-texto 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: hero-texto 0.7s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 @keyframes hero-texto {
   from {
@@ -536,7 +558,7 @@ body {
   }
 }
 .hero-simbolo {
-  animation: hero-simbolo 1s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+  animation: hero-simbolo 1s cubic-bezier(0.16, 1, 0.3, 1) 0.1s backwards;
 }
 @keyframes hero-simbolo {
   from {
@@ -560,7 +582,7 @@ body {
    Entrada y salida por CSS. Ver Nav.tsx.
    ============================================================ */
 .menu-capa {
-  animation: menu-entrar 0.3s linear both;
+  animation: menu-entrar 0.3s linear backwards;
 }
 .menu-capa.cerrando {
   animation: menu-salir 0.25s linear both;
@@ -582,7 +604,7 @@ body {
   }
 }
 .menu-panel {
-  animation: menu-panel 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: menu-panel 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 @keyframes menu-panel {
   from {
@@ -595,7 +617,7 @@ body {
   }
 }
 .menu-link {
-  animation: menu-link 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: menu-link 0.3s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 @keyframes menu-link {
   from {
@@ -660,7 +682,7 @@ body {
   opacity: 0.75;
 }
 .intro-logo {
-  animation: intro-aparecer 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: intro-aparecer 0.28s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 @keyframes intro-aparecer {
   from {
@@ -673,7 +695,7 @@ body {
   }
 }
 .intro-linea {
-  animation: intro-linea 0.25s cubic-bezier(0.16, 1, 0.3, 1) 0.14s both;
+  animation: intro-linea 0.25s cubic-bezier(0.16, 1, 0.3, 1) 0.14s backwards;
 }
 @keyframes intro-linea {
   from {
@@ -686,7 +708,7 @@ body {
   }
 }
 .intro-sello {
-  animation: intro-sello 0.2s linear 0.24s both;
+  animation: intro-sello 0.2s linear 0.24s backwards;
 }
 @keyframes intro-sello {
   from {
@@ -722,8 +744,20 @@ body {
     transform: translate3d(0, 0, 0);
   }
 }
+/*
+  `backwards`, NUNCA `both`. Esto importa muchísimo y no es un detalle.
+
+  Con `both`, el transform final queda aplicado para siempre. Y un elemento con
+  transform se convierte en el marco de referencia de todo lo que tenga
+  `position: fixed` adentro: la barra de navegación dejaba de estar fija y se
+  iba con el scroll, en todas las páginas del sitio.
+
+  Con `backwards` el estado inicial se aplica antes de arrancar (que es lo que
+  se necesita para que no haya un salto) y al terminar el elemento vuelve a su
+  estado normal, sin transform. El marco de referencia vuelve a ser la ventana.
+*/
 .entrada-ruta {
-  animation: entrada-ruta 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: entrada-ruta 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 /* El panel y la administración no esperan: la página ya está lista. */
 .entrada-ruta:has([data-zona-trabajo]) {
@@ -876,7 +910,9 @@ input[type="file"] {
 /* Luz que recorre la tarjeta por su cuenta — en táctil es la que le da vida. */
 .uni-ambient {
   animation: uni-float 16s ease-in-out infinite;
-  will-change: transform;
+  /* Sin will-change: el navegador ya promueve solo lo que está animando un
+     transform. Declararlo además reserva una capa de GPU por tarjeta, y con
+     muchas universidades en pantalla eso es memoria de video regalada. */
 }
 @keyframes uni-float {
   0%,
@@ -903,22 +939,33 @@ input[type="file"] {
 }
 
 /* Sin cursor (celular / tablet): la placa se mueve sola, con el mismo lenguaje. */
+/*
+  Sin cursor (celular / tablet).
+
+  La tarjeta NO se anima. Antes tenía `uni-breathe`, una rotación y un
+  desplazamiento infinitos, y eso rompía la experiencia táctil de tres formas:
+
+  1. El blanco del toque se movía bajo el dedo. Tocar una tarjeta que se
+     inclina y sube 5 px es incómodo, y a veces el toque no cae donde uno cree.
+  2. Cada tarjeta quedaba como una capa de GPU animándose para siempre. Con
+     muchas universidades en pantalla eso es mucho trabajo continuo, en los
+     dispositivos que menos margen tienen.
+  3. El contenido nunca terminaba de "asentarse": visualmente daba la sensación
+     de que la página seguía cargando.
+
+  La vida visual se mantiene: la luz ambiental de adentro sigue derivando. Se
+  mueve el brillo, no el blanco del toque.
+*/
 @media (hover: none), (pointer: coarse) {
-  .uni-card {
-    animation: uni-breathe 12s ease-in-out infinite;
-    will-change: transform;
-  }
   .uni-ambient {
     opacity: 0.6;
   }
-}
-@keyframes uni-breathe {
-  0%,
-  100% {
-    transform: perspective(1200px) rotateX(1.4deg) rotateY(-2.2deg) translateY(0);
+  /* Respuesta al toque: inmediata y acotada, en vez de movimiento perpetuo. */
+  .uni-card:active {
+    transform: scale(0.985);
   }
-  50% {
-    transform: perspective(1200px) rotateX(-1.4deg) rotateY(2.2deg) translateY(-5px);
+  .uni-card {
+    transition: transform 0.18s ease-out;
   }
 }
 

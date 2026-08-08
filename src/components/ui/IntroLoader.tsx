@@ -1,10 +1,16 @@
 import Image from "next/image";
-import { IntroSonido } from "./IntroSonido";
 
 /**
- * Intro de entrada — logo metálico con brillo azul y golpe cinematográfico.
+ * Intro de entrada — logo metálico con brillo azul.
  *
- * SERVER COMPONENT: cero JavaScript de React, cero librería de animación.
+ * SERVER COMPONENT: cero JavaScript. Ni React, ni librerías, ni audio.
+ *
+ * SE QUITÓ EL SONIDO, a propósito. Los navegadores bloquean el audio hasta que
+ * la persona toca algo, así que el golpe nunca sonaba con la intro: quedaba
+ * esperando y se disparaba en el primer clic, que normalmente es el botón de
+ * Campus. El resultado era un sonido de bienvenida sonando al entrar a otra
+ * sección: se leía como una falla, no como un efecto. Además arrastraba un
+ * contexto de audio y la generación de 88.000 muestras de ruido.
  *
  * POR QUÉ SE REHIZO
  * Esta pantalla tapaba el sitio entero durante 2 segundos y tardaba otros 0,85
@@ -52,8 +58,6 @@ export function IntroLoader() {
           Est. 2026
         </span>
       </div>
-
-      <IntroSonido />
     </div>
   );
 }
