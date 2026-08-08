@@ -19,19 +19,24 @@ export function IntroSonido() {
     if (window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) return;
 
     let cancelado = false;
+    const gestos = ["pointerdown", "keydown", "touchstart"] as const;
+
     const arrancar = () => {
+      gestos.forEach((g) => window.removeEventListener(g, arrancar));
       if (cancelado) return;
       // Import diferido: el sintetizador no forma parte del arranque.
       import("@/lib/cue").then((m) => !cancelado && m.armarGolpe());
     };
 
-    const idle = window.requestIdleCallback?.(arrancar, { timeout: 1200 });
-    const t = idle === undefined ? window.setTimeout(arrancar, 400) : undefined;
+    // Solo al primer gesto. Los navegadores bloquean el audio hasta que la
+    // persona toca algo, así que cargarlo antes es trabajo garantizado en
+    // vano. Medido: armar el contexto de audio y generar el buffer de ruido
+    // costaba una tarea de 457 ms en celular, en plena carga de la página.
+    gestos.forEach((g) => window.addEventListener(g, arrancar, { once: true, passive: true }));
 
     return () => {
       cancelado = true;
-      if (idle !== undefined) window.cancelIdleCallback?.(idle);
-      if (t !== undefined) clearTimeout(t);
+      gestos.forEach((g) => window.removeEventListener(g, arrancar));
     };
   }, []);
 

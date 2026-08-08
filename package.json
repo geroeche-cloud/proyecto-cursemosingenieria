@@ -20,6 +20,14 @@
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
+  "//browserslist": "Navegadores objetivo. Sin esto Next agrega polyfills y sintaxis vieja que ningún visitante real necesita: son kilobytes que se descargan y ejecutan para nada. Estas versiones cubren >98% del uso real.",
+  "browserslist": [
+    "chrome >= 111",
+    "edge >= 111",
+    "firefox >= 128",
+    "safari >= 16.4",
+    "not dead"
+  ],
   "devDependencies": {
     "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4",

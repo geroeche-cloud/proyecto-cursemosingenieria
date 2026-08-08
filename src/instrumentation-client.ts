@@ -85,12 +85,21 @@ if (dsn && typeof window !== "undefined") {
     if (pendientes.length < 20) pendientes.push({ error: e.reason, origen: "promesa" });
   });
 
-  const arrancar = () => void cargarSentry();
-  if (typeof window.requestIdleCallback === "function") {
-    window.requestIdleCallback(arrancar, { timeout: 3000 });
-  } else {
-    window.setTimeout(arrancar, 2000);
-  }
+  // CUÁNDO se carga: en el primer gesto de la persona, o a los 8 segundos si
+  // no hay ninguno. NO en el primer momento libre.
+  //
+  // Medido: cargarlo apenas el navegador quedaba desocupado costaba 3,4
+  // segundos de ejecución en un celular, justo mientras el visitante espera
+  // ver la página. Sentry no aporta nada en ese instante: los errores de la
+  // carga ya quedaron guardados en el buffer y se reportan igual cuando
+  // llegue. Se espera a que la persona ya esté usando el sitio.
+  const gestos = ["pointerdown", "keydown", "scroll", "touchstart"] as const;
+  const arrancar = () => {
+    gestos.forEach((g) => window.removeEventListener(g, arrancar));
+    void cargarSentry();
+  };
+  gestos.forEach((g) => window.addEventListener(g, arrancar, { once: true, passive: true }));
+  window.setTimeout(arrancar, 8000);
 }
 
 /**
