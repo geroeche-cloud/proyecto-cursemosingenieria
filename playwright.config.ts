@@ -2,16 +2,26 @@ import { defineConfig, devices } from "@playwright/test";
 import { readFileSync, existsSync } from "node:fs";
 
 /**
- * Carga .env.local en el proceso de pruebas.
+ * Carga las variables de entorno en el proceso de pruebas.
  *
- * Next lo lee solo para la aplicación, no para quien la prueba. Sin esto, las
- * pruebas de aislamiento —las que le preguntan a la base qué puede ver alguien
- * sin sesión— se salteaban en silencio. Una prueba de seguridad que no corre es
- * peor que no tenerla: da la sensación de estar cubierto.
+ * Next lee .env.local solo para la aplicación, no para quien la prueba. Sin
+ * esto, las pruebas de aislamiento —las que le preguntan a la base qué puede
+ * ver alguien sin sesión— se salteaban en silencio. Una prueba de seguridad que
+ * no corre es peor que no tenerla: da la sensación de estar cubierto.
+ *
+ * Se leen dos archivos, por orden:
+ *   .env.local → las claves de Supabase, que ya usa la aplicación.
+ *   .env.test  → SOLO las credenciales de la cuenta de prueba (PW_EMAIL y
+ *                PW_PASSWORD), separadas a propósito: son de una cuenta
+ *                descartable y no tienen por qué mezclarse con las de la app.
+ *
+ * Los dos están ignorados por git (`.env*`), así que nunca se suben.
+ * Lo que ya esté definido en la terminal manda sobre los archivos.
  */
-if (existsSync(".env.local")) {
-  for (const linea of readFileSync(".env.local", "utf8").split("\n")) {
-    const m = linea.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+for (const archivo of [".env.local", ".env.test"]) {
+  if (!existsSync(archivo)) continue;
+  for (const linea of readFileSync(archivo, "utf8").split("\n")) {
+    const m = linea.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
     if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
   }
 }
