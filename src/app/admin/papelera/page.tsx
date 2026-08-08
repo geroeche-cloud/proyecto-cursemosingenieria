@@ -22,13 +22,19 @@ function fmt(d: string | null) {
 export default async function AdminPapeleraPage() {
   const supabase = await createClient();
 
+  // La papelera crece para siempre: nada la vacía sola. Sin tope, esta pantalla
+  // se vuelve más lenta cada mes hasta volverse inusable, justo cuando más
+  // falta hace. Se traen las más recientes de cada tipo, que es lo que alguien
+  // viene a buscar acá: lo que se borró hace poco, para recuperarlo.
+  const TOPE = 40;
+
   const [uniRes, profRes, newsRes, oppRes, proRes, drvRes] = await Promise.all([
-    supabase.from("universities").select("id, name, short_name, city, deleted_at").not("deleted_at", "is", null),
-    supabase.from("profiles").select("id, full_name, email, deleted_at").eq("role", "ambassador").not("deleted_at", "is", null),
-    supabase.from("news").select("id, title, deleted_at").not("deleted_at", "is", null),
-    supabase.from("opportunities").select("id, title, deleted_at").not("deleted_at", "is", null),
-    supabase.from("professors").select("id, name, deleted_at").not("deleted_at", "is", null),
-    supabase.from("drives").select("id, owner, deleted_at").not("deleted_at", "is", null),
+    supabase.from("universities").select("id, name, short_name, city, deleted_at").not("deleted_at", "is", null).order("deleted_at", { ascending: false }).limit(TOPE),
+    supabase.from("profiles").select("id, full_name, email, deleted_at").eq("role", "ambassador").not("deleted_at", "is", null).order("deleted_at", { ascending: false }).limit(TOPE),
+    supabase.from("news").select("id, title, deleted_at").not("deleted_at", "is", null).order("deleted_at", { ascending: false }).limit(TOPE),
+    supabase.from("opportunities").select("id, title, deleted_at").not("deleted_at", "is", null).order("deleted_at", { ascending: false }).limit(TOPE),
+    supabase.from("professors").select("id, name, deleted_at").not("deleted_at", "is", null).order("deleted_at", { ascending: false }).limit(TOPE),
+    supabase.from("drives").select("id, owner, deleted_at").not("deleted_at", "is", null).order("deleted_at", { ascending: false }).limit(TOPE),
   ]);
   logIfError("admin papelera", uniRes.error);
 

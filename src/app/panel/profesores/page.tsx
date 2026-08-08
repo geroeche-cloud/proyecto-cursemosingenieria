@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { leerPagina, totalPaginas } from "@/lib/paginacion";
+import { Paginacion } from "@/components/ui/Paginacion";
 import { ProfessorForm } from "./ProfessorForm";
 import { setProfessorStatus, deleteProfessor } from "./actions";
 
@@ -19,14 +21,20 @@ const MODALITY_LABEL: Record<Professor["modality"], string> = {
   ambas: "Presencial y virtual",
 };
 
-export default async function ProfesoresPanelPage() {
+export default async function ProfesoresPanelPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const supabase = await createClient();
+  const pagina = leerPagina(await searchParams);
 
-  const { data } = await supabase
+  const { data, count } = await supabase
     .from("professors")
-    .select("id, name, title, modality, subjects, whatsapp, status, clicks")
+    .select("id, name, title, modality, subjects, whatsapp, status, clicks", { count: "exact" })
     .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(pagina.desde, pagina.hasta);
   const items = (data ?? []) as Professor[];
 
   return (
@@ -106,6 +114,14 @@ export default async function ProfesoresPanelPage() {
             ))
           )}
         </div>
+
+        <Paginacion
+          base="/panel/profesores"
+          pagina={pagina.numero}
+          paginas={totalPaginas(count)}
+          total={count}
+          que="profesores"
+        />
       </section>
     </div>
   );

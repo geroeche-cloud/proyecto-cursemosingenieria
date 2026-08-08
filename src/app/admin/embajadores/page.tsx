@@ -1,12 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { logIfError } from "@/lib/log";
+import { getAdminResumen } from "@/lib/resumenes";
 import { AmbassadorForm } from "../AmbassadorForm";
 import { AmbassadorsList, type AmbRow } from "./AmbassadorsList";
 
 export default async function AdminEmbajadoresPage() {
   const supabase = await createClient();
 
-  const [uniRes, ambRes, newsRes, oppRes, profRes, driveRes] = await Promise.all([
+  // Igual que en Universidades: el conteo por universidad lo calcula la base,
+  // en vez de traerse el university_id de cada publicación del país.
+  const [uniRes, ambRes, resumen] = await Promise.all([
     supabase.from("universities").select("id, name, short_name").is("deleted_at", null).order("name"),
     supabase
       .from("profiles")
@@ -14,22 +17,14 @@ export default async function AdminEmbajadoresPage() {
       .eq("role", "ambassador")
       .is("deleted_at", null)
       .order("email"),
-    supabase.from("news").select("university_id").eq("status", "published"),
-    supabase.from("opportunities").select("university_id").eq("status", "published"),
-    supabase.from("professors").select("university_id").eq("status", "published"),
-    supabase.from("drives").select("university_id").eq("status", "published"),
+    getAdminResumen(),
   ]);
   logIfError("admin embajadores", ambRes.error);
 
   const unis = (uniRes.data ?? []) as { id: string; name: string; short_name: string | null }[];
   const uniName = new Map(unis.map((u) => [u.id, u.short_name || u.name]));
 
-  const conteo = new Map<string, number>();
-  for (const res of [newsRes, oppRes, profRes, driveRes]) {
-    for (const r of (res.data ?? []) as { university_id: string }[]) {
-      conteo.set(r.university_id, (conteo.get(r.university_id) ?? 0) + 1);
-    }
-  }
+  const conteo = new Map(resumen.por_universidad.map((u) => [u.id, u.publicaciones]));
 
   const ambassadors: AmbRow[] = (
     (ambRes.data ?? []) as {

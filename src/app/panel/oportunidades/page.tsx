@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { leerPagina, totalPaginas } from "@/lib/paginacion";
+import { Paginacion } from "@/components/ui/Paginacion";
 import { OpportunityForm } from "./OpportunityForm";
 import { setOpportunityStatus, deleteOpportunity } from "./actions";
 import { scheduleState, type ScheduleTone } from "@/lib/schedule";
@@ -35,14 +37,20 @@ const TONE: Record<ScheduleTone, string> = {
     "rounded-full border border-hair px-2.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-ink-mute",
 };
 
-export default async function OportunidadesPanelPage() {
+export default async function OportunidadesPanelPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const supabase = await createClient();
+  const pagina = leerPagina(await searchParams);
 
-  const { data } = await supabase
+  const { data, count } = await supabase
     .from("opportunities")
-    .select("id, kind, title, org, deadline, requirements, status, starts_at, ends_at, clicks")
+    .select("id, kind, title, org, deadline, requirements, status, starts_at, ends_at, clicks", { count: "exact" })
     .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(pagina.desde, pagina.hasta);
   const items = (data ?? []) as Opportunity[];
 
   return (
@@ -119,6 +127,14 @@ export default async function OportunidadesPanelPage() {
             })
           )}
         </div>
+
+        <Paginacion
+          base="/panel/oportunidades"
+          pagina={pagina.numero}
+          paginas={totalPaginas(count)}
+          total={count}
+          que="oportunidades"
+        />
       </section>
     </div>
   );

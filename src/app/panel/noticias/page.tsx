@@ -2,6 +2,8 @@ import { createClient } from "@/lib/supabase/server";
 import { setNewsStatus, deleteNews } from "./actions";
 import { NoticiaForm } from "./NoticiaForm";
 import { scheduleState, type ScheduleTone } from "@/lib/schedule";
+import { leerPagina, totalPaginas } from "@/lib/paginacion";
+import { Paginacion } from "@/components/ui/Paginacion";
 
 type News = {
   id: string;
@@ -23,14 +25,22 @@ const TONE: Record<ScheduleTone, string> = {
     "rounded-full border border-hair px-2.5 py-0.5 font-mono text-[0.6rem] uppercase tracking-[0.12em] text-ink-mute",
 };
 
-export default async function NoticiasPanelPage() {
+export default async function NoticiasPanelPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const supabase = await createClient();
+  const pagina = leerPagina(await searchParams);
 
-  const { data } = await supabase
+  // Solo la página pedida: el pedido a la base queda del mismo tamaño sin
+  // importar cuántas noticias tenga cargadas la universidad.
+  const { data, count } = await supabase
     .from("news")
-    .select("id, title, summary, status, starts_at, ends_at, clicks")
+    .select("id, title, summary, status, starts_at, ends_at, clicks", { count: "exact" })
     .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(pagina.desde, pagina.hasta);
   const news = (data ?? []) as News[];
 
   return (
@@ -90,6 +100,14 @@ export default async function NoticiasPanelPage() {
             })
           )}
         </div>
+
+        <Paginacion
+          base="/panel/noticias"
+          pagina={pagina.numero}
+          paginas={totalPaginas(count)}
+          total={count}
+          que="noticias"
+        />
       </section>
     </div>
   );

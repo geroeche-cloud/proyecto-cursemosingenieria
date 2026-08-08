@@ -1,18 +1,19 @@
 import { createClient } from "@/lib/supabase/server";
 import { logIfError } from "@/lib/log";
+import { getAdminResumen } from "@/lib/resumenes";
 import { UniversityForm } from "../UniversityForm";
 import { UniversitiesList, type UniRow } from "./UniversitiesList";
 
 export default async function AdminUniversidadesPage() {
   const supabase = await createClient();
 
-  const [uniRes, ambRes, newsRes, oppRes, profRes, driveRes] = await Promise.all([
+  // El conteo de publicaciones por universidad ya viene calculado por la base
+  // (admin_overview). Antes esta pantalla se traía el university_id de TODAS
+  // las publicaciones del país para contarlas acá, una por una.
+  const [uniRes, ambRes, resumen] = await Promise.all([
     supabase.from("universities").select("id, name, short_name, city, status").is("deleted_at", null).order("name"),
     supabase.from("profiles").select("full_name, email, university_id").eq("role", "ambassador").is("deleted_at", null),
-    supabase.from("news").select("university_id").eq("status", "published"),
-    supabase.from("opportunities").select("university_id").eq("status", "published"),
-    supabase.from("professors").select("university_id").eq("status", "published"),
-    supabase.from("drives").select("university_id").eq("status", "published"),
+    getAdminResumen(),
   ]);
   logIfError("admin universidades", uniRes.error);
 
@@ -22,12 +23,7 @@ export default async function AdminUniversidadesPage() {
       .map((a) => [a.university_id as string, a.full_name || a.email || "embajador"]),
   );
 
-  const conteo = new Map<string, number>();
-  for (const res of [newsRes, oppRes, profRes, driveRes]) {
-    for (const r of (res.data ?? []) as { university_id: string }[]) {
-      conteo.set(r.university_id, (conteo.get(r.university_id) ?? 0) + 1);
-    }
-  }
+  const conteo = new Map(resumen.por_universidad.map((u) => [u.id, u.publicaciones]));
 
   const universities: UniRow[] = (
     (uniRes.data ?? []) as { id: string; name: string; short_name: string | null; city: string | null; status: string }[]

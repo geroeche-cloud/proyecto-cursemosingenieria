@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { leerPagina, totalPaginas } from "@/lib/paginacion";
+import { Paginacion } from "@/components/ui/Paginacion";
 import { DriveForm } from "./DriveForm";
 import { setDriveStatus, deleteDrive } from "./actions";
 
@@ -11,14 +13,20 @@ type Drive = {
   clicks: number;
 };
 
-export default async function DrivesPanelPage() {
+export default async function DrivesPanelPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const supabase = await createClient();
+  const pagina = leerPagina(await searchParams);
 
-  const { data } = await supabase
+  const { data, count } = await supabase
     .from("drives")
-    .select("id, owner, career, href, status, clicks")
+    .select("id, owner, career, href, status, clicks", { count: "exact" })
     .is("deleted_at", null)
-    .order("created_at", { ascending: false });
+    .order("created_at", { ascending: false })
+    .range(pagina.desde, pagina.hasta);
   const items = (data ?? []) as Drive[];
 
   return (
@@ -95,6 +103,14 @@ export default async function DrivesPanelPage() {
             ))
           )}
         </div>
+
+        <Paginacion
+          base="/panel/drives"
+          pagina={pagina.numero}
+          paginas={totalPaginas(count)}
+          total={count}
+          que="drives"
+        />
       </section>
     </div>
   );
