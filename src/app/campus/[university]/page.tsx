@@ -14,12 +14,32 @@ import { logIfError } from "@/lib/log";
 
 export const revalidate = 60;
 
+/**
+ * Qué universidades se generan en el momento del despliegue.
+ *
+ * Se genera un tope, NO todas. Con quinientas universidades, generarlas todas
+ * en cada despliegue convertiría un build de un minuto en uno de varios, y ese
+ * costo se paga en cada cambio por chico que sea.
+ *
+ * Las que quedan fuera no se rompen: Next las genera sola la primera vez que
+ * alguien las visita y a partir de ahí quedan cacheadas igual que el resto.
+ * Solo el primer visitante de una universidad poco vista espera un poco más.
+ */
+const PREGENERADAS = 60;
+
 export async function generateStaticParams() {
   try {
     const supabase = createPublicClient();
-    const { data } = await supabase.from("universities").select("slug").eq("status", "active");
+    const { data } = await supabase
+      .from("universities")
+      .select("slug")
+      .eq("status", "active")
+      .order("created_at", { ascending: true })
+      .limit(PREGENERADAS);
     return (data ?? []).map((u: { slug: string }) => ({ university: u.slug }));
   } catch {
+    // Si la base no responde durante el build, no se cae el despliegue: las
+    // páginas se generan bajo demanda.
     return [];
   }
 }

@@ -31,24 +31,48 @@ function toTrajectory(raw: unknown) {
     : [];
 }
 
+/**
+ * Cuántos embajadores muestra la PORTADA.
+ *
+ * Esta sección es una vitrina, no el directorio: el directorio completo es
+ * /campus, y desde acá se enlaza. Sin tope, la portada —la página más visitada
+ * del sitio— se traía TODOS los perfiles con biografía larga y trayectoria
+ * completa. Con una universidad no se nota; con quinientas, cada visitante
+ * descarga quinientas biografías para ver seis tarjetas.
+ */
+const EN_PORTADA = 6;
+
 async function loadAmbassadors(): Promise<AmbassadorCardData[]> {
   try {
     const supabase = createPublicClient();
-    const [profRes, uniRes] = await Promise.all([
-      supabase
-        .from("ambassador_profiles")
-        .select(
-          "university_id, display_name, presentation, bio, bio_full, photo_url, email, instagram, tiktok, youtube, linkedin, trajectory",
-        ),
-      supabase.from("universities").select("id, name").eq("status", "active"),
-    ]);
 
+    // Se piden algunos de más porque después se descartan los perfiles sin
+    // datos y los de universidades inactivas: sin ese margen, la vitrina
+    // mostraría menos de seis por un perfil incompleto.
+    const profRes = await supabase
+      .from("ambassador_profiles")
+      .select(
+        "university_id, display_name, presentation, bio, bio_full, photo_url, email, instagram, tiktok, youtube, linkedin, trajectory",
+      )
+      .limit(EN_PORTADA * 4);
     logIfError("home ambassador_profiles", profRes.error);
+
+    const perfiles = (profRes.data ?? []) as ProfileRow[];
+    if (perfiles.length === 0) return [];
+
+    // Solo las universidades de esos perfiles, no todas las del país: la
+    // consulta se mantiene chica sin importar cuántas haya en la plataforma.
+    const uniRes = await supabase
+      .from("universities")
+      .select("id, name")
+      .eq("status", "active")
+      .in("id", [...new Set(perfiles.map((p) => p.university_id))]);
     logIfError("home universities", uniRes.error);
 
     const uniName = new Map((uniRes.data ?? []).map((u) => [u.id as string, u.name as string]));
-    return ((profRes.data ?? []) as ProfileRow[])
+    return perfiles
       .filter((p) => uniName.has(p.university_id) && (p.display_name || p.bio || p.photo_url))
+      .slice(0, EN_PORTADA)
       .map((p) => ({
         universityId: p.university_id,
         universityName: uniName.get(p.university_id) ?? "",
