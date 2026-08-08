@@ -35,11 +35,14 @@ export function IntroLoader() {
             alt=""
             width={896}
             height={667}
-            priority
-            // Sin `unoptimized`: antes se servía el PNG crudo de 342 KB, y es
-            // justo la imagen que el navegador pinta primero. Next la entrega
-            // en AVIF/WebP al tamaño que pide cada pantalla.
-            quality={90}
+            // Carga inmediata pero en PRIORIDAD BAJA. Con `priority` competía
+            // por el ancho de banda contra la tipografía del titular, que es
+            // el elemento que Google cronometra. Esta imagen es decorativa y
+            // vive 0,75 s; el titular es el contenido.
+            loading="eager"
+            fetchPriority="low"
+            // Sin `unoptimized`: antes se servía el PNG crudo de 342 KB.
+            quality={85}
             sizes="(max-width: 640px) 240px, 320px"
             className="h-auto w-60 sm:w-80"
           />

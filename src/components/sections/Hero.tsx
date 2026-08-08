@@ -155,7 +155,10 @@ export function Hero() {
               height={416}
               priority
               quality={90}
-              sizes="(max-width: 1024px) 42vw, 336px"
+              // El ancho real está topeado por max-w-[11rem] / max-w-[21rem],
+              // no por el 42vw. Declarar el vw hacía que el navegador pidiera
+              // una versión de 1080 px para mostrarla a 176.
+              sizes="(max-width: 1024px) 176px, 336px"
               className="relative w-[42vw] max-w-[11rem] object-contain lg:w-full lg:max-w-[21rem]"
             />
           </div>
