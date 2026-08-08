@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect } from "react";
-import * as Sentry from "@sentry/nextjs";
+import { reportar } from "@/instrumentation-client";
 
 /**
  * Pantalla de error de la aplicación. Sin esto, cualquier fallo mostraba la
@@ -20,7 +20,9 @@ export default function Error({
     // Queda en los logs del servidor y, si Sentry está configurado, llega
     // con la página, el navegador y la fecha del incidente.
     console.error("[app] error no controlado:", error.message, error.digest ?? "");
-    Sentry.captureException(error);
+    // No importa Sentry directamente: eso lo traería al bundle de todas las
+    // páginas. `reportar` lo carga solo si de verdad hace falta.
+    reportar(error, "pantalla-de-error");
   }, [error]);
 
   return (
