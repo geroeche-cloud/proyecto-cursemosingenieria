@@ -26,6 +26,10 @@
 *.tsbuildinfo
 next-env.d.ts
 
+# scratch de diagnóstico: sondas descartables, nunca parte del proyecto
+/.tmp
+/.tmp-shots
+
 # pruebas
 /test-results
 /playwright-report
