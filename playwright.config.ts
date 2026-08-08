@@ -15,13 +15,20 @@ export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  // Un reintento también en local. El servidor de desarrollo compila cada
+  // página la primera vez que alguien la pide, y con varias pruebas en
+  // paralelo esa primera compilación puede pasarse del tiempo límite. Es un
+  // fallo del entorno, no del sitio: al segundo intento la página ya está
+  // compilada. Sin esto, la suite falla de a ratos y se vuelve ruido.
+  retries: 1,
   reporter: process.env.CI ? "github" : "list",
-  timeout: 30_000,
+  timeout: 45_000,
 
   use: {
     baseURL,
     trace: "on-first-retry",
+    // Margen para esa primera compilación.
+    navigationTimeout: 30_000,
     // La intro de bienvenida se saltea para que no tape la pantalla.
     storageState: { cookies: [], origins: [{ origin: baseURL, localStorage: [] }] },
   },

@@ -779,6 +779,17 @@ body {
   .grain::after {
     display: none;
   }
+
+  /* El desenfoque de fondo (backdrop-filter) obliga al navegador a leer lo que
+     hay DEBAJO del elemento y volver a procesarlo. La barra de navegación es
+     fija, o sea que eso pasa en cada scroll. En celular se baja el radio y se
+     quita la saturación: el efecto vidrio se mantiene, el costo baja mucho. */
+  .glass,
+  .glass-lux,
+  .glass-bright {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
 }
 @media (max-width: 640px) {
   .site-glow {

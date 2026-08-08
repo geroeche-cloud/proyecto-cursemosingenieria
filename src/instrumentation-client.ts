@@ -93,7 +93,11 @@ if (dsn && typeof window !== "undefined") {
   // ver la página. Sentry no aporta nada en ese instante: los errores de la
   // carga ya quedaron guardados en el buffer y se reportan igual cuando
   // llegue. Se espera a que la persona ya esté usando el sitio.
-  const gestos = ["pointerdown", "keydown", "scroll", "touchstart"] as const;
+  // Scroll NO cuenta como gesto: pasa en el primer instante de cualquier
+  // visita, incluso automática, y no significa que alguien esté usando el
+  // sitio. Traer 170 KB porque la página se movió un poco es exactamente el
+  // problema que esto vino a resolver. Tocar o teclear sí es intención.
+  const gestos = ["pointerdown", "keydown", "touchstart"] as const;
   const arrancar = () => {
     gestos.forEach((g) => window.removeEventListener(g, arrancar));
     void cargarSentry();
