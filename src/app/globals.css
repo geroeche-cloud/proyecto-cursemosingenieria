@@ -484,6 +484,260 @@ body {
   background: linear-gradient(122deg, transparent 42%, rgba(216, 226, 240, 0.035) 50%, transparent 58%);
   mix-blend-mode: screen;
 }
+/* ============================================================
+   CAMBIO DE PESTAÑA (sección Colaborar). Ver Collaborate.tsx.
+   ============================================================ */
+.cambio-pestana {
+  animation: cambio-pestana 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes cambio-pestana {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cambio-pestana {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   ENTRADA DEL HERO
+   Ver Hero.tsx, que gracias a esto volvió a ser Server Component.
+   ============================================================ */
+.hero-texto {
+  animation: hero-texto 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes hero-texto {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+.hero-simbolo {
+  animation: hero-simbolo 1s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+}
+@keyframes hero-simbolo {
+  from {
+    opacity: 0;
+    transform: scale(0.88);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero-texto,
+  .hero-simbolo {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   MENÚ MÓVIL
+   Entrada y salida por CSS. Ver Nav.tsx.
+   ============================================================ */
+.menu-capa {
+  animation: menu-entrar 0.3s linear both;
+}
+.menu-capa.cerrando {
+  animation: menu-salir 0.25s linear both;
+}
+@keyframes menu-entrar {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes menu-salir {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.menu-panel {
+  animation: menu-panel 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes menu-panel {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -20px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+.menu-link {
+  animation: menu-link 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes menu-link {
+  from {
+    opacity: 0;
+    transform: translate3d(-20px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+.menu-capa.cerrando .menu-panel,
+.menu-capa.cerrando .menu-link {
+  animation: none;
+}
+
+/* ============================================================
+   INTRO DE ENTRADA
+   Todo por CSS: no espera a que React hidrate para irse, y no
+   depende de ninguna librería. 1,2 s en total — antes eran 2,85 s
+   tapando el contenido, que es lo que Google mide como LCP.
+   Solo opacity y transform. Ver IntroLoader.tsx.
+   ============================================================ */
+.intro {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  animation: intro-salir 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both;
+}
+@keyframes intro-salir {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -100%, 0);
+    visibility: hidden;
+  }
+}
+.intro-glow {
+  position: absolute;
+  height: 42vmin;
+  width: 42vmin;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  background: radial-gradient(circle, rgba(59, 107, 255, 0.55), transparent 70%);
+  opacity: 0.7;
+}
+.intro-logo {
+  animation: intro-aparecer 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes intro-aparecer {
+  from {
+    opacity: 0;
+    transform: scale(0.86);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.intro-linea {
+  animation: intro-linea 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.28s both;
+}
+@keyframes intro-linea {
+  from {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+.intro-sello {
+  animation: intro-sello 0.35s linear 0.42s both;
+}
+@keyframes intro-sello {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+/* Ya vista en esta sesión: la marca el script del <head>, antes de pintar. */
+.intro-vista .intro {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro {
+    display: none;
+  }
+}
+
+/* ============================================================
+   ENTRADA AL CAMBIAR DE RUTA
+   Antes era la librería de animación en el template raíz, o sea
+   en TODAS las páginas. Ahora es CSS. Ver template.tsx.
+   ============================================================ */
+@keyframes entrada-ruta {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 8px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+.entrada-ruta {
+  animation: entrada-ruta 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+/* El panel y la administración no esperan: la página ya está lista. */
+.entrada-ruta:has([data-zona-trabajo]) {
+  animation: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .entrada-ruta {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   APARICIÓN AL HACER SCROLL
+   Reemplaza a la librería de animación. Solo opacity y transform:
+   las dos propiedades que el navegador resuelve en la GPU, sin
+   rehacer layout ni repintar. Ver Reveal.tsx y RevealObserver.tsx.
+   ============================================================ */
+[data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0);
+  transition:
+    opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-reveal].visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+/* Sin JavaScript nunca llega la clase: el contenido se muestra igual. */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
 .site-glow {
   position: absolute;
   border-radius: 50%;

@@ -10,7 +10,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
   if (user.role !== "admin") redirect("/panel");
 
   return (
-    <div className="min-h-screen bg-bg text-ink">
+    <div data-zona-trabajo className="min-h-screen bg-bg text-ink">
       <header className="border-b border-hair">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-3 px-5 pt-5 pb-4 sm:px-6 sm:pt-6">
           <div className="min-w-0">

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
 import Link from "next/link";
 import { Logo } from "@/components/ui/Logo";
 import { NAV, ORG } from "@/lib/org";
@@ -28,7 +27,19 @@ function CapIcon() {
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
-  const [open, setOpen] = useState(false);
+  // `montado` mantiene el menú en el DOM mientras corre la animación de salida;
+  // `cerrando` dispara esa animación. Es lo que antes hacía AnimatePresence,
+  // en dos booleanos en vez de una librería.
+  const [montado, setMontado] = useState(false);
+  const [cerrando, setCerrando] = useState(false);
+  const open = montado && !cerrando;
+
+  const abrir = () => {
+    setMontado(true);
+    setCerrando(false);
+  };
+  const cerrar = () => setCerrando(true);
+  const alternar = () => (open ? cerrar() : abrir());
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24);
@@ -88,7 +99,7 @@ export function Nav() {
               </Link>
               <button
                 type="button"
-                onClick={() => setOpen((v) => !v)}
+                onClick={alternar}
                 aria-label="Menú"
                 aria-expanded={open}
                 className="flex h-10 w-10 items-center justify-center rounded-full border border-hair-strong bg-white/[0.03] lg:hidden"
@@ -103,47 +114,43 @@ export function Nav() {
         </div>
       </header>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
-            className="fixed inset-0 z-40 lg:hidden"
-          >
-            <div className="absolute inset-0 bg-bg/85 backdrop-blur-xl" onClick={() => setOpen(false)} />
-            <motion.nav
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -20, opacity: 0 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="relative flex h-full flex-col justify-center gap-1 px-8 pt-20"
-            >
-              {NAV.map((l, i) => (
-                <motion.a
-                  key={l.href}
-                  href={l.href}
-                  onClick={() => setOpen(false)}
-                  initial={{ x: -20, opacity: 0 }}
-                  animate={{ x: 0, opacity: 1 }}
-                  transition={{ delay: 0.08 + i * 0.05 }}
-                  className="font-display text-3xl font-medium text-ink"
-                >
-                  {l.label}
-                </motion.a>
-              ))}
-              <Link href="/campus" onClick={() => setOpen(false)} className="btn btn-blue mt-8 w-fit text-sm">
-                <CapIcon />
-                Campus
-              </Link>
-              <Link href="/#colaborar" onClick={() => setOpen(false)} className="btn btn-metal mt-3 w-fit text-sm">
-                Contacto
-              </Link>
-            </motion.nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Menú móvil: entrada y salida por CSS. Antes esto arrastraba la
+          librería de animación entera al sitio público para hacer un
+          desvanecido con un deslizamiento. */}
+      {montado && (
+        <div
+          className={cn("menu-capa fixed inset-0 z-40 lg:hidden", cerrando && "cerrando")}
+          onAnimationEnd={(e) => {
+            // Solo al terminar el cierre de la capa: ahí recién se desmonta.
+            if (e.target === e.currentTarget && cerrando) {
+              setMontado(false);
+              setCerrando(false);
+            }
+          }}
+        >
+          <div className="absolute inset-0 bg-bg/85 backdrop-blur-xl" onClick={cerrar} />
+          <nav className="menu-panel relative flex h-full flex-col justify-center gap-1 px-8 pt-20">
+            {NAV.map((l, i) => (
+              <a
+                key={l.href}
+                href={l.href}
+                onClick={cerrar}
+                className="menu-link font-display text-3xl font-medium text-ink"
+                style={{ animationDelay: `${0.08 + i * 0.05}s` }}
+              >
+                {l.label}
+              </a>
+            ))}
+            <Link href="/campus" onClick={cerrar} className="btn btn-blue mt-8 w-fit text-sm">
+              <CapIcon />
+              Campus
+            </Link>
+            <Link href="/#colaborar" onClick={cerrar} className="btn btn-metal mt-3 w-fit text-sm">
+              Contacto
+            </Link>
+          </nav>
+        </div>
+      )}
     </>
   );
 }

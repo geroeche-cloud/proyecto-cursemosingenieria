@@ -1,47 +1,38 @@
-"use client";
-
-import { motion, type Variants } from "motion/react";
 import type { ReactNode } from "react";
 
-const variants: Variants = {
-  hidden: { opacity: 0, y: 28, filter: "blur(6px)" },
-  visible: {
-    opacity: 1,
-    y: 0,
-    filter: "blur(0px)",
-  },
-};
-
 /**
- * Scroll-triggered reveal. Respects prefers-reduced-motion automatically
- * (motion disables transforms globally via the CSS media query fallback).
+ * Aparición al hacer scroll. SERVER COMPONENT: no envía nada de JavaScript.
+ *
+ * Antes esto era un componente de `motion`. Cada aparición traía la librería
+ * entera al navegador —cientos de kilobytes— para hacer un desvanecido con un
+ * desplazamiento, que es literalmente lo que una transición CSS hace nativa y
+ * gratis, en el compositor, sin ocupar el hilo principal.
+ *
+ * El único JavaScript involucrado es un observador de 30 líneas que se monta
+ * UNA vez por página (RevealObserver) y le pone la clase a todos.
+ *
+ * Se anima solo opacity y transform: las dos propiedades que el navegador
+ * resuelve en la GPU sin rehacer el layout ni repintar.
  */
 export function Reveal({
   children,
   delay = 0,
   className,
-  as = "div",
+  as: Tag = "div",
 }: {
   children: ReactNode;
+  /** Retraso en segundos, para escalonar elementos de una misma fila. */
   delay?: number;
   className?: string;
   as?: "div" | "section" | "li" | "span";
 }) {
-  const MotionTag = motion[as];
   return (
-    <MotionTag
+    <Tag
+      data-reveal=""
       className={className}
-      variants={variants}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{
-        duration: 0.8,
-        delay,
-        ease: [0.16, 1, 0.3, 1],
-      }}
+      style={delay ? { transitionDelay: `${delay}s` } : undefined}
     >
       {children}
-    </MotionTag>
+    </Tag>
   );
 }

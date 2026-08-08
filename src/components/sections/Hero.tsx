@@ -1,11 +1,14 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "motion/react";
 import { HeroField } from "@/components/sections/HeroField";
 
-const ease = [0.16, 1, 0.3, 1] as const;
+/**
+ * SERVER COMPONENT. Antes era cliente únicamente para dos animaciones de
+ * entrada con `motion`. Eso convertía todo el hero —la primera pantalla que ve
+ * cualquier visitante— en JavaScript que había que descargar, parsear e
+ * hidratar antes de que sirviera para algo. Ahora las animaciones son CSS y el
+ * hero llega listo desde el servidor.
+ */
 
 /** Ícono de birrete para el acceso destacado al Campus. */
 function CapIcon() {
@@ -92,12 +95,7 @@ export function Hero() {
       <div className="shell relative z-10 w-full py-28 lg:py-0">
         <div className="grid items-center gap-10 lg:grid-cols-[1.45fr_0.55fr] lg:gap-6">
           {/* Texto */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.9, ease }}
-            className="order-2 flex flex-col items-start gap-7 lg:order-1"
-          >
+          <div className="hero-texto order-2 flex flex-col items-start gap-7 lg:order-1">
             <span className="eyebrow flex items-center gap-3">
               <span className="metal-tick" />
               Bienvenidos al cambio.
@@ -136,15 +134,10 @@ export function Hero() {
                 Conocer el proyecto
               </a>
             </div>
-          </motion.div>
+          </div>
 
           {/* Símbolo del logo */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.88, filter: "blur(8px)" }}
-            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-            transition={{ duration: 1, delay: 0.1, ease }}
-            className="relative order-1 flex justify-center lg:order-2 lg:justify-end"
-          >
+          <div className="hero-simbolo relative order-1 flex justify-center lg:order-2 lg:justify-end">
             <div
               className="pointer-events-none absolute left-1/2 top-1/2 h-[80%] w-[80%] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[70px]"
               style={{ background: "radial-gradient(circle, rgba(59,107,255,0.45), transparent 70%)" }}
@@ -161,10 +154,11 @@ export function Hero() {
               width={452}
               height={416}
               priority
-              unoptimized
+              quality={90}
+              sizes="(max-width: 1024px) 42vw, 336px"
               className="relative w-[42vw] max-w-[11rem] object-contain lg:w-full lg:max-w-[21rem]"
             />
-          </motion.div>
+          </div>
         </div>
       </div>
     </section>

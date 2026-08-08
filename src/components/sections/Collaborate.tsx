@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
 import { AmbientLights } from "@/components/ui/AmbientLights";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { TRACKS } from "@/lib/collaborate";
@@ -53,15 +52,10 @@ export function Collaborate() {
               style={{ background: "radial-gradient(circle, rgba(59,107,255,0.35), transparent 70%)" }}
               aria-hidden
             />
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={track.id}
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-                className="relative flex h-full flex-col"
-              >
+            {/* Al cambiar la pestaña cambia la key: React vuelve a montar el
+                bloque y la animación CSS se reproduce sola. Es lo que hacía
+                AnimatePresence, sin librería. */}
+            <div key={track.id} className="cambio-pestana relative flex h-full flex-col">
                 <span className="font-mono text-xs uppercase tracking-[0.16em] text-blue-300">
                   {track.label}
                 </span>
@@ -74,8 +68,7 @@ export function Collaborate() {
                     {track.cta}
                   </a>
                 </div>
-              </motion.div>
-            </AnimatePresence>
+            </div>
           </div>
         </div>
       </div>

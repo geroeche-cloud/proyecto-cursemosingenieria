@@ -4,6 +4,7 @@ import "./globals.css";
 import { IntroLoader } from "@/components/ui/IntroLoader";
 import { SiteBackdrop } from "@/components/ui/SiteBackdrop";
 import { SoloPublico } from "@/components/ui/SoloPublico";
+import { RevealObserver } from "@/components/ui/RevealObserver";
 import { SITE_URL } from "@/lib/site";
 
 const inter = Inter({
@@ -12,17 +13,19 @@ const inter = Inter({
   display: "swap",
 });
 
+// Sin `weight`: next/font usa la versión VARIABLE de cada familia, que trae
+// todos los grosores en un solo archivo. Antes eran cuatro archivos de Space
+// Grotesk y dos de JetBrains; ahora es uno de cada una. Mismos grosores
+// disponibles, misma tipografía, seis descargas menos en la primera visita.
 const spaceGrotesk = Space_Grotesk({
   variable: "--font-display-var",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
 const jetbrains = JetBrains_Mono({
   variable: "--font-mono-var",
   subsets: ["latin"],
-  weight: ["400", "500"],
   display: "swap",
 });
 
@@ -79,8 +82,24 @@ export default function RootLayout({
       className={`${inter.variable} ${spaceGrotesk.variable} ${jetbrains.variable} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        {/* Corre ANTES de pintar: quien ya vio la intro en esta sesión no ve
+            ni un parpadeo. Tres líneas en vez de un componente de React con
+            estado, y sin esperar a la hidratación. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{if(sessionStorage.getItem('ei-intro'))document.documentElement.className+=' intro-vista';else sessionStorage.setItem('ei-intro','1')}catch(e){}`,
+          }}
+        />
+        {/* Sin JavaScript, la clase .visible nunca llega y el contenido
+            quedaría invisible para siempre. Esto lo garantiza. */}
+        <noscript>
+          <style>{`[data-reveal]{opacity:1!important;transform:none!important}.intro{display:none}`}</style>
+        </noscript>
+      </head>
       <body className="min-h-full grain">
         <SiteBackdrop />
+        <RevealObserver />
         {/* La intro cinematográfica (con sonido) es para quien llega al sitio.
             Nadie que entra a publicar una noticia quiere verla otra vez. */}
         <SoloPublico>

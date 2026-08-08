@@ -16,7 +16,6 @@
     "@supabase/ssr": "^0.12.4",
     "@supabase/supabase-js": "^2.112.0",
     "clsx": "^2.1.1",
-    "motion": "^12.42.2",
     "next": "16.2.10",
     "react": "19.2.4",
     "react-dom": "19.2.4"
