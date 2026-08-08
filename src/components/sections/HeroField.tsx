@@ -40,7 +40,12 @@ export function HeroField() {
       canvas.style.height = `${height}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-      const count = Math.min(96, Math.max(40, Math.round((width * height) / 20000)));
+      // Los enlaces se calculan entre TODOS los pares, o sea que el costo crece
+      // al cuadrado: 96 nodos son ~4.600 comparaciones por cuadro. En un
+      // celular eso bloquea el hilo principal. Se baja el techo en pantallas
+      // chicas, donde además el efecto casi no se aprecia.
+      const techo = width < 768 ? 44 : 88;
+      const count = Math.min(techo, Math.max(28, Math.round((width * height) / 22000)));
       points = Array.from({ length: count }, () => ({
         x: Math.random() * width,
         y: Math.random() * height,
@@ -53,7 +58,17 @@ export function HeroField() {
     const LINK = 132;
     const MOUSE = 180;
 
-    const draw = () => {
+    // 30 cuadros por segundo alcanzan de sobra para una deriva lenta, y es la
+    // mitad de trabajo que 60. La diferencia no se percibe; el bloqueo del
+    // hilo principal sí.
+    const PASO = 1000 / 30;
+    let ultimo = 0;
+
+    const draw = (t = 0) => {
+      if (!reduce) raf = requestAnimationFrame(draw);
+      if (t - ultimo < PASO) return;
+      ultimo = t;
+
       ctx.clearRect(0, 0, width, height);
 
       for (const p of points) {
@@ -105,8 +120,6 @@ export function HeroField() {
         ctx.fillStyle = near ? "rgba(190,212,255,0.95)" : "rgba(150,178,255,0.5)";
         ctx.fill();
       }
-
-      if (!reduce) raf = requestAnimationFrame(draw);
     };
 
     const onMove = (e: MouseEvent) => {
@@ -119,17 +132,47 @@ export function HeroField() {
       mouse.y = -9999;
     };
 
+    // Pausa cuando la pestaña no está a la vista: seguir animando un canvas que
+    // nadie mira gasta batería y hilo principal a cambio de nada.
+    const onVisibilidad = () => {
+      cancelAnimationFrame(raf);
+      if (!document.hidden && !reduce) {
+        ultimo = 0;
+        draw();
+      }
+    };
+
     resize();
-    draw();
+    // Un cuadro estático de inmediato para que no haya un hueco visual, pero
+    // la animación NO arranca durante la carga: se espera a que el navegador
+    // termine lo importante. Es el trabajo que más bloqueaba el hilo principal
+    // justo cuando se mide la aparición del contenido.
+    ctx.clearRect(0, 0, width, height);
+    let arrancado = false;
+    const arrancar = () => {
+      if (arrancado) return;
+      arrancado = true;
+      draw();
+    };
+    const idle =
+      typeof window.requestIdleCallback === "function"
+        ? window.requestIdleCallback(arrancar, { timeout: 2500 })
+        : undefined;
+    const tmr = idle === undefined ? window.setTimeout(arrancar, 900) : undefined;
+
     window.addEventListener("resize", resize);
-    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mousemove", onMove, { passive: true });
     window.addEventListener("mouseout", onLeave);
+    document.addEventListener("visibilitychange", onVisibilidad);
 
     return () => {
       cancelAnimationFrame(raf);
+      if (idle !== undefined) window.cancelIdleCallback?.(idle);
+      if (tmr !== undefined) clearTimeout(tmr);
       window.removeEventListener("resize", resize);
       window.removeEventListener("mousemove", onMove);
       window.removeEventListener("mouseout", onLeave);
+      document.removeEventListener("visibilitychange", onVisibilidad);
     };
   }, []);
 

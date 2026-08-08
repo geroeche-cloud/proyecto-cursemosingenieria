@@ -510,16 +510,19 @@ body {
    ENTRADA DEL HERO
    Ver Hero.tsx, que gracias a esto volvió a ser Server Component.
    ============================================================ */
+/* SIN opacity a propósito. Este bloque contiene el texto más grande de la
+   portada, o sea el elemento que Google cronometra como LCP. Arrancarlo en
+   opacity 0 significaba decirle al navegador "no lo pintes todavía", y la
+   nota se calculaba sobre el final de la animación en vez del momento en que
+   el contenido ya estaba listo. Solo se desliza: se pinta de inmediato. */
 .hero-texto {
-  animation: hero-texto 0.9s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: hero-texto 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 @keyframes hero-texto {
   from {
-    opacity: 0;
-    transform: translate3d(0, 20px, 0);
+    transform: translate3d(0, 18px, 0);
   }
   to {
-    opacity: 1;
     transform: translate3d(0, 0, 0);
   }
 }
@@ -616,7 +619,10 @@ body {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  animation: intro-salir 0.55s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both;
+  /* 0,75 s en total. Empezó en 2,85 s: era una cortina tapando contenido que
+     ya estaba listo, y Google cronometra justamente eso. Cada décima que la
+     cortina permanece es una décima peor de nota, sin ningún beneficio. */
+  animation: intro-salir 0.45s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
 }
 @keyframes intro-salir {
   from {
@@ -638,7 +644,7 @@ body {
   opacity: 0.7;
 }
 .intro-logo {
-  animation: intro-aparecer 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: intro-aparecer 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 @keyframes intro-aparecer {
   from {
@@ -651,7 +657,7 @@ body {
   }
 }
 .intro-linea {
-  animation: intro-linea 0.4s cubic-bezier(0.16, 1, 0.3, 1) 0.28s both;
+  animation: intro-linea 0.25s cubic-bezier(0.16, 1, 0.3, 1) 0.14s both;
 }
 @keyframes intro-linea {
   from {
@@ -664,7 +670,7 @@ body {
   }
 }
 .intro-sello {
-  animation: intro-sello 0.35s linear 0.42s both;
+  animation: intro-sello 0.2s linear 0.24s both;
 }
 @keyframes intro-sello {
   from {
@@ -689,18 +695,19 @@ body {
    Antes era la librería de animación en el template raíz, o sea
    en TODAS las páginas. Ahora es CSS. Ver template.tsx.
    ============================================================ */
+/* SIN opacity a propósito: este contenedor envuelve TODA la página, así que un
+   desvanecido acá retrasaba el pintado de todo lo de adentro — incluido el
+   elemento que Google cronometra como LCP. Solo se desliza. */
 @keyframes entrada-ruta {
   from {
-    opacity: 0;
     transform: translate3d(0, 8px, 0);
   }
   to {
-    opacity: 1;
     transform: translate3d(0, 0, 0);
   }
 }
 .entrada-ruta {
-  animation: entrada-ruta 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: entrada-ruta 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 /* El panel y la administración no esperan: la página ya está lista. */
 .entrada-ruta:has([data-zona-trabajo]) {
