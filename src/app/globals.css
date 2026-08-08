@@ -913,6 +913,59 @@ input[type="file"] {
    Todo con transform/opacity (trabajo del compositor, no repintado). */
 
 /* Luz que recorre la tarjeta por su cuenta — en táctil es la que le da vida. */
+/* ============================================================
+   FICHA DE PROFESOR
+   Mismo lenguaje que las placas de universidad —luz azul, borde
+   vivo— pero contenido. Son muchas en una lista: si cada una
+   gritara, la sección entera se volvería ruido.
+   ============================================================ */
+.ficha-profe {
+  position: relative;
+  isolation: isolate;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+/* Filamento superior: el mismo detalle de las placas de universidad,
+   más corto y tenue. Da el guiño tecnológico sin robar atención. */
+.ficha-profe::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 1.75rem;
+  width: 3.5rem;
+  height: 1px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(110, 147, 255, 0.85), transparent);
+  opacity: 0.7;
+  transition: opacity 0.3s ease, width 0.4s var(--ease-out-expo);
+  pointer-events: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .ficha-profe:hover {
+    border-color: rgba(110, 147, 255, 0.28);
+    box-shadow: 0 0 40px -18px rgba(59, 107, 255, 0.5);
+  }
+  /* El filamento se estira al pasar por encima. Solo transform-adyacentes
+     (width sobre 1px de alto) y opacity: no cuesta nada. */
+  .ficha-profe:hover::before {
+    width: 7rem;
+    opacity: 1;
+  }
+}
+
+/* Etiqueta de materia: relleno tenue en vez de solo contorno. Un contorno
+   suelto se lee como campo de formulario; el relleno la vuelve una marca. */
+.materia {
+  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .ficha-profe:hover .materia {
+    background: rgba(110, 147, 255, 0.09);
+    border-color: rgba(110, 147, 255, 0.2);
+  }
+}
+
 .uni-ambient {
   animation: uni-float 16s ease-in-out infinite;
   /* Sin will-change: el navegador ya promueve solo lo que está animando un

@@ -262,34 +262,59 @@ export function CampusView({
                   const wa = waLink(p.whatsapp, p.name);
                   return (
                     <Reveal key={p.id}>
-                      <article className="chrome-edge flex flex-col gap-4 rounded-3xl border border-hair-strong p-6 sm:flex-row sm:items-center sm:justify-between" style={{ background: CARD }}>
-                        <div>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="rounded-full border border-blue-500/40 bg-blue-500/10 px-2.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-blue-300">
-                              {MODALITY_LABEL[p.modality] ?? p.modality}
-                            </span>
-                            <StateBadge preview={preview} status={p.status} />
-                          </div>
-                          <h3 className="mt-2 font-display text-xl font-semibold text-ink">{p.name}</h3>
-                          {p.title && <p className="text-sm text-ti-500">{p.title}</p>}
-                          {p.subjects && p.subjects.length > 0 && (
-                            <div className="mt-2 flex flex-wrap gap-1.5">
-                              {p.subjects.map((s, i) => (
-                                <span key={i} className="rounded-full border border-hair px-2.5 py-0.5 text-xs text-ink-soft">
-                                  {s}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                          <div className="mt-3">
+                      {/*
+                        La tarjeta se lee de arriba abajo: quién es, qué enseña,
+                        cómo contactarlo. El contador de clics viaja en la
+                        cabecera, alineado a la derecha: antes ocupaba una fila
+                        entera para sí solo y dejaba un hueco al costado que
+                        hacía ver la tarjeta como una pila de renglones.
+                      */}
+                      <article className="ficha-profe flex flex-col gap-4 rounded-3xl border border-hair-strong p-6" style={{ background: CARD }}>
+                        {/*
+                          Cabecera de ancho completo: modalidad a la izquierda,
+                          clics a la derecha del todo. El contador antes ocupaba
+                          una fila entera para sí solo y dejaba un hueco al
+                          costado; acá aprovecha espacio que ya estaba vacío.
+                        */}
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className="rounded-full border border-blue-500/40 bg-blue-500/10 px-2.5 py-0.5 font-mono text-[0.58rem] uppercase tracking-[0.12em] text-blue-300">
+                            {MODALITY_LABEL[p.modality] ?? p.modality}
+                          </span>
+                          <StateBadge preview={preview} status={p.status} />
+                          <span className="ml-auto">
                             <ClickCount kind="professors" id={p.id} clicks={p.clicks} />
-                          </div>
+                          </span>
                         </div>
-                        {wa && (
-                          <TrackedLink kind="professors" id={p.id} href={wa} track={!preview} className="btn btn-blue shrink-0 self-start text-sm sm:self-auto">
-                            Enviar WhatsApp
-                          </TrackedLink>
-                        )}
+
+                        {/* Quién es y qué enseña · cómo contactarlo */}
+                        <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between sm:gap-8">
+                          <div className="min-w-0 flex-1">
+                            <h3 className="font-display text-xl font-semibold leading-tight text-ink break-anywhere">
+                              {p.name}
+                            </h3>
+                            {p.title && <p className="mt-0.5 text-sm text-ti-500">{p.title}</p>}
+                            {p.subjects && p.subjects.length > 0 && (
+                              <div className="mt-3 flex flex-wrap gap-1.5">
+                                {p.subjects.map((s, i) => (
+                                  // Relleno tenue en vez de solo contorno: un
+                                  // contorno suelto se lee como campo de
+                                  // formulario; el relleno lo vuelve una marca.
+                                  <span key={i} className="materia rounded-full px-2.5 py-1 text-xs text-ink-soft">
+                                    {s}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                          {wa && (
+                            // Ancho completo al apilarse: se ve intencional y da
+                            // un blanco de toque grande en el celular, en vez de
+                            // quedar suelto con vacío al lado.
+                            <TrackedLink kind="professors" id={p.id} href={wa} track={!preview} className="btn btn-blue w-full shrink-0 justify-center text-sm sm:w-auto">
+                              Enviar WhatsApp
+                            </TrackedLink>
+                          )}
+                        </div>
                       </article>
                     </Reveal>
                   );
