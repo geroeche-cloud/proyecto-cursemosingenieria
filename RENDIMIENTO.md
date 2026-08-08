@@ -44,6 +44,46 @@ elemento que esté arriba de todo. Eso le dice al navegador "no lo pintes
 todavía", y Google cronometra justo eso. El hero y la entrada de ruta animan
 **solo transform** por esa razón — están comentadas en `globals.css`.
 
+## 2 bis. `animation-fill-mode: backwards`, nunca `both`
+
+Esta se pagó cara: rompió la barra de navegación **en todo el sitio** y nadie
+lo notó hasta que apareció en producción.
+
+Con `both`, el transform del último fotograma queda aplicado para siempre. Y un
+elemento con transform se convierte en el **marco de referencia** de todo lo
+que tenga `position: fixed` adentro: la barra quedaba anclada al alto de la
+página en vez de a la ventana y se iba con el scroll.
+
+Usá `backwards`: el estado inicial se aplica antes de arrancar (que es lo que
+hace falta para que no haya salto) y al terminar el elemento vuelve a su estado
+normal, sin transform.
+
+`both` solo cuando el estado final DEBE persistir y el elemento no contiene
+nada fijo — hoy son dos casos: la salida del menú y la salida de la intro.
+
+**Cómo detectarlo:** scrolleá y fijate si la barra se queda arriba. O en
+consola: `getComputedStyle(document.querySelector('.entrada-ruta')).transform`
+tiene que decir `none` cuando la animación terminó.
+
+## 2 ter. Nada que se toque puede estar animándose para siempre
+
+Las tarjetas de universidad tenían una rotación infinita en celular. Resultado:
+el blanco del toque se movía bajo el dedo, cada tarjeta era una capa de GPU
+animándose eternamente, y la página nunca terminaba de "asentarse"
+visualmente — se leía como que seguía cargando.
+
+Se detecta solo: si Playwright no puede tocar un elemento y dice
+`element is not stable`, un dedo tampoco va a poder cómodamente.
+
+Regla: la vida visual va en elementos **decorativos** (una luz que deriva
+dentro de la tarjeta), nunca en el contenedor que hay que tocar. Para el
+elemento tocable, respuesta al toque: `:active` con una escala breve.
+
+Lo mismo vale para animar propiedades que no son de compositor:
+`background-position` en un texto con degradado recortado re-rasteriza el texto
+en cada cuadro. Si el efecto vale la pena, hacelo **finito** (dos pasadas y
+para), no infinito.
+
 ## 3. El trabajo que no urge se hace cuando la persona ya está usando el sitio
 
 Que algo sea diferido no alcanza: importa **cuánto**. "Al primer momento libre"
@@ -135,3 +175,19 @@ npx lighthouse@12 https://proyecto-cursemosingenieria.vercel.app/ --only-categor
 Si el puntaje móvil bajó de 90, algo se rompió. Mirá primero **Total Blocking
 Time** (JavaScript de más en el arranque) y **LCP** (algo tapando o retrasando
 el contenido principal).
+
+## Chequeo de estabilidad antes de publicar
+
+El rendimiento no alcanza: dos de los peores problemas que tuvo este proyecto
+no aparecían en Lighthouse. Estos tres se hacen a mano, en un celular o con el
+navegador en modo celular:
+
+1. **Scrolleá.** La barra de navegación tiene que quedarse arriba. Si se va con
+   la página, alguna animación dejó un transform colgado (ver 2 bis).
+2. **Tocá una tarjeta.** Tiene que responder al primer toque. Si hay que
+   apuntar, algo se está moviendo abajo del dedo (ver 2 ter).
+3. **Navegá entre secciones y volvé con el botón "atrás".** El contenido tiene
+   que aparecer completo y quedarse quieto.
+
+Y siempre con la consola abierta: cero errores. Un error de JavaScript en
+producción puede dejar media página sin funcionar sin que se vea nada raro.
