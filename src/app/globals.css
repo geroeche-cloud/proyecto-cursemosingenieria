@@ -14,11 +14,16 @@
   --color-surface: #0e1119;
   --color-raised: #141824;
 
-  /* Ink */
+  /* Ink — cuatro niveles de jerarquía, los cuatro legibles.
+     Los dos más tenues estaban por debajo del mínimo de contraste: el
+     penúltimo daba 3,75 y el último 2,02, cuando hace falta 4,5. En una
+     pantalla buena y a oscuras se leían; en un celular con sol de frente,
+     no. Se levantan lo justo para cruzar el umbral conservando el escalón
+     entre uno y otro: sigue habiendo cuatro niveles, no tres. */
   --color-ink: #f4f6fa;
   --color-ink-soft: #a7aebc;
-  --color-ink-mute: #646b79;
-  --color-ink-faint: #3d4350;
+  --color-ink-mute: #828a99;
+  --color-ink-faint: #6b7280;
 
   /* Titanium / brushed steel */
   --color-ti-50: #f3f6fa;
