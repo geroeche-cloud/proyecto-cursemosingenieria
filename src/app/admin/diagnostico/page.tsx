@@ -1,5 +1,6 @@
 import { correrDiagnostico, type Estado } from "@/lib/diagnostico";
 import { enlaceEditorSQL } from "@/lib/migraciones";
+import { hora as horaAR } from "@/lib/schedule";
 import { supabaseUrl } from "@/lib/supabase/env";
 import { BloqueSQL } from "@/components/admin/BloqueSQL";
 
@@ -33,10 +34,8 @@ export default async function AdminDiagnosticoPage() {
   const avisos = chequeos.filter((c) => c.estado === "aviso").length;
   const todoBien = fallas === 0 && avisos === 0;
 
-  const hora = new Date().toLocaleTimeString("es-AR", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  // Hora de Argentina, no la del servidor (Vercel corre en UTC: 3 horas más).
+  const hora = horaAR();
 
   return (
     <div className="flex flex-col gap-6">

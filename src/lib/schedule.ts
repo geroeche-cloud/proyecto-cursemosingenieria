@@ -7,10 +7,66 @@
  * No hace falta cron: la visibilidad y el estado se calculan por fecha.
  */
 
+/**
+ * Zona horaria del proyecto.
+ *
+ * TODO lo que se muestre con fecha u hora tiene que usarla, sin excepción.
+ *
+ * El motivo no es preferencia: el código corre en los servidores de Vercel, que
+ * están en UTC. Un `toLocaleDateString("es-AR")` sin zona NO usa la hora de
+ * Argentina — usa la del servidor, y solo cambia el idioma. Son tres horas de
+ * diferencia.
+ *
+ * En un informe eso se ve como una hora equivocada. En una fecha es peor y más
+ * difícil de notar: todo lo que pase entre las 21:00 y la medianoche se muestra
+ * con la fecha del DÍA SIGUIENTE. Una noticia publicada un martes a las 22 hs
+ * aparece fechada el miércoles.
+ */
+export const ZONA = "America/Argentina/Buenos_Aires";
+
 /** Fecha de hoy (YYYY-MM-DD) en horario de Argentina. */
 export function todayAR(): string {
-  return new Date().toLocaleDateString("en-CA", {
-    timeZone: "America/Argentina/Buenos_Aires",
+  return new Date().toLocaleDateString("en-CA", { timeZone: ZONA });
+}
+
+/** Fecha larga en hora argentina. Ej: "8 de agosto de 2026". */
+export function fechaLarga(d?: string | number | Date | null): string {
+  const f = d ? new Date(d) : new Date();
+  if (Number.isNaN(f.getTime())) return "";
+  return f.toLocaleDateString("es-AR", {
+    timeZone: ZONA,
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
+/** Fecha corta en hora argentina. Ej: "08 ago 2026". */
+export function fechaCorta(d?: string | number | Date | null): string {
+  const f = d ? new Date(d) : new Date();
+  if (Number.isNaN(f.getTime())) return "";
+  return f.toLocaleDateString("es-AR", {
+    timeZone: ZONA,
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+/**
+ * Hora en horario argentino, en formato de 24 horas. Ej: "22:30".
+ *
+ * `hour12: false` es a propósito: sin eso, el formato "es-AR" devolvía
+ * "10:30 p. m.", que nadie escribe así acá. Acá se dice 22:30.
+ */
+export function hora(d?: string | number | Date | null): string {
+  const f = d ? new Date(d) : new Date();
+  if (Number.isNaN(f.getTime())) return "";
+  return f.toLocaleTimeString("es-AR", {
+    timeZone: ZONA,
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
   });
 }
 

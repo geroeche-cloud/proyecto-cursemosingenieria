@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { logIfError } from "@/lib/log";
+import { fechaCorta } from "@/lib/schedule";
 import { DangerForm } from "../DangerForm";
 import { restoreItem, purgeItem } from "../actions";
 
@@ -16,7 +17,9 @@ type Item = {
 
 function fmt(d: string | null) {
   if (!d) return "";
-  return new Date(d).toLocaleDateString("es-AR", { day: "2-digit", month: "short", year: "numeric" });
+  // Hora de Argentina: sin esto, lo borrado después de las 21 hs aparecía
+  // fechado al día siguiente.
+  return fechaCorta(d);
 }
 
 export default async function AdminPapeleraPage() {

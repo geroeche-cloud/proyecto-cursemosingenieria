@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { fechaLarga } from "@/lib/schedule";
 import {
   BarrasSemanales,
   RedesDesglose,
@@ -32,11 +33,10 @@ export function InformeImpreso({
   stats: Stats;
   extra?: ReactNode;
 }) {
-  const fecha = new Date().toLocaleDateString("es-AR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+  // Hora de Argentina, no la del servidor. Este informe se presenta ante
+  // empresas y universidades: una fecha corrida un día se nota y resta
+  // credibilidad a todo lo demás que dice.
+  const fecha = fechaLarga();
 
   return (
     <div className="report-print mx-auto max-w-3xl bg-white px-8 py-10 text-neutral-900">

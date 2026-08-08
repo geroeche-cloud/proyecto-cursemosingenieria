@@ -1,5 +1,5 @@
 import { createPublicClient } from "@/lib/supabase/public";
-import { isActiveNow } from "@/lib/schedule";
+import { isActiveNow, fechaLarga } from "@/lib/schedule";
 import { unwrapOrThrow } from "@/lib/log";
 
 // ISR: la página se sirve cacheada y se regenera (acá o al publicar una noticia).
@@ -66,13 +66,11 @@ export default async function NovedadesPage() {
                   {n.title}
                 </h2>
                 {n.summary && <p className="mt-2 leading-relaxed text-ink-soft">{n.summary}</p>}
+                {/* Hora de Argentina: una noticia publicada un martes a las
+                    22 hs aparecía fechada el miércoles. */}
                 {n.published_at && (
                   <p className="mt-2 font-mono text-xs text-ink-mute">
-                    {new Date(n.published_at).toLocaleDateString("es-AR", {
-                      day: "2-digit",
-                      month: "long",
-                      year: "numeric",
-                    })}
+                    {fechaLarga(n.published_at)}
                   </p>
                 )}
               </article>
