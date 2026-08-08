@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionUser } from "@/lib/auth";
-import { traducirYReportar } from "@/lib/errores";
+import { traducirYReportar, exigirOk } from "@/lib/errores";
+import { urlSegura } from "@/lib/url";
 
 export type ActionState = { ok: boolean; error?: string; message?: string };
 
@@ -29,7 +30,7 @@ export async function createOpportunity(
     const org = String(formData.get("org") ?? "").trim() || null;
     const description = String(formData.get("description") ?? "").trim() || null;
     const deadline = String(formData.get("deadline") ?? "").trim() || null;
-    const href = String(formData.get("href") ?? "").trim() || null;
+    const href = urlSegura(String(formData.get("href") ?? ""));
     const starts_at = String(formData.get("starts_at") ?? "").trim() || null;
     const ends_at = String(formData.get("ends_at") ?? "").trim() || null;
     const requirements = String(formData.get("requirements") ?? "")
@@ -85,7 +86,7 @@ export async function updateOpportunity(
     const org = String(formData.get("org") ?? "").trim() || null;
     const description = String(formData.get("description") ?? "").trim() || null;
     const deadline = String(formData.get("deadline") ?? "").trim() || null;
-    const href = String(formData.get("href") ?? "").trim() || null;
+    const href = urlSegura(String(formData.get("href") ?? ""));
     const starts_at = String(formData.get("starts_at") ?? "").trim() || null;
     const ends_at = String(formData.get("ends_at") ?? "").trim() || null;
     const requirements = String(formData.get("requirements") ?? "")
@@ -119,18 +120,23 @@ export async function setOpportunityStatus(formData: FormData) {
     if (!id || !["draft", "published", "archived"].includes(status)) return;
 
     const supabase = await createClient();
-    await supabase
-      .from("opportunities")
-      .update({
-        status,
-        published_at: status === "published" ? new Date().toISOString() : null,
-      })
-      .eq("id", id);
+    exigirOk(
+      await supabase
+        .from("opportunities")
+        .update({
+          status,
+          published_at: status === "published" ? new Date().toISOString() : null,
+        })
+        .eq("id", id),
+      "cambiar estado de oportunidad",
+    );
 
     revalidatePath("/panel/oportunidades");
     revalidatePath("/campus/[university]", "page");
-  } catch {
-    // no-op: la UI se mantiene; se puede reintentar.
+  } catch (e) {
+    // Una acción que falla en silencio es peor que una que avisa: la persona
+    // cree que funcionó y se va. Se propaga para que se vea.
+    throw e instanceof Error ? e : new Error("No se pudo completar la acción.");
   }
 }
 
@@ -141,11 +147,11 @@ export async function deleteOpportunity(formData: FormData) {
     if (!id) return;
 
     const supabase = await createClient();
-    await supabase.from("opportunities").delete().eq("id", id);
+    exigirOk(await supabase.from("opportunities").delete().eq("id", id), "borrar");
 
     revalidatePath("/panel/oportunidades");
     revalidatePath("/campus/[university]", "page");
-  } catch {
-    // no-op
+  } catch (e) {
+    throw e instanceof Error ? e : new Error("No se pudo completar la accion.");
   }
 }

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getSessionUser } from "@/lib/auth";
-import { traducirYReportar } from "@/lib/errores";
+import { traducirYReportar, exigirOk } from "@/lib/errores";
 
 export type ActionState = { ok: boolean; error?: string; message?: string };
 
@@ -132,14 +132,14 @@ export async function setUniversityStatus(formData: FormData) {
     if (!id || !["active", "inactive"].includes(status)) return;
 
     const supabase = await createClient();
-    await supabase.from("universities").update({ status }).eq("id", id);
+    exigirOk(await supabase.from("universities").update({ status }).eq("id", id), "activar/desactivar universidad");
 
     revalidatePath("/admin");
     revalidatePath("/campus");
     revalidatePath("/campus/[university]", "page");
     revalidatePath("/");
-  } catch {
-    // no-op
+  } catch (e) {
+    throw e instanceof Error ? e : new Error("No se pudo completar la accion.");
   }
 }
 
@@ -152,11 +152,14 @@ export async function setAmbassadorStatus(formData: FormData) {
     if (!id || !["active", "suspended"].includes(status)) return;
 
     const supabase = await createClient();
-    await supabase.from("profiles").update({ status }).eq("id", id).eq("role", "ambassador");
+    exigirOk(
+      await supabase.from("profiles").update({ status }).eq("id", id).eq("role", "ambassador"),
+      "suspender/reactivar embajador",
+    );
 
     revalidatePath("/admin");
-  } catch {
-    // no-op
+  } catch (e) {
+    throw e instanceof Error ? e : new Error("No se pudo completar la accion.");
   }
 }
 
@@ -419,12 +422,12 @@ export async function unpublishContent(formData: FormData) {
     if (!id || !CONTENT_TABLES.includes(table)) return;
 
     const supabase = await createClient();
-    await supabase.from(table).update({ status: "archived" }).eq("id", id);
+    exigirOk(await supabase.from(table).update({ status: "archived" }).eq("id", id), "despublicar contenido");
 
     revalidatePath("/admin");
     revalidatePath("/campus/[university]", "page");
     if (table === "news") revalidatePath("/novedades");
-  } catch {
-    // no-op
+  } catch (e) {
+    throw e instanceof Error ? e : new Error("No se pudo completar la accion.");
   }
 }

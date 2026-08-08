@@ -1,6 +1,7 @@
 "use client";
 
 import { trackClick, type EventKind } from "./TrackedLink";
+import { hrefSeguro } from "@/lib/url";
 
 export type SocialItem = { label: string; href: string };
 
@@ -30,12 +31,15 @@ export function SocialLinks({
   return (
     <div className="flex flex-wrap gap-2.5">
       {socials.map((s) => {
-        const external = !s.href.startsWith("mailto:");
+        // Las redes las carga el administrador, pero se sanean igual: es la
+        // misma regla para todo enlace que escribe una persona (ver lib/url.ts).
+        const destino = hrefSeguro(s.href);
+        const external = !destino.startsWith("mailto:");
         const kind = KIND_BY_LABEL[s.label];
         return (
           <a
             key={s.label}
-            href={s.href}
+            href={destino}
             target={external ? "_blank" : undefined}
             rel={external ? "noopener noreferrer" : undefined}
             onClick={() => track && kind && trackClick(kind, universityId)}

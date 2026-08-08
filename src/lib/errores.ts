@@ -165,6 +165,29 @@ export function traducirError(
 }
 
 /**
+ * Verifica el resultado de una escritura y LANZA si falló.
+ *
+ * POR QUÉ EXISTE
+ * Varias acciones hacían `await supabase.from(...).update(...)` sin mirar el
+ * resultado, envueltas en un `catch` vacío. Si la política de seguridad
+ * bloqueaba la operación o la base fallaba, no pasaba absolutamente nada: ni
+ * cambio, ni mensaje, ni registro. El embajador tocaba "Publicar", la noticia
+ * seguía en borrador y nadie se enteraba nunca.
+ *
+ * Una acción que falla en silencio es peor que una que falla con un error: la
+ * persona cree que funcionó y se va. Al lanzar, la pantalla de error avisa y el
+ * fallo queda registrado.
+ */
+export function exigirOk(
+  res: { error: { message?: string; code?: string } | null },
+  donde: string,
+): void {
+  if (!res.error) return;
+  const { mensaje } = traducirYReportar(res.error, { admin: true, donde });
+  throw new Error(mensaje);
+}
+
+/**
  * Traduce y, si el problema es de configuración, avisa por Sentry.
  *
  * Solo se reportan los de configuración: son raros, siempre accionables y

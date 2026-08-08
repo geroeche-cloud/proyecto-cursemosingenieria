@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { llamarRpc } from "@/lib/rpc";
 import { getVisitorId } from "@/lib/visitor";
+import { hrefSeguro } from "@/lib/url";
 
 /** Clics de contenido: suman en el contador visible de la publicación. */
 export type ClickKind = "news" | "opportunities" | "professors" | "drives";
@@ -96,7 +97,11 @@ export function TrackedLink({
 }) {
   return (
     <a
-      href={href}
+      // Segunda capa de saneo. Al guardar ya se valida (ver lib/url.ts), pero
+      // acá pasa TODO enlace de contenido del sitio, incluido lo cargado antes
+      // de que existiera esa validación. Un `javascript:` acá ejecutaría código
+      // en el navegador de quien lo toque.
+      href={hrefSeguro(href)}
       target="_blank"
       rel="noopener noreferrer"
       onClick={() => track && trackClick(kind, id)}

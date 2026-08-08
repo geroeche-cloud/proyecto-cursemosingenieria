@@ -3,7 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionUser } from "@/lib/auth";
-import { traducirYReportar } from "@/lib/errores";
+import { traducirYReportar, exigirOk } from "@/lib/errores";
+import { urlSegura } from "@/lib/url";
 
 export type ActionState = { ok: boolean; error?: string; message?: string };
 
@@ -24,7 +25,7 @@ export async function createDrive(
 
     const owner = String(formData.get("owner") ?? "").trim();
     const career = String(formData.get("career") ?? "").trim() || null;
-    const href = String(formData.get("href") ?? "").trim() || null;
+    const href = urlSegura(String(formData.get("href") ?? ""));
 
     if (!owner) return { ok: false, error: "El nombre de quien comparte es obligatorio." };
 
@@ -63,7 +64,7 @@ export async function updateDrive(
 
     const owner = String(formData.get("owner") ?? "").trim();
     const career = String(formData.get("career") ?? "").trim() || null;
-    const href = String(formData.get("href") ?? "").trim() || null;
+    const href = urlSegura(String(formData.get("href") ?? ""));
     if (!owner) return { ok: false, error: "El nombre de quien comparte es obligatorio." };
 
     const supabase = await createClient();
@@ -86,11 +87,11 @@ export async function setDriveStatus(formData: FormData) {
     if (!id || !["draft", "published", "archived"].includes(status)) return;
 
     const supabase = await createClient();
-    await supabase.from("drives").update({ status }).eq("id", id);
+    exigirOk(await supabase.from("drives").update({ status }).eq("id", id), "cambiar estado");
     revalidatePath("/panel/drives");
     revalidatePath("/campus/[university]", "page");
-  } catch {
-    // no-op
+  } catch (e) {
+    throw e instanceof Error ? e : new Error("No se pudo completar la accion.");
   }
 }
 
@@ -101,10 +102,10 @@ export async function deleteDrive(formData: FormData) {
     if (!id) return;
 
     const supabase = await createClient();
-    await supabase.from("drives").delete().eq("id", id);
+    exigirOk(await supabase.from("drives").delete().eq("id", id), "borrar");
     revalidatePath("/panel/drives");
     revalidatePath("/campus/[university]", "page");
-  } catch {
-    // no-op
+  } catch (e) {
+    throw e instanceof Error ? e : new Error("No se pudo completar la accion.");
   }
 }

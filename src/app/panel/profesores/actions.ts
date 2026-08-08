@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionUser } from "@/lib/auth";
-import { traducirYReportar } from "@/lib/errores";
+import { traducirYReportar, exigirOk } from "@/lib/errores";
 
 export type ActionState = { ok: boolean; error?: string; message?: string };
 
@@ -106,11 +106,11 @@ export async function setProfessorStatus(formData: FormData) {
     if (!id || !["draft", "published", "archived"].includes(status)) return;
 
     const supabase = await createClient();
-    await supabase.from("professors").update({ status }).eq("id", id);
+    exigirOk(await supabase.from("professors").update({ status }).eq("id", id), "cambiar estado");
     revalidatePath("/panel/profesores");
     revalidatePath("/campus/[university]", "page");
-  } catch {
-    // no-op
+  } catch (e) {
+    throw e instanceof Error ? e : new Error("No se pudo completar la accion.");
   }
 }
 
@@ -121,10 +121,10 @@ export async function deleteProfessor(formData: FormData) {
     if (!id) return;
 
     const supabase = await createClient();
-    await supabase.from("professors").delete().eq("id", id);
+    exigirOk(await supabase.from("professors").delete().eq("id", id), "borrar");
     revalidatePath("/panel/profesores");
     revalidatePath("/campus/[university]", "page");
-  } catch {
-    // no-op
+  } catch (e) {
+    throw e instanceof Error ? e : new Error("No se pudo completar la accion.");
   }
 }
