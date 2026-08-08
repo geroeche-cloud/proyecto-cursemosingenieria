@@ -26,6 +26,10 @@
 *.tsbuildinfo
 next-env.d.ts
 
+# respaldos: contienen TODOS los datos, incluidos los de contacto.
+# Nunca al repositorio.
+/respaldos
+
 # scratch de diagnóstico: sondas descartables, nunca parte del proyecto
 /.tmp
 /.tmp-shots

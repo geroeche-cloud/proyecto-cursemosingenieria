@@ -76,8 +76,12 @@ async function contenidoInvisible(page: import("@playwright/test").Page) {
   return page.evaluate(() =>
     [...document.querySelectorAll<HTMLElement>("[data-reveal]")].filter((el) => {
       const r = el.getBoundingClientRect();
-      const dentro = r.top < window.innerHeight && r.bottom > 0;
-      return dentro && parseFloat(getComputedStyle(el).opacity) < 0.9;
+      // Se exige un margen de 100 px contra el borde inferior. El observador
+      // revela con un margen de 80: un elemento que apenas asoma abajo todavía
+      // NO tiene que estar visible, y es correcto que no lo esté. Sin este
+      // margen la prueba marcaba como error el funcionamiento normal.
+      const bienDentro = r.top < window.innerHeight - 100 && r.bottom > 0;
+      return bienDentro && parseFloat(getComputedStyle(el).opacity) < 0.9;
     }).length,
   );
 }

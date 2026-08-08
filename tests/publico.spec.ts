@@ -18,6 +18,29 @@ test.beforeEach(async ({ page }) => {
   await sinIntro(page);
 });
 
+/**
+ * Entra a una universidad QUE TENGA contenido publicado.
+ *
+ * Antes las pruebas entraban a la primera de la lista y daban por hecho que
+ * tendría publicaciones. Funcionó mientras hubo una sola universidad; al
+ * sumarse otras vacías —que es el caso normal cuando se incorpora una nueva—
+ * la suite empezó a fallar sin que hubiera nada roto.
+ *
+ * Una universidad sin contenido es un estado LEGÍTIMO, no un error. Se prueba
+ * aparte, en su propia prueba.
+ */
+async function entrarAUniversidadConContenido(page: Page): Promise<boolean> {
+  await page.goto("/campus");
+  const enlaces = await page.locator('a[href^="/campus/"]').evaluateAll((as) =>
+    [...new Set(as.map((a) => (a as HTMLAnchorElement).getAttribute("href")!))],
+  );
+  for (const href of enlaces) {
+    await page.goto(href);
+    if ((await page.locator('[id^="pub-"]').count()) > 0) return true;
+  }
+  return false;
+}
+
 test("la portada carga y muestra la red de embajadores", async ({ page }) => {
   await page.goto("/");
   await expect(page).toHaveTitle(/Cursemos Ingeniería/i);
@@ -39,9 +62,27 @@ test("el campus lista universidades y se puede entrar a una", async ({ page }) =
   await expect(page.getByText("Recursos de estudio")).toBeVisible();
 });
 
-test("una publicación se puede abrir y compartir", async ({ page }) => {
+test("una universidad sin contenido muestra un estado vacío, no una pantalla rota", async ({
+  page,
+}) => {
+  // Es el estado en el que nace toda universidad nueva: tiene que verse bien.
   await page.goto("/campus");
-  await page.locator('a[href^="/campus/"]').first().click();
+  const hrefs = await page.locator('a[href^="/campus/"]').evaluateAll((as) =>
+    [...new Set(as.map((a) => (a as HTMLAnchorElement).getAttribute("href")!))],
+  );
+
+  for (const href of hrefs) {
+    const res = await page.goto(href);
+    expect(res?.status(), `${href} debería responder OK`).toBe(200);
+    // Las secciones existen aunque estén vacías: nada de página en blanco.
+    await expect(page.getByText("Noticias y oportunidades")).toBeVisible();
+    await expect(page.getByText("Recursos de estudio")).toBeVisible();
+  }
+});
+
+test("una publicación se puede abrir y compartir", async ({ page }) => {
+  const hay = await entrarAUniversidadConContenido(page);
+  test.skip(!hay, "Todavía no hay ninguna universidad con contenido publicado.");
 
   const publicacion = page.locator('[id^="pub-"]').first();
   await expect(publicacion).toBeVisible();

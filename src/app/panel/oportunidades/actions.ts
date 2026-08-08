@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSessionUser } from "@/lib/auth";
 import { traducirYReportar, exigirOk } from "@/lib/errores";
 import { urlSegura } from "@/lib/url";
+import { texto, fecha, rangoDeFechas, lista, LIMITES } from "@/lib/validar";
 
 export type ActionState = { ok: boolean; error?: string; message?: string };
 
@@ -26,19 +27,16 @@ export async function createOpportunity(
     await assertAmbassador();
 
     const kind = String(formData.get("kind") ?? "beca");
-    const title = String(formData.get("title") ?? "").trim();
-    const org = String(formData.get("org") ?? "").trim() || null;
-    const description = String(formData.get("description") ?? "").trim() || null;
-    const deadline = String(formData.get("deadline") ?? "").trim() || null;
+    const title = texto(formData.get("title"), "El titulo", LIMITES.titulo, true)!;
+    const org = texto(formData.get("org"), "La organizacion", LIMITES.organizacion);
+    const description = texto(formData.get("description"), "La descripcion", LIMITES.descripcion);
+    const deadline = fecha(formData.get("deadline"), "La fecha limite");
     const href = urlSegura(String(formData.get("href") ?? ""));
-    const starts_at = String(formData.get("starts_at") ?? "").trim() || null;
-    const ends_at = String(formData.get("ends_at") ?? "").trim() || null;
-    const requirements = String(formData.get("requirements") ?? "")
-      .split("\n")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const starts_at = fecha(formData.get("starts_at"), "La fecha de inicio");
+    const ends_at = fecha(formData.get("ends_at"), "La fecha de fin");
+    rangoDeFechas(starts_at, ends_at);
+    const requirements = lista(formData.get("requirements"), "Los requisitos", LIMITES.requisitos);
 
-    if (!title) return { ok: false, error: "El título es obligatorio." };
     if (!KINDS.includes(kind)) return { ok: false, error: "Tipo inválido." };
 
     const publish = String(formData.get("intent") ?? "") === "publish";
@@ -82,19 +80,16 @@ export async function updateOpportunity(
     if (!id) return { ok: false, error: "Falta el identificador." };
 
     const kind = String(formData.get("kind") ?? "beca");
-    const title = String(formData.get("title") ?? "").trim();
-    const org = String(formData.get("org") ?? "").trim() || null;
-    const description = String(formData.get("description") ?? "").trim() || null;
-    const deadline = String(formData.get("deadline") ?? "").trim() || null;
+    const title = texto(formData.get("title"), "El titulo", LIMITES.titulo, true)!;
+    const org = texto(formData.get("org"), "La organizacion", LIMITES.organizacion);
+    const description = texto(formData.get("description"), "La descripcion", LIMITES.descripcion);
+    const deadline = fecha(formData.get("deadline"), "La fecha limite");
     const href = urlSegura(String(formData.get("href") ?? ""));
-    const starts_at = String(formData.get("starts_at") ?? "").trim() || null;
-    const ends_at = String(formData.get("ends_at") ?? "").trim() || null;
-    const requirements = String(formData.get("requirements") ?? "")
-      .split("\n")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    const starts_at = fecha(formData.get("starts_at"), "La fecha de inicio");
+    const ends_at = fecha(formData.get("ends_at"), "La fecha de fin");
+    rangoDeFechas(starts_at, ends_at);
+    const requirements = lista(formData.get("requirements"), "Los requisitos", LIMITES.requisitos);
 
-    if (!title) return { ok: false, error: "El título es obligatorio." };
     if (!KINDS.includes(kind)) return { ok: false, error: "Tipo inválido." };
 
     const supabase = await createClient();

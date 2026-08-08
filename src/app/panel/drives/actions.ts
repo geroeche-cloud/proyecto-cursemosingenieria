@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSessionUser } from "@/lib/auth";
 import { traducirYReportar, exigirOk } from "@/lib/errores";
 import { urlSegura } from "@/lib/url";
+import { texto, LIMITES } from "@/lib/validar";
 
 export type ActionState = { ok: boolean; error?: string; message?: string };
 
@@ -23,11 +24,10 @@ export async function createDrive(
   try {
     await assertAmbassador();
 
-    const owner = String(formData.get("owner") ?? "").trim();
-    const career = String(formData.get("career") ?? "").trim() || null;
+    const owner = texto(formData.get("owner"), "El nombre de quien comparte", LIMITES.nombre, true)!;
+    const career = texto(formData.get("career"), "La carrera", LIMITES.carrera);
     const href = urlSegura(String(formData.get("href") ?? ""));
 
-    if (!owner) return { ok: false, error: "El nombre de quien comparte es obligatorio." };
 
     const publish = String(formData.get("intent") ?? "") === "publish";
 
@@ -62,10 +62,9 @@ export async function updateDrive(
     const id = String(formData.get("id") ?? "");
     if (!id) return { ok: false, error: "Falta el identificador." };
 
-    const owner = String(formData.get("owner") ?? "").trim();
-    const career = String(formData.get("career") ?? "").trim() || null;
+    const owner = texto(formData.get("owner"), "El nombre de quien comparte", LIMITES.nombre, true)!;
+    const career = texto(formData.get("career"), "La carrera", LIMITES.carrera);
     const href = urlSegura(String(formData.get("href") ?? ""));
-    if (!owner) return { ok: false, error: "El nombre de quien comparte es obligatorio." };
 
     const supabase = await createClient();
     const { error } = await supabase.from("drives").update({ owner, career, href }).eq("id", id);

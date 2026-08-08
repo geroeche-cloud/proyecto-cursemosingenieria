@@ -99,13 +99,13 @@ export default async function CampusPage() {
                 la misma retícula, para que nunca quede una tarjeta estirada. */}
             <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
               {universities.map((u, i) => (
-                <Reveal key={u.id} delay={0.05 * i}>
+                <Reveal key={u.id} delay={0.05 * i} className="min-w-0">
                   <UniversityCard u={u} accent={accentOf(u.slug)} index={i} />
                 </Reveal>
               ))}
 
               {Array.from({ length: Math.max(0, 3 - universities.length) }).map((_, i) => (
-                <Reveal key={`slot-${i}`} delay={0.05 * (universities.length + i)}>
+                <Reveal key={`slot-${i}`} delay={0.05 * (universities.length + i)} className="min-w-0">
                   <div
                     className="flex h-full min-h-[16rem] flex-col items-center justify-center gap-3 rounded-3xl p-8 text-center"
                     style={{

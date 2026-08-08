@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionUser } from "@/lib/auth";
 import { traducirYReportar, exigirOk } from "@/lib/errores";
+import { texto, lista, LIMITES } from "@/lib/validar";
 
 export type ActionState = { ok: boolean; error?: string; message?: string };
 
@@ -24,16 +25,18 @@ export async function createProfessor(
   try {
     await assertAmbassador();
 
-    const name = String(formData.get("name") ?? "").trim();
-    const title = String(formData.get("title") ?? "").trim() || null;
+    const name = texto(formData.get("name"), "El nombre", LIMITES.nombre, true)!;
+    const title = texto(formData.get("title"), "El cargo", LIMITES.cargo);
     const modality = String(formData.get("modality") ?? "ambas");
-    const whatsapp = String(formData.get("whatsapp") ?? "").trim() || null;
-    const subjects = formData
-      .getAll("subjects")
-      .map((s) => String(s).trim())
-      .filter(Boolean);
+    const whatsapp = texto(formData.get("whatsapp"), "El WhatsApp", LIMITES.whatsapp);
+    // Las materias llegan como varios campos con el mismo nombre. Se unen con
+    // saltos de linea para validarlas con la misma regla que cualquier lista.
+    const subjects = lista(
+      formData.getAll("subjects").map((s) => String(s)).join("`n"),
+      "Las materias",
+      LIMITES.materias,
+    );
 
-    if (!name) return { ok: false, error: "El nombre es obligatorio." };
     if (!MODALITIES.includes(modality)) return { ok: false, error: "Modalidad inválida." };
 
     const publish = String(formData.get("intent") ?? "") === "publish";
@@ -71,16 +74,18 @@ export async function updateProfessor(
     const id = String(formData.get("id") ?? "");
     if (!id) return { ok: false, error: "Falta el identificador." };
 
-    const name = String(formData.get("name") ?? "").trim();
-    const title = String(formData.get("title") ?? "").trim() || null;
+    const name = texto(formData.get("name"), "El nombre", LIMITES.nombre, true)!;
+    const title = texto(formData.get("title"), "El cargo", LIMITES.cargo);
     const modality = String(formData.get("modality") ?? "ambas");
-    const whatsapp = String(formData.get("whatsapp") ?? "").trim() || null;
-    const subjects = formData
-      .getAll("subjects")
-      .map((s) => String(s).trim())
-      .filter(Boolean);
+    const whatsapp = texto(formData.get("whatsapp"), "El WhatsApp", LIMITES.whatsapp);
+    // Las materias llegan como varios campos con el mismo nombre. Se unen con
+    // saltos de linea para validarlas con la misma regla que cualquier lista.
+    const subjects = lista(
+      formData.getAll("subjects").map((s) => String(s)).join("`n"),
+      "Las materias",
+      LIMITES.materias,
+    );
 
-    if (!name) return { ok: false, error: "El nombre es obligatorio." };
     if (!MODALITIES.includes(modality)) return { ok: false, error: "Modalidad inválida." };
 
     const supabase = await createClient();

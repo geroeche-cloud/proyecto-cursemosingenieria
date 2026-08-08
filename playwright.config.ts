@@ -1,4 +1,20 @@
 import { defineConfig, devices } from "@playwright/test";
+import { readFileSync, existsSync } from "node:fs";
+
+/**
+ * Carga .env.local en el proceso de pruebas.
+ *
+ * Next lo lee solo para la aplicación, no para quien la prueba. Sin esto, las
+ * pruebas de aislamiento —las que le preguntan a la base qué puede ver alguien
+ * sin sesión— se salteaban en silencio. Una prueba de seguridad que no corre es
+ * peor que no tenerla: da la sensación de estar cubierto.
+ */
+if (existsSync(".env.local")) {
+  for (const linea of readFileSync(".env.local", "utf8").split("\n")) {
+    const m = linea.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/);
+    if (m && !process.env[m[1]]) process.env[m[1]] = m[2].replace(/^["']|["']$/g, "");
+  }
+}
 
 /**
  * Pruebas automáticas de los flujos críticos.

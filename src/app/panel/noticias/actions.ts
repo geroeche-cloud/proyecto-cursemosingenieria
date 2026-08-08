@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getSessionUser } from "@/lib/auth";
 import { traducirYReportar } from "@/lib/errores";
+import { texto, fecha, rangoDeFechas, LIMITES } from "@/lib/validar";
 
 export type ActionState = { ok: boolean; error?: string; message?: string };
 
@@ -31,13 +32,13 @@ export async function createNews(
   try {
     await assertAmbassador();
 
-    const title = String(formData.get("title") ?? "").trim();
-    const summary = String(formData.get("summary") ?? "").trim() || null;
-    const body = String(formData.get("body") ?? "").trim() || null;
-    const starts_at = String(formData.get("starts_at") ?? "").trim() || null;
-    const ends_at = String(formData.get("ends_at") ?? "").trim() || null;
+    const title = texto(formData.get("title"), "El titulo", LIMITES.titulo, true)!;
+    const summary = texto(formData.get("summary"), "El resumen", LIMITES.resumen);
+    const body = texto(formData.get("body"), "El cuerpo", LIMITES.cuerpo);
+    const starts_at = fecha(formData.get("starts_at"), "La fecha de inicio");
+    const ends_at = fecha(formData.get("ends_at"), "La fecha de fin");
+    rangoDeFechas(starts_at, ends_at);
     const publish = String(formData.get("intent") ?? "") === "publish";
-    if (!title) return { ok: false, error: "El título es obligatorio." };
 
     const supabase = await createClient();
     const slug = `${slugify(title)}-${Math.random().toString(36).slice(2, 7)}`;
@@ -77,12 +78,12 @@ export async function updateNews(
     const id = String(formData.get("id") ?? "");
     if (!id) return { ok: false, error: "Falta el identificador." };
 
-    const title = String(formData.get("title") ?? "").trim();
-    const summary = String(formData.get("summary") ?? "").trim() || null;
-    const body = String(formData.get("body") ?? "").trim() || null;
-    const starts_at = String(formData.get("starts_at") ?? "").trim() || null;
-    const ends_at = String(formData.get("ends_at") ?? "").trim() || null;
-    if (!title) return { ok: false, error: "El título es obligatorio." };
+    const title = texto(formData.get("title"), "El titulo", LIMITES.titulo, true)!;
+    const summary = texto(formData.get("summary"), "El resumen", LIMITES.resumen);
+    const body = texto(formData.get("body"), "El cuerpo", LIMITES.cuerpo);
+    const starts_at = fecha(formData.get("starts_at"), "La fecha de inicio");
+    const ends_at = fecha(formData.get("ends_at"), "La fecha de fin");
+    rangoDeFechas(starts_at, ends_at);
 
     const supabase = await createClient();
     const { error } = await supabase
