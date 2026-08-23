@@ -28,13 +28,31 @@
 -- exigían que fuera la universidad de quien lo pide. Esto es sobre LEER.
 -- ============================================================================
 
-do $$
+-- ---------------------------------------------------------------------------
+-- Antes de nada: comprobar que estamos en la base correcta.
+--
+-- Sin esto, correrlo en otro proyecto devuelve
+--     ERROR: relation "public.news" does not exist
+-- que no explica nada. Y es fácil equivocarse: el panel de Supabase recuerda el
+-- último proyecto abierto, así que si tenés más de uno el editor SQL puede
+-- quedar apuntando al que no es.
+-- ---------------------------------------------------------------------------
+do $guarda$
+begin
+  if to_regclass('public.news') is null then
+    raise exception
+      'Esta base no tiene las tablas de Cursemos Ingenieria. Estas en el proyecto equivocado: fijate el selector de arriba en el panel de Supabase y elegi el proyecto del sitio.';
+  end if;
+end
+$guarda$;
+
+do $migracion$
 declare t text;
 begin
   foreach t in array array['news', 'opportunities', 'professors', 'drives']
   loop
     execute format('drop policy if exists %1$s_read on public.%1$s', t);
-    execute format($f$
+    execute format($politica$
       create policy %1$s_read on public.%1$s
         for select using (
           -- Visitante sin sesión: ve lo publicado. Es el sitio público.
@@ -45,8 +63,9 @@ begin
           or (public.app_role() = 'ambassador'
               and university_id = public.app_university_id())
         )
-    $f$, t);
+    $politica$, t);
   end loop;
-end $$;
+end
+$migracion$;
 
 notify pgrst, 'reload schema';
