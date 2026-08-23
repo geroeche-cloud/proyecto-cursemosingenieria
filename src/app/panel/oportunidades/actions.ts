@@ -30,7 +30,7 @@ export async function createOpportunity(
     const title = texto(formData.get("title"), "El titulo", LIMITES.titulo, true)!;
     const org = texto(formData.get("org"), "La organizacion", LIMITES.organizacion);
     const description = texto(formData.get("description"), "La descripcion", LIMITES.descripcion);
-    const deadline = fecha(formData.get("deadline"), "La fecha limite");
+    const deadline = texto(formData.get("deadline"), "La fecha limite", LIMITES.fechaLimite);
     const href = urlSegura(String(formData.get("href") ?? ""));
     const starts_at = fecha(formData.get("starts_at"), "La fecha de inicio");
     const ends_at = fecha(formData.get("ends_at"), "La fecha de fin");
@@ -83,7 +83,7 @@ export async function updateOpportunity(
     const title = texto(formData.get("title"), "El titulo", LIMITES.titulo, true)!;
     const org = texto(formData.get("org"), "La organizacion", LIMITES.organizacion);
     const description = texto(formData.get("description"), "La descripcion", LIMITES.descripcion);
-    const deadline = fecha(formData.get("deadline"), "La fecha limite");
+    const deadline = texto(formData.get("deadline"), "La fecha limite", LIMITES.fechaLimite);
     const href = urlSegura(String(formData.get("href") ?? ""));
     const starts_at = fecha(formData.get("starts_at"), "La fecha de inicio");
     const ends_at = fecha(formData.get("ends_at"), "La fecha de fin");

@@ -33,6 +33,9 @@ export const LIMITES = {
   resumen: 300,
   cuerpo: 8000,
   organizacion: 120,
+  /** "Fecha límite" es TEXTO LIBRE: "Inscripción hasta el 30/09", "Hasta
+      agotar cupos". No es una fecha y no debe validarse como tal. */
+  fechaLimite: 120,
   descripcion: 4000,
   nombre: 120,
   cargo: 120,

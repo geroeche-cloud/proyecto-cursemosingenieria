@@ -41,7 +41,20 @@ async function ingresar(page: Page) {
   await page.locator('input[type="email"]').fill(EMAIL!);
   await page.locator('input[type="password"]').fill(PASSWORD!);
   await page.getByRole("button", { name: /Ingresar/i }).click();
-  await page.waitForURL(/\/(panel|admin)/);
+
+  // Si la cuenta está suspendida o en la papelera, el inicio de sesión FUNCIONA
+  // —la contraseña sigue siendo válida— pero el panel la rechaza y la devuelve
+  // al login. Sin esta comprobación, la prueba se quedaba 45 segundos buscando
+  // un campo que nunca iba a aparecer, y fallaba con un "tiempo agotado" que no
+  // explica nada. Conviene decir exactamente qué pasó.
+  await page.waitForURL(/\/(panel|admin|login)/, { timeout: 20_000 });
+  if (/\/login/.test(page.url())) {
+    throw new Error(
+      `La cuenta de prueba (${EMAIL}) no puede entrar al panel. Suele ser porque ` +
+        "está suspendida o en la papelera: reactivala desde Administración, o " +
+        "creá otra y actualizá .env.test.",
+    );
+  }
 }
 
 test("un embajador puede crear una noticia y luego borrarla", async ({ page }) => {
