@@ -1,4 +1,5 @@
 import { Logo } from "@/components/ui/Logo";
+import Link from "next/link";
 import { NAV, ORG, SOCIALS, PILLARS } from "@/lib/org";
 
 export function Footer() {
@@ -57,7 +58,15 @@ export function Footer() {
 
         <div className="flex flex-col items-center justify-between gap-3 font-mono text-xs text-ink-mute sm:flex-row">
           <p>© {year} {ORG.name}. Est. {ORG.established}.</p>
-          <p>Construido y documentado en público.</p>
+          <div className="flex items-center gap-4">
+            {/* La política tiene que estar a un clic desde cualquier página:
+                si hay que buscarla, es como no tenerla. */}
+            <Link href="/privacidad" className="transition-colors hover:text-ink">
+              Privacidad
+            </Link>
+            <span aria-hidden>·</span>
+            <p>Construido y documentado en público.</p>
+          </div>
         </div>
       </div>
     </footer>

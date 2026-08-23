@@ -1,3 +1,5 @@
+import { Nav } from "@/components/layout/Nav";
+import { Footer } from "@/components/layout/Footer";
 import { createPublicClient } from "@/lib/supabase/public";
 import { isActiveNow, fechaLarga } from "@/lib/schedule";
 import { unwrapOrThrow } from "@/lib/log";
@@ -40,7 +42,9 @@ export default async function NovedadesPage() {
   const news = ((data ?? []) as Row[]).filter((n) => isActiveNow(n.starts_at, n.ends_at));
 
   return (
-    <main className="mx-auto max-w-2xl px-6 py-20 text-ink">
+    <>
+      <Nav />
+      <main className="mx-auto max-w-2xl px-6 pt-32 pb-24 text-ink sm:pt-40">
       <p className="font-mono text-xs uppercase tracking-[0.2em] text-blue-300">Novedades</p>
       <h1 className="mt-2 font-display text-4xl font-bold tracking-tight">
         Noticias de la red
@@ -78,6 +82,8 @@ export default async function NovedadesPage() {
           })
         )}
       </div>
-    </main>
+      </main>
+      <Footer />
+    </>
   );
 }
