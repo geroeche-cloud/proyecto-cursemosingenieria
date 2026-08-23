@@ -42,17 +42,32 @@ async function ingresar(page: Page) {
   await page.locator('input[type="password"]').fill(PASSWORD!);
   await page.getByRole("button", { name: /Ingresar/i }).click();
 
-  // Si la cuenta está suspendida o en la papelera, el inicio de sesión FUNCIONA
-  // —la contraseña sigue siendo válida— pero el panel la rechaza y la devuelve
-  // al login. Sin esta comprobación, la prueba se quedaba 45 segundos buscando
-  // un campo que nunca iba a aparecer, y fallaba con un "tiempo agotado" que no
-  // explica nada. Conviene decir exactamente qué pasó.
-  await page.waitForURL(/\/(panel|admin|login)/, { timeout: 20_000 });
-  if (/\/login/.test(page.url())) {
+  // Se espera a SALIR del login. Ojo con la trampa: en este momento la URL ya
+  // es /login, asi que esperar "panel|admin|login" se resuelve al instante con
+  // la URL actual y da por fallado un inicio de sesion que iba a funcionar.
+  // Hay que esperar el destino, y recien si no llega, mirar que paso.
+  const entro = await page
+    .waitForURL(
+      (url) => url.pathname.startsWith("/panel") || url.pathname.startsWith("/admin"),
+      { timeout: 25_000 },
+    )
+    .then(() => true)
+    .catch(() => false);
+
+  if (!entro) {
+    // La pantalla de login ahora explica por que rechaza; se repite ese texto
+    // en el error de la prueba, que es lo unico que se ve al revisarla.
+    const motivo = await page
+      .locator("p.text-red-400")
+      .first()
+      .textContent()
+      .catch(() => null);
     throw new Error(
-      `La cuenta de prueba (${EMAIL}) no puede entrar al panel. Suele ser porque ` +
-        "está suspendida o en la papelera: reactivala desde Administración, o " +
-        "creá otra y actualizá .env.test.",
+      `La cuenta de prueba (${EMAIL}) no pudo entrar al panel. ` +
+        (motivo?.trim()
+          ? `La pantalla dice: "${motivo.trim()}"`
+          : "La pantalla no mostro ningun motivo.") +
+        " Revisala en Administracion, o usa otra y actualiza .env.test.",
     );
   }
 }
