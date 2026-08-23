@@ -33,17 +33,45 @@ function LoginForm() {
       return;
     }
 
-    // Redirigir según el rol (o a la página que se pedía antes de loguearse).
+    // La contraseña era correcta, pero eso NO alcanza para entrar: la cuenta
+    // puede estar suspendida, dada de baja o sin universidad asignada.
+    //
+    // Se comprueba ACÁ, antes de redirigir. Antes no se comprobaba, así que la
+    // persona llegaba al panel, el panel la rechazaba y la devolvía al login
+    // sin ningún mensaje: clave correcta, "Ingresando…", y de vuelta a la misma
+    // pantalla. Parecía que el login estaba roto, y no había forma de saber por
+    // qué. Un rechazo que no se explica es indistinguible de una falla.
     let dest = "/panel";
     const {
       data: { user },
     } = await supabase.auth.getUser();
+
     if (user) {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role, status, university_id, deleted_at")
         .eq("id", user.id)
         .single();
+
+      const motivo = !profile
+        ? "Tu cuenta todavía no está configurada. Escribinos y la dejamos lista."
+        : profile.deleted_at
+          ? "Tu cuenta fue dada de baja. Si creés que es un error, escribinos."
+          : profile.status !== "active"
+            ? "Tu cuenta está suspendida y no puede entrar al panel. Escribile al equipo de Cursemos para reactivarla."
+            : profile.role === "ambassador" && !profile.university_id
+              ? "Tu cuenta todavía no tiene una universidad asignada. Escribinos y lo resolvemos."
+              : null;
+
+      if (motivo) {
+        // Se cierra la sesión: sin esto queda abierta una sesión que no sirve
+        // para nada y que rebotaría en cada intento.
+        await supabase.auth.signOut();
+        setError(motivo);
+        setLoading(false);
+        return;
+      }
+
       if (profile?.role === "admin") dest = "/admin";
     }
 
