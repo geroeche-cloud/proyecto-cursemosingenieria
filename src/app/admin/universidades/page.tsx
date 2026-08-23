@@ -11,7 +11,14 @@ export default async function AdminUniversidadesPage() {
   // (admin_overview). Antes esta pantalla se traía el university_id de TODAS
   // las publicaciones del país para contarlas acá, una por una.
   const [uniRes, ambRes, resumen] = await Promise.all([
-    supabase.from("universities").select("id, name, short_name, city, status").is("deleted_at", null).order("name"),
+    // Mismo orden que el campus público: así esta lista se lee como la grilla
+    // que ve un visitante, y "está primera acá" significa "está primera allá".
+    supabase
+      .from("universities")
+      .select("id, name, short_name, city, status, orden")
+      .is("deleted_at", null)
+      .order("orden", { ascending: true })
+      .order("created_at", { ascending: true }),
     supabase.from("profiles").select("full_name, email, university_id").eq("role", "ambassador").is("deleted_at", null),
     getAdminResumen(),
   ]);
@@ -26,7 +33,14 @@ export default async function AdminUniversidadesPage() {
   const conteo = new Map(resumen.por_universidad.map((u) => [u.id, u.publicaciones]));
 
   const universities: UniRow[] = (
-    (uniRes.data ?? []) as { id: string; name: string; short_name: string | null; city: string | null; status: string }[]
+    (uniRes.data ?? []) as {
+      id: string;
+      name: string;
+      short_name: string | null;
+      city: string | null;
+      status: string;
+      orden: number | null;
+    }[]
   ).map((u) => ({
     ...u,
     embajador: ambPorUni.get(u.id) ?? null,
@@ -38,7 +52,9 @@ export default async function AdminUniversidadesPage() {
       <section>
         <h2 className="font-display text-xl font-semibold">Universidades</h2>
         <p className="mt-1 text-sm text-ink-soft">
-          Cada universidad activa aparece en el campus público y puede tener un embajador.
+          Cada universidad activa aparece en el campus público y puede tener un embajador. Se
+          muestran en este mismo orden: primero las destacadas, después las demás según cuándo se
+          sumaron.
         </p>
         <div className="mt-4">
           <UniversitiesList universities={universities} />

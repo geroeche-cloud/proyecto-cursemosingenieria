@@ -46,32 +46,49 @@ async function loadAmbassadors(): Promise<AmbassadorCardData[]> {
   try {
     const supabase = createPublicClient();
 
-    // Se piden algunos de más porque después se descartan los perfiles sin
-    // datos y los de universidades inactivas: sin ese margen, la vitrina
-    // mostraría menos de seis por un perfil incompleto.
+    // SE EMPIEZA POR LAS UNIVERSIDADES, no por los perfiles. Es al revés de lo
+    // que parece natural, y el motivo importa:
+    //
+    // Antes se pedían 24 perfiles y recién después se miraba de qué universidad
+    // eran. Con dos o tres universidades no se nota, pero con quinientos
+    // embajadores esos 24 son arbitrarios: la universidad que debía encabezar
+    // podía no estar entre ellos, y la vitrina la dejaba afuera.
+    //
+    // Pidiendo primero las universidades EN SU ORDEN, lo que aparece en la
+    // portada es siempre lo que corresponde, sin importar cuánto crezca.
+    const uniRes = await supabase
+      .from("universities")
+      .select("id, name")
+      .eq("status", "active")
+      // Mismo criterio que /campus: orden elegido, y a igualdad la más antigua
+      // primero. `created_at` es inmutable, así que editar un perfil no
+      // reordena la portada.
+      .order("orden", { ascending: true })
+      .order("created_at", { ascending: true })
+      .limit(EN_PORTADA * 4);
+    logIfError("home universities", uniRes.error);
+
+    const universidades = (uniRes.data ?? []) as { id: string; name: string }[];
+    if (universidades.length === 0) return [];
+
+    // El orden en que vinieron ES el orden de la vitrina.
+    const posicion = new Map(universidades.map((u, i) => [u.id, i]));
+    const uniName = new Map(universidades.map((u) => [u.id, u.name]));
+
     const profRes = await supabase
       .from("ambassador_profiles")
       .select(
         "university_id, display_name, presentation, bio, bio_full, photo_url, email, instagram, tiktok, youtube, linkedin, trajectory",
       )
-      .limit(EN_PORTADA * 4);
+      .in("university_id", universidades.map((u) => u.id));
     logIfError("home ambassador_profiles", profRes.error);
 
     const perfiles = (profRes.data ?? []) as ProfileRow[];
     if (perfiles.length === 0) return [];
 
-    // Solo las universidades de esos perfiles, no todas las del país: la
-    // consulta se mantiene chica sin importar cuántas haya en la plataforma.
-    const uniRes = await supabase
-      .from("universities")
-      .select("id, name")
-      .eq("status", "active")
-      .in("id", [...new Set(perfiles.map((p) => p.university_id))]);
-    logIfError("home universities", uniRes.error);
-
-    const uniName = new Map((uniRes.data ?? []).map((u) => [u.id as string, u.name as string]));
     return perfiles
       .filter((p) => uniName.has(p.university_id) && (p.display_name || p.bio || p.photo_url))
+      .sort((a, b) => (posicion.get(a.university_id) ?? 999) - (posicion.get(b.university_id) ?? 999))
       .slice(0, EN_PORTADA)
       .map((p) => ({
         universityId: p.university_id,

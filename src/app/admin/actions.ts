@@ -145,6 +145,43 @@ export async function setUniversityStatus(formData: FormData) {
   }
 }
 
+/**
+ * Poner una universidad al frente del campus, o devolverla al montón.
+ *
+ * El orden público es (orden, created_at): manda este número y, a igualdad, la
+ * que se sumó antes. Así la fundadora encabeza siempre y las demás quedan por
+ * antigüedad, sin que ninguna esté escrita en el código.
+ *
+ * Son dos valores y no una casilla libre a propósito: DESTACADA (0) y el valor
+ * por defecto (100). Un campo numérico abierto invita a inventar escalas —"le
+ * pongo 37"— que después nadie recuerda ni entiende.
+ */
+const DESTACADA = 0;
+const AL_MONTON = 100;
+
+export async function setUniversityOrden(formData: FormData) {
+  try {
+    await assertAdmin();
+    const id = String(formData.get("id") ?? "");
+    const orden = Number(formData.get("orden"));
+    // Se valida contra los dos valores permitidos, no contra "es un número":
+    // el formulario es solo la puerta de entrada más cómoda, no la garantía.
+    if (!id || ![DESTACADA, AL_MONTON].includes(orden)) return;
+
+    const supabase = await createClient();
+    exigirOk(
+      await supabase.from("universities").update({ orden }).eq("id", id),
+      "cambiar el orden de la universidad",
+    );
+
+    revalidatePath("/admin");
+    revalidatePath("/campus");
+    revalidatePath("/");
+  } catch (e) {
+    throw e instanceof Error ? e : new Error("No se pudo completar la accion.");
+  }
+}
+
 /** Suspender / reactivar un embajador (un suspendido no puede entrar al panel). */
 export async function setAmbassadorStatus(formData: FormData) {
   try {

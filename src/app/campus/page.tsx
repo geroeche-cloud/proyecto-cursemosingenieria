@@ -52,7 +52,12 @@ export default async function CampusPage() {
       .from("universities")
       .select("id, name, short_name, city, slug")
       .eq("status", "active")
-      .order("name"),
+      // Primero el orden elegido desde el panel; a igualdad, por antigüedad:
+      // la que se sumó antes va antes. `created_at` no cambia nunca —ni al
+      // editar la universidad ni al editar el perfil del embajador—, así que
+      // la grilla queda quieta. Ninguna universidad está escrita en el código.
+      .order("orden", { ascending: true })
+      .order("created_at", { ascending: true }),
     [] as University[],
   ) as University[];
 

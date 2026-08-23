@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { DangerForm } from "../DangerForm";
-import { setUniversityStatus, deleteUniversity } from "../actions";
+import { setUniversityStatus, setUniversityOrden, deleteUniversity } from "../actions";
 
 export type UniRow = {
   id: string;
@@ -10,6 +10,8 @@ export type UniRow = {
   short_name: string | null;
   city: string | null;
   status: string;
+  /** Menor va primero en el campus. 0 = destacada; 100 = el montón. */
+  orden: number | null;
   embajador: string | null;
   publicaciones: number;
 };
@@ -50,6 +52,7 @@ export function UniversitiesList({ universities }: { universities: UniRow[] }) {
           <ul className="divide-y divide-hair">
             {visibles.map((u) => {
               const activa = u.status === "active";
+              const destacada = (u.orden ?? 100) === 0;
               return (
                 <li
                   key={u.id}
@@ -57,6 +60,14 @@ export function UniversitiesList({ universities }: { universities: UniRow[] }) {
                 >
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-ink break-anywhere">
+                      {destacada && (
+                        <span
+                          title="Aparece primera en el campus"
+                          className="mr-1.5 align-middle text-blue-300"
+                        >
+                          ★
+                        </span>
+                      )}
                       {u.name}
                       {u.short_name ? <span className="text-ink-mute"> · {u.short_name}</span> : null}
                     </p>
@@ -77,6 +88,21 @@ export function UniversitiesList({ universities }: { universities: UniRow[] }) {
                     >
                       {activa ? "Activa" : "Inactiva"}
                     </span>
+                    <form action={setUniversityOrden}>
+                      <input type="hidden" name="id" value={u.id} />
+                      <input type="hidden" name="orden" value={destacada ? 100 : 0} />
+                      <button
+                        type="submit"
+                        className="btn btn-ghost text-xs"
+                        title={
+                          destacada
+                            ? "Vuelve al montón, ordenada por antigüedad"
+                            : "Pasa al frente del campus y de la portada"
+                        }
+                      >
+                        {destacada ? "Quitar de primera" : "Poner primera"}
+                      </button>
+                    </form>
                     <form action={setUniversityStatus}>
                       <input type="hidden" name="id" value={u.id} />
                       <input type="hidden" name="status" value={activa ? "inactive" : "active"} />
