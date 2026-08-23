@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { Nav } from "@/components/layout/Nav";
 import { Footer } from "@/components/layout/Footer";
 import { Reveal } from "@/components/ui/Reveal";
@@ -6,12 +7,12 @@ import { GlobalNet } from "@/components/campus/GlobalNet";
 import { CampusCrumb } from "@/components/campus/CampusCrumb";
 import { AmbassadorCard, type AmbassadorCardData } from "@/components/campus/AmbassadorCard";
 import { TrackedLink } from "@/components/campus/TrackedLink";
-import { TrackedNews } from "@/components/campus/TrackedNews";
+import { NoticiaCard } from "@/components/campus/NoticiaCard";
 import { TrackVisit } from "@/components/campus/TrackVisit";
 import { ClickCount } from "@/components/campus/ClickCount";
 import { ShareButtons } from "@/components/campus/ShareButtons";
 import { scheduleState, type ScheduleTone } from "@/lib/schedule";
-import { SITE_URL } from "@/lib/site";
+import { rutaNoticia, rutaOportunidad, urlAbsoluta } from "@/lib/publicaciones";
 
 const CARD = "linear-gradient(158deg, #121a2c 0%, #0b1020 100%)";
 
@@ -128,9 +129,6 @@ export function CampusView({
   ambassador: AmbassadorCardData | null;
   preview?: boolean;
 }) {
-  // Enlace público de esta universidad: cada publicación se comparte con su ancla.
-  const baseUrl = `${SITE_URL}/campus/${uni.slug}`;
-
   return (
     <>
       <Nav />
@@ -176,17 +174,18 @@ export function CampusView({
               )}
               {news.map((n) => (
                 <Reveal key={n.id}>
-                  <TrackedNews
+                  <NoticiaCard
                     id={n.id}
                     title={n.title}
                     summary={n.summary}
                     body={n.body ?? null}
-                    track={!preview}
+                    href={rutaNoticia(uni.slug, n.id)}
+                    url={urlAbsoluta(rutaNoticia(uni.slug, n.id))}
+                    preview={preview}
                     badge={
                       <StateBadge preview={preview} status={n.status} starts_at={n.starts_at} ends_at={n.ends_at} />
                     }
                     footer={<ClickCount kind="news" id={n.id} clicks={n.clicks} />}
-                    baseUrl={baseUrl}
                   />
                 </Reveal>
               ))}
@@ -211,7 +210,18 @@ export function CampusView({
                           <StateBadge preview={preview} status={o.status} starts_at={o.starts_at} ends_at={o.ends_at} />
                         </div>
                         <div>
-                          <h3 className="font-display text-xl font-semibold leading-snug text-ink">{o.title}</h3>
+                          <h3 className="font-display text-xl font-semibold leading-snug text-ink">
+                            {preview ? (
+                              o.title
+                            ) : (
+                              <Link
+                                href={rutaOportunidad(uni.slug, o.id)}
+                                className="transition-colors hover:text-white"
+                              >
+                                {o.title}
+                              </Link>
+                            )}
+                          </h3>
                           {o.org && <p className="mt-1 text-sm font-medium text-ti-500">{o.org}</p>}
                           {o.description && <p className="mt-2 text-sm leading-relaxed text-ink-soft">{o.description}</p>}
                         </div>
@@ -238,7 +248,7 @@ export function CampusView({
                           )}
                           <div className="flex flex-wrap items-center justify-between gap-3">
                             <ClickCount kind="opportunities" id={o.id} clicks={o.clicks} />
-                            <ShareButtons baseUrl={baseUrl} anchor={`pub-${o.id}`} titulo={o.title} />
+                            <ShareButtons url={urlAbsoluta(rutaOportunidad(uni.slug, o.id))} titulo={o.title} />
                           </div>
                         </div>
                       </article>

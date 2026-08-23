@@ -1,13 +1,15 @@
+import Link from "next/link";
 import { Nav } from "@/components/layout/Nav";
 import { Footer } from "@/components/layout/Footer";
 import { createPublicClient } from "@/lib/supabase/public";
 import { isActiveNow, fechaLarga } from "@/lib/schedule";
+import { rutaNoticia } from "@/lib/publicaciones";
 import { unwrapOrThrow } from "@/lib/log";
 
 // ISR: la página se sirve cacheada y se regenera (acá o al publicar una noticia).
 export const revalidate = 60;
 
-type UniRef = { name: string; short_name: string | null };
+type UniRef = { name: string; short_name: string | null; slug: string };
 type Row = {
   id: string;
   title: string;
@@ -32,7 +34,7 @@ export default async function NovedadesPage() {
     "novedades",
     await supabase
       .from("news")
-      .select("id, title, summary, published_at, starts_at, ends_at, universities(name, short_name)")
+      .select("id, title, summary, published_at, starts_at, ends_at, universities(name, short_name, slug)")
       .eq("status", "published")
       .order("published_at", { ascending: false })
       .limit(50),
@@ -67,7 +69,20 @@ export default async function NovedadesPage() {
                   </p>
                 )}
                 <h2 className="mt-1.5 font-display text-2xl font-semibold leading-snug">
-                  {n.title}
+                  {/* Cada noticia enlaza a su página propia. Antes este listado
+                      era texto suelto: se podía leer el resumen pero no llegar
+                      a la noticia — otra punta muerta, como lo fue /novedades
+                      entera en su momento. */}
+                  {uni ? (
+                    <Link
+                      href={rutaNoticia(uni.slug, n.id)}
+                      className="transition-colors hover:text-blue-200"
+                    >
+                      {n.title}
+                    </Link>
+                  ) : (
+                    n.title
+                  )}
                 </h2>
                 {n.summary && <p className="mt-2 leading-relaxed text-ink-soft">{n.summary}</p>}
                 {/* Hora de Argentina: una noticia publicada un martes a las

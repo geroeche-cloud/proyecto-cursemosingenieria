@@ -8,6 +8,7 @@ import {
   type CampusDrive,
 } from "@/components/campus/CampusView";
 import { createPublicClient } from "@/lib/supabase/public";
+import { SITE_URL } from "@/lib/site";
 import { isActiveNow } from "@/lib/schedule";
 import { AMB_COLS, buildAmbassador, type AmbassadorRaw } from "@/lib/ambassador";
 import { logIfError } from "@/lib/log";
@@ -53,10 +54,34 @@ export async function generateMetadata({
   const supabase = createPublicClient();
   const { data } = await supabase
     .from("universities")
-    .select("name, short_name")
+    .select("name, short_name, city")
     .eq("slug", university)
     .maybeSingle();
-  return { title: data ? `${data.short_name || data.name} · Campus` : "Campus" };
+  if (!data) return { title: "Campus" };
+
+  // Al compartir el campus de una universidad, la vista previa habla de ESA
+  // universidad. Antes heredaba la del sitio entero: quien recibía el enlace
+  // de la UNCo veía una placa genérica que no decía ni "UNCo".
+  const nombre = data.short_name || data.name;
+  const titulo = `${nombre} · Campus`;
+  const descripcion =
+    `Becas, convocatorias, profesores particulares y apuntes para estudiantes de ingeniería de ${data.name}` +
+    (data.city ? `, en ${data.city}.` : ".");
+  const url = `${SITE_URL}/campus/${university}`;
+
+  return {
+    title: titulo,
+    description: descripcion,
+    alternates: { canonical: url },
+    openGraph: {
+      title: titulo,
+      description: descripcion,
+      url,
+      siteName: "Cursemos Ingeniería",
+      locale: "es_AR",
+    },
+    twitter: { card: "summary_large_image", title: titulo, description: descripcion },
+  };
 }
 
 export default async function UniversityPage({

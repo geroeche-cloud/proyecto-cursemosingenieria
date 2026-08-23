@@ -58,7 +58,12 @@ export async function createOpportunity(
     if (error) return { ok: false, error: traducirYReportar(error).mensaje };
 
     revalidatePath("/panel/oportunidades");
-    if (publish) revalidatePath("/campus/[university]", "page");
+    if (publish) {
+      revalidatePath("/campus/[university]", "page");
+      // La oportunidad tiene además página propia; sin esto, editarla o
+      // borrarla dejaría la versión vieja servida hasta un minuto.
+      revalidatePath("/campus/[university]/oportunidad/[id]", "page");
+    }
     return {
       ok: true,
       message: publish
@@ -101,6 +106,7 @@ export async function updateOpportunity(
 
     revalidatePath("/panel/oportunidades");
     revalidatePath("/campus/[university]", "page");
+    revalidatePath("/campus/[university]/oportunidad/[id]", "page");
     return { ok: true, message: "Cambios guardados." };
   } catch (e) {
     return { ok: false, error: traducirYReportar(e).mensaje };
@@ -128,6 +134,7 @@ export async function setOpportunityStatus(formData: FormData) {
 
     revalidatePath("/panel/oportunidades");
     revalidatePath("/campus/[university]", "page");
+    revalidatePath("/campus/[university]/oportunidad/[id]", "page");
   } catch (e) {
     // Una acción que falla en silencio es peor que una que avisa: la persona
     // cree que funcionó y se va. Se propaga para que se vea.
@@ -146,6 +153,7 @@ export async function deleteOpportunity(formData: FormData) {
 
     revalidatePath("/panel/oportunidades");
     revalidatePath("/campus/[university]", "page");
+    revalidatePath("/campus/[university]/oportunidad/[id]", "page");
   } catch (e) {
     throw e instanceof Error ? e : new Error("No se pudo completar la accion.");
   }

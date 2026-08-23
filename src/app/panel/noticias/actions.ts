@@ -59,6 +59,9 @@ export async function createNews(
     if (publish) {
       revalidatePath("/novedades");
       revalidatePath("/campus/[university]", "page");
+      // La noticia tiene además página propia; sin esto, editarla o borrarla
+      // dejaría la versión vieja servida hasta un minuto.
+      revalidatePath("/campus/[university]/noticia/[id]", "page");
     }
     return {
       ok: true,
@@ -95,6 +98,7 @@ export async function updateNews(
     revalidatePath("/panel/noticias");
     revalidatePath("/novedades");
     revalidatePath("/campus/[university]", "page");
+    revalidatePath("/campus/[university]/noticia/[id]", "page");
     return { ok: true, message: "Cambios guardados." };
   } catch (e) {
     return { ok: false, error: traducirYReportar(e).mensaje };
@@ -121,6 +125,7 @@ export async function setNewsStatus(formData: FormData) {
   revalidatePath("/panel/noticias");
   revalidatePath("/novedades");
   revalidatePath("/campus/[university]", "page");
+  revalidatePath("/campus/[university]/noticia/[id]", "page");
 }
 
 export async function deleteNews(formData: FormData) {
@@ -136,4 +141,5 @@ export async function deleteNews(formData: FormData) {
   revalidatePath("/panel/noticias");
   revalidatePath("/novedades");
   revalidatePath("/campus/[university]", "page");
+  revalidatePath("/campus/[university]/noticia/[id]", "page");
 }

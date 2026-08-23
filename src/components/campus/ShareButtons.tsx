@@ -3,10 +3,16 @@
 import { useState } from "react";
 
 type Props = {
-  /** URL pública de la página, provista por el servidor (sin ancla). */
-  baseUrl: string;
-  /** Ancla de la publicación dentro de la página (#pub-<id>). */
-  anchor: string;
+  /**
+   * Dirección completa y propia de la publicación, armada en el servidor.
+   *
+   * Antes acá llegaba la página de la universidad más un ancla (`#pub-<id>`).
+   * Saltaba al lugar correcto, pero el que recibía el mensaje veía la vista
+   * previa del sitio entero —sin título ni descripción— y Google no podía
+   * mostrar la publicación por su cuenta, porque un ancla no es una dirección
+   * distinta. Ahora cada publicación tiene la suya.
+   */
+  url: string;
   /** Texto que acompaña al enlace al compartir. */
   titulo: string;
 };
@@ -51,18 +57,16 @@ const boton =
   "inline-flex h-8 w-8 items-center justify-center rounded-full border border-hair text-ink-mute transition-colors hover:border-blue-500/50 hover:text-blue-200";
 
 /**
- * Compartir una publicación. Cada una tiene su propio enlace (#pub-id), así el
- * que lo recibe cae directo en ella.
+ * Compartir una publicación. Cada una tiene su propia página, así el que lo
+ * recibe cae directo en ella y ve de qué se trata antes de tocar.
  *
  * Instagram no permite compartir enlaces desde la web (no existe una URL para
  * eso). Por eso en celular se ofrece el menú nativo —que sí incluye Instagram,
  * historias y cualquier app instalada— y en escritorio, copiar el enlace.
  */
-export function ShareButtons({ baseUrl, anchor, titulo }: Props) {
+export function ShareButtons({ url, titulo }: Props) {
   const [copiado, setCopiado] = useState(false);
 
-  // La URL viene del servidor: no hace falta estado ni esperar al navegador.
-  const url = `${baseUrl}#${anchor}`;
   const texto = `${titulo} — vía Cursemos Ingeniería`;
 
   const copiar = async () => {

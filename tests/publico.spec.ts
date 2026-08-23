@@ -87,11 +87,14 @@ test("una publicación se puede abrir y compartir", async ({ page }) => {
   const publicacion = page.locator('[id^="pub-"]').first();
   await expect(publicacion).toBeVisible();
 
-  // Compartir por WhatsApp: el enlace tiene que apuntar a esa publicación.
+  // Compartir por WhatsApp: el enlace apunta a la PÁGINA PROPIA de la
+  // publicación (/noticia/<id> u /oportunidad/<id>), no a un ancla dentro
+  // del campus. De esa dirección dependen la vista previa con título y la
+  // entrada propia en Google.
   const wa = publicacion.locator('a[href*="wa.me"]').first();
   await expect(wa).toBeVisible();
-  const href = await wa.getAttribute("href");
-  expect(decodeURIComponent(href ?? "")).toContain("#pub-");
+  const href = decodeURIComponent((await wa.getAttribute("href")) ?? "");
+  expect(href).toMatch(/\/(noticia|oportunidad)\/[0-9a-f-]{36}/);
 
   // Copiar enlace: el botón responde y confirma.
   const copiar = publicacion.getByRole("button", { name: "Copiar enlace" });
