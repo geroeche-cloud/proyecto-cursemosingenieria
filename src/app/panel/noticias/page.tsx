@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { deMiUniversidad } from "@/lib/panel";
 import { setNewsStatus, deleteNews } from "./actions";
 import { NoticiaForm } from "./NoticiaForm";
 import { scheduleState, type ScheduleTone } from "@/lib/schedule";
@@ -30,18 +30,22 @@ export default async function NoticiasPanelPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const supabase = await createClient();
+  // deMiUniversidad, NO supabase.from: el filtro por universidad viene
+  // puesto. Sin el, el panel mostraba tambien lo publicado por las demas
+  // universidades — la politica de lectura permite ver lo publicado de
+  // cualquiera, porque lo necesita el sitio publico.
+  const { consultar } = await deMiUniversidad("news");
   const pagina = leerPagina(await searchParams);
 
   // Solo la página pedida: el pedido a la base queda del mismo tamaño sin
   // importar cuántas noticias tenga cargadas la universidad.
-  const { data, count } = await supabase
-    .from("news")
-    .select("id, title, summary, status, starts_at, ends_at, clicks", { count: "exact" })
+  const { data, count } = await consultar("id, title, summary, status, starts_at, ends_at, clicks", { count: "exact" })
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .range(pagina.desde, pagina.hasta);
-  const news = (data ?? []) as News[];
+  // El helper recibe las columnas como texto, asi que Supabase no puede
+  // deducir el tipo de fila: se afirma a mano.
+  const news = (data ?? []) as unknown as News[];
 
   return (
     <div className="flex flex-col gap-12">

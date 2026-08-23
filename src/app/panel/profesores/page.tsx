@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { deMiUniversidad } from "@/lib/panel";
 import { leerPagina, totalPaginas } from "@/lib/paginacion";
 import { Paginacion } from "@/components/ui/Paginacion";
 import { ProfessorForm } from "./ProfessorForm";
@@ -26,16 +26,20 @@ export default async function ProfesoresPanelPage({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const supabase = await createClient();
+  // deMiUniversidad, NO supabase.from: el filtro por universidad viene
+  // puesto. Sin el, el panel mostraba tambien lo publicado por las demas
+  // universidades — la politica de lectura permite ver lo publicado de
+  // cualquiera, porque lo necesita el sitio publico.
+  const { consultar } = await deMiUniversidad("professors");
   const pagina = leerPagina(await searchParams);
 
-  const { data, count } = await supabase
-    .from("professors")
-    .select("id, name, title, modality, subjects, whatsapp, status, clicks", { count: "exact" })
+  const { data, count } = await consultar("id, name, title, modality, subjects, whatsapp, status, clicks", { count: "exact" })
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
     .range(pagina.desde, pagina.hasta);
-  const items = (data ?? []) as Professor[];
+  // El helper recibe las columnas como texto, asi que Supabase no puede
+  // deducir el tipo de fila: se afirma a mano.
+  const items = (data ?? []) as unknown as Professor[];
 
   return (
     <div className="flex flex-col gap-12">

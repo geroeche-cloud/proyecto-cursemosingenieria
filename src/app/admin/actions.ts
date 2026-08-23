@@ -375,10 +375,17 @@ export async function restoreItem(
     }
 
     revalidarTodo();
+    // Restaurar NO devuelve el acceso ni republica: eso se decide aparte, a
+    // propósito. Pero el aviso tiene que decir qué falta hacer, y no es lo
+    // mismo para una cuenta que para una publicación.
     return {
       ok: true,
       message:
-        "Restaurado. Queda inactivo o como borrador: revisalo y volvé a publicarlo cuando quieras.",
+        table === "profiles"
+          ? "Cuenta restaurada, pero sigue SUSPENDIDA: no puede entrar al panel todavía. Reactivala desde Embajadores."
+          : table === "universities"
+            ? "Universidad restaurada, pero sigue INACTIVA: no aparece en el campus. Activala desde Universidades."
+            : "Restaurado como borrador: revisalo y publicalo cuando quieras.",
     };
   } catch (e) {
     return { ok: false, error: friendly(e) };
